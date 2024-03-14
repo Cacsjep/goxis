@@ -1,0 +1,362 @@
+package main
+
+import (
+	"fmt"
+	"testing"
+	"time"
+
+	"github.com/Cacsjep/goxis/pkg/axevent"
+	"github.com/Cacsjep/goxis/pkg/axlicense"
+	"github.com/Cacsjep/goxis/pkg/axparam"
+	"github.com/Cacsjep/goxis/pkg/axvdo"
+	"github.com/Cacsjep/goxis/pkg/glib"
+	"github.com/stretchr/testify/assert"
+)
+
+func main() {
+	testing.Main(
+		nil,
+		[]testing.InternalTest{
+			{"TestVdoMapOperations", TestVdoMapOperations},
+			{"VdoMapTest", VdoMapTest},
+			{"VdoChannelTest", VdoChannelTest},
+			//{"LicenseTest", LicenseTest},
+			//{"ParamTests", ParamTests},
+			//{"EventTests", EventTests},
+			//{"EventHandlerTests", EventHandlerTests},
+		},
+		nil, nil,
+	)
+}
+
+func TestVdoMapOperations(t *testing.T) {
+	// Assuming NewVdoMap is a constructor that initializes VdoMap correctly.
+	vdoMap := axvdo.NewVdoMap()
+	anotherMap := axvdo.NewVdoMap()
+
+	// Initially, both maps should be empty
+	assert.True(t, vdoMap.Empty(), "vdoMap should be empty initially")
+	assert.Equal(t, 0, vdoMap.Size(), "vdoMap should have size 0 initially")
+
+	// Add some entries to vdoMap
+	vdoMap.SetString("key1", "value1")
+	vdoMap.SetInt32("key2", 1234)
+
+	// Now, vdoMap should not be empty and should contain the keys
+	assert.False(t, vdoMap.Empty(), "vdoMap should not be empty after adding entries")
+	assert.Equal(t, 2, vdoMap.Size(), "vdoMap should have size 2 after adding entries")
+	assert.True(t, vdoMap.Contains("key1"), "vdoMap should contain key1")
+	assert.True(t, vdoMap.Contains("key2"), "vdoMap should contain key2")
+
+	// Testing Swap operation
+	vdoMap.Swap(anotherMap)
+	assert.True(t, vdoMap.Empty(), "vdoMap should be empty after swap")
+	assert.False(t, anotherMap.Empty(), "anotherMap should not be empty after swap")
+
+	// Reset maps to original state for further testing
+	vdoMap.Swap(anotherMap)
+
+	// Testing Merge operation
+	anotherMap.SetString("key3", "value3")
+	vdoMap.Merge(anotherMap)
+	assert.Equal(t, 3, vdoMap.Size(), "vdoMap should have size 3 after merge")
+	assert.True(t, vdoMap.Contains("key3"), "vdoMap should contain key3 after merge")
+
+	// Testing Remove operation
+	vdoMap.Remove("key3")
+	assert.False(t, vdoMap.Contains("key3"), "vdoMap should not contain key3 after removal")
+	assert.Equal(t, 2, vdoMap.Size(), "vdoMap should have size 2 after removing key3")
+
+	// Testing Equal operation
+	assert.False(t, vdoMap.Equal(anotherMap), "vdoMap should not be equal to anotherMap after modifications")
+
+	vdoMap.Unref()
+	anotherMap.Unref()
+}
+
+func VdoMapTest(t *testing.T) {
+	vdoMap := axvdo.NewVdoMap()
+	byteValue := byte(255)
+	boolValue := true
+	int16Value := int16(-32768)
+	uint16Value := uint16(65535)
+	int32Value := int32(-2147483648)
+	uint32Value := uint32(4294967295)
+	int64Value := int64(-9223372036854775808)
+	uint64Value := uint64(18446744073709551615)
+	doubleValue := 3.14159
+	stringValue := "Test String"
+
+	// Set values using setters
+	vdoMap.SetByte("byteKey", byteValue)
+	vdoMap.SetBoolean("boolKey", boolValue)
+	vdoMap.SetInt16("int16Key", int16Value)
+	vdoMap.SetUint16("uint16Key", uint16Value)
+	vdoMap.SetInt32("int32Key", int32Value)
+	vdoMap.SetUint32("uint32Key", uint32Value)
+	vdoMap.SetInt64("int64Key", int64Value)
+	vdoMap.SetUint64("uint64Key", uint64Value)
+	vdoMap.SetDouble("doubleKey", doubleValue)
+	vdoMap.SetString("stringKey", stringValue)
+
+	// Get values using getters and assert they match what was set
+	assert.Equal(t, byteValue, vdoMap.GetByte("byteKey", 0), "Byte value did not match")
+	assert.Equal(t, boolValue, vdoMap.GetBoolean("boolKey", false), "Boolean value did not match")
+	assert.Equal(t, int16Value, vdoMap.GetInt16("int16Key", 0), "Int16 value did not match")
+	assert.Equal(t, uint16Value, vdoMap.GetUint16("uint16Key", 0), "Uint16 value did not match")
+	assert.Equal(t, int32Value, vdoMap.GetInt32("int32Key", 0), "Int32 value did not match")
+	assert.Equal(t, uint32Value, vdoMap.GetUint32("uint32Key", 0), "Uint32 value did not match")
+	assert.Equal(t, int64Value, vdoMap.GetInt64("int64Key", 0), "Int64 value did not match")
+	assert.Equal(t, uint64Value, vdoMap.GetUint64("uint64Key", 0), "Uint64 value did not match")
+	assert.Equal(t, doubleValue, vdoMap.GetDouble("doubleKey", 0), "Double value did not match")
+	assert.Equal(t, stringValue, vdoMap.GetString("stringKey", "foo"), "String value did not match")
+
+	vdoMap.Unref()
+}
+
+func VdoChannelTest(t *testing.T) {
+	VDO_CHANNEL := uint(1)
+	s, err := axvdo.VdoChannelGet(VDO_CHANNEL)
+	assert.NoError(t, err)
+	assert.Equal(t, VDO_CHANNEL, s.GetId())
+	resos, err := s.GetResolutions(nil)
+	assert.NoError(t, err)
+	assert.Greater(t, len(resos), 0)
+
+	info, err := s.GetInfo()
+	assert.NoError(t, err)
+	assert.NotNil(t, info)
+	info.Unref()
+
+	m2, err := s.GetSettings()
+	assert.NoError(t, err)
+	assert.NotNil(t, m2)
+
+	err = s.SetSettings(m2)
+	assert.NoError(t, err)
+
+	err = s.SetFramerate(25)
+	assert.NoError(t, err)
+	m2.Unref()
+
+	streams, err := axvdo.VdoChannelGetAll()
+	assert.NoError(t, err)
+	assert.NotNil(t, streams)
+	assert.Greater(t, len(streams), 0)
+
+	filtermap := axvdo.NewVdoMap()
+	filtermap.SetUint32("format", uint32(axvdo.VdoFormatH264))
+	streams2, err := axvdo.VdoChannelGetFilterd(filtermap)
+	assert.NoError(t, err)
+	assert.NotNil(t, streams2)
+	assert.Greater(t, len(streams2), 0)
+	filtermap.Unref()
+}
+
+func LicenseTest(t *testing.T) {
+	s := axlicense.LicensekeyVerify("dbustest", 414614, 1, 0)
+	assert.True(t, s)
+	// TODO: Bring this to work
+	//t1, err := axlicense.LicensekeyGetExpDate("dbustest")
+	//fmt.Println(t1, err)
+}
+
+func ParamTests(t *testing.T) {
+	p, err := axparam.AXParameterNew("dbustest")
+	assert.NoError(t, err)
+	assert.NotNil(t, p)
+
+	// Add Test
+	err = p.Add("IsCustomized", "yes", "bool:no,yes")
+	assert.NoError(t, err)
+
+	// Get Test 1
+	pvalue1, err := p.Get("IsCustomized")
+	assert.NoError(t, err)
+	assert.Equal(t, "yes", pvalue1)
+
+	// Set Test 1
+	err = p.Set("IsCustomized", "no", true)
+	assert.NoError(t, err)
+
+	// Set Test 2
+	err = p.Set("unkown", "no", true)
+	assert.Error(t, err)
+
+	// Get Test 2
+	pvalue2, err := p.Get("IsCustomized")
+	assert.NoError(t, err)
+	assert.Equal(t, "no", pvalue2)
+
+	// Get Test 3
+	pvalue3, err := p.Get("Icantfound")
+	assert.Error(t, err)
+	assert.Equal(t, "", pvalue3)
+
+	// List test
+	params, err := p.List()
+	assert.NoError(t, err)
+	assert.Len(t, params, 1)
+	fmt.Println("Params listed", params)
+
+	err = p.RegisterCallback("IsCustomized", func(name, value string, userdata any) {
+		fmt.Println("Param Callback Invoked", name, value, userdata)
+	}, "mydata")
+
+	assert.NoError(t, err)
+
+	m := glib.NewMainLoop()
+	assert.NotNil(t, m)
+
+	l, err := p.List()
+	fmt.Println(l, err)
+
+	go time.AfterFunc(time.Second*60, func() {
+		m.Quit()
+		p.UnregisterCallback("IsCustomized")
+		// Remove Test 1
+		err = p.Remove("IsCustomized")
+		assert.NoError(t, err)
+
+		// Remove Test 2
+		err = p.Remove("idontknow")
+		assert.Error(t, err)
+
+		p.Free()
+	})
+	m.Run()
+
+}
+
+func EventHandlerTests(t *testing.T) {
+	set := axevent.NewAXEventKeyValueSet()
+	namespacet1 := "tns1"
+	err := set.AddKeyValue("topic0", &namespacet1, "Device", axevent.AXValueTypeString)
+	assert.NoError(t, err)
+	handler := axevent.NewEventHandler()
+	subscription, err2 := handler.Subscribe(set, func(subscription int, event *axevent.AXEvent, userdata any) {
+		fmt.Println("Callback invoked", subscription, event.GetTimestamp(), userdata.(string))
+	}, "myuserdata")
+	assert.NotNil(t, subscription)
+	assert.Equal(t, 1, subscription)
+	assert.NoError(t, err2)
+
+	declaration, err3 := handler.Declare(set, true, func(declaration int, userdata any) {
+		fmt.Println("Event declared successfully", declaration, userdata.(string))
+	}, "foobar")
+	assert.NotNil(t, declaration)
+	assert.NoError(t, err3)
+
+	set2 := axevent.NewAXEventKeyValueSet()
+	assert.NotNil(t, set2)
+	err4 := set2.AddKeyValue("feature", nil, "myfeature", axevent.AXValueTypeString)
+	assert.NoError(t, err4)
+	err5 := set2.AddKeyValue("enabled", nil, true, axevent.AXValueTypeBool)
+	assert.NoError(t, err5)
+
+	/* declaration2, err6 := handler.DeclareFromTemplate(set2, "com.vendor.PropertyState.Example", func(declaration int, userdata any) {
+		fmt.Println("Event with templ declared successfully", declaration, userdata.(string))
+	}, "bazfoo")
+	assert.NotNil(t, declaration2)
+	assert.NoError(t, err6) */
+
+	m := glib.NewMainLoop()
+	assert.NotNil(t, m)
+	go time.AfterFunc(time.Second*5, func() {
+		m.Quit()
+		err := handler.Unsubscribe(1)
+		assert.NoError(t, err)
+		err2 := handler.Undeclare(1)
+		assert.NoError(t, err2)
+		err3 := handler.Undeclare(2)
+		assert.NoError(t, err3)
+		handler.Free()
+		set.Free()
+		set2.Free()
+	})
+	m.Run()
+
+}
+
+func EventTests(t *testing.T) {
+	set := axevent.NewAXEventKeyValueSet()
+	assert.NotNil(t, set)
+
+	namespace := "tnaxis"
+	err := set.AddKeyValue("topic0", &namespace, "port", axevent.AXValueTypeString)
+	assert.NoError(t, err)
+
+	vtype, err := set.GetValueType("topic0", &namespace)
+	assert.NoError(t, err)
+	assert.Equal(t, vtype, axevent.AXValueTypeString)
+
+	str, err2 := set.GetString("topic0", &namespace)
+	assert.NoError(t, err2)
+	assert.Equal(t, str, "port")
+
+	err = set.AddKeyValue("topic1", nil, "foobar", axevent.AXValueTypeString)
+	assert.NoError(t, err)
+
+	str2, err3 := set.GetString("topic1", nil)
+	assert.NoError(t, err3)
+	assert.Equal(t, str2, "foobar")
+
+	vtype, err = set.GetValueType("topic1", nil)
+	assert.NoError(t, err)
+	assert.Equal(t, vtype, axevent.AXValueTypeString)
+
+	err = set.AddKeyValue("topic2", nil, nil, axevent.AXValueTypeString)
+	assert.NoError(t, err)
+
+	vtype, err = set.GetValueType("topic2", nil)
+	assert.NoError(t, err)
+	assert.Equal(t, vtype, axevent.AXValueTypeString)
+
+	err = set.RemoveKey("topic2", nil)
+	assert.NoError(t, err)
+
+	err = set.AddKeyValue("topic2", nil, true, axevent.AXValueTypeBool)
+	assert.NoError(t, err)
+
+	b1, err3 := set.GetBoolean("topic2", nil)
+	assert.NoError(t, err3)
+	assert.Equal(t, true, b1)
+
+	err = set.AddKeyValue("topic3", nil, 1, axevent.AXValueTypeInt)
+	assert.NoError(t, err)
+
+	i1, err4 := set.GetInteger("topic3", nil)
+	assert.NoError(t, err4)
+	assert.Equal(t, 1, i1)
+
+	err = set.AddKeyValue("topic4", nil, 1.2, axevent.AXValueTypeDouble)
+	assert.NoError(t, err)
+
+	f1, err5 := set.GetDouble("topic4", nil)
+	assert.NoError(t, err5)
+	assert.Equal(t, 1.2, f1)
+
+	err6 := set.MarkAsSource("topic4", nil)
+	assert.NoError(t, err6)
+
+	err7 := set.MarkAsData("topic3", nil)
+	assert.NoError(t, err7)
+
+	err8 := set.MarkAsUserDefined("topic2", nil, "mytag")
+	assert.NoError(t, err8)
+
+	now := time.Now()
+	evt := axevent.NewAxEvent(set, &now)
+	assert.NotNil(t, evt)
+	assert.NotNil(t, evt.GetTimestamp())
+	evt.Free()
+
+	set2 := axevent.NewAXEventKeyValueSet()
+	evt2 := axevent.NewAxEvent(set2, nil)
+	assert.NotNil(t, evt2)
+
+	evt2.Free()
+
+	set.Free()
+	set2.Free()
+}

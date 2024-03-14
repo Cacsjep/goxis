@@ -1,0 +1,32 @@
+{
+    "schemaVersion": "1.6.0",
+    "acapPackageConf": {
+        "setup": {
+            "appName": "dbustest",
+            "friendlyName": "Dbus Test APP",
+            "vendor": "Commend Österreich GmbH",
+            "version": "1.0.1",
+            "appId": "414614",
+            "runMode": "never",
+            "embeddedSdkVersion": "3.0",
+            "user": {
+                "group": "root",
+                "username": "root"
+            }
+        },
+        "configuration": {
+            "paramConfig": [],
+            "settingPage": "redirect.html",
+            "reverseProxy": [
+				{
+					"apiPath": "goxis",
+					"target": "http://localhost:2001",
+					"access": "admin"
+				}
+			]
+        },
+        "copyProtection": {
+            "method": "axis"
+        }
+    }
+}

@@ -1,0 +1,15 @@
+{
+    "files.associations": {
+        "*.ipp": "cpp",
+        "chrono": "cpp",
+        "typeindex": "cpp",
+        "typeinfo": "cpp",
+        "future": "cpp",
+        "system_error": "cpp",
+        "xlocale": "cpp",
+        "ostream": "cpp",
+        "functional": "cpp",
+        "codecvt": "cpp",
+        "expected": "cpp"
+    }
+}

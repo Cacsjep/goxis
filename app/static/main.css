@@ -1,0 +1,9 @@
+body {
+  font-family: "Open Sans", Helvetica, arial, sans-serif;
+  background-color: rgb(24, 24, 24);
+  margin: 0px;
+  min-height: 100vh;
+  overflow-y: hidden;
+  padding: 0px;
+
+}
