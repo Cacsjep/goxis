@@ -5,6 +5,13 @@ package axvdo
 #include "vdo-stream.h"
 */
 import "C"
+import (
+	"errors"
+	"unsafe"
+
+	"github.com/Cacsjep/goxis/pkg/clib"
+	"github.com/Cacsjep/goxis/pkg/glib"
+)
 
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/vdostream/html/vdo-stream_8h.html
 type VdoStream struct {
@@ -14,29 +21,67 @@ type VdoStream struct {
 // Create a new VdoStream
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/vdostream/html/vdo-stream_8h.html#a36fa0021eb58d482c494163db9b22b61
-func NewVdoStream(settings *VdoMap) (*VdoStream, error) {
-	return nil, nil
+func NewStream(settings *VdoMap) (*VdoStream, error) {
+	cError := clib.NewError()
+	ptr := C.vdo_stream_new(settings.Ptr, nil, (**C.GError)(unsafe.Pointer(cError.Ptr)))
+	if err := cError.IsError(); err != nil {
+		return nil, err
+	}
+	return &VdoStream{Ptr: ptr}, nil
+}
+
+// Unref/Free the VdoStream
+func (v *VdoStream) Unref() {
+	if v.Ptr != nil {
+		C.g_object_unref(C.gpointer(v.Ptr))
+	}
 }
 
 // Get an existing video stream
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/vdostream/html/vdo-stream_8h.html#a07e12d4c5d79563413711dcdc6085171
-func (v *VdoStream) Get(id int) (*VdoStream, error) {
-	return nil, nil
+func StreamGet(id int) (*VdoStream, error) {
+	cError := clib.NewError()
+	ptr := C.vdo_stream_get(C.guint(id), (**C.GError)(unsafe.Pointer(cError.Ptr)))
+	if err := cError.IsError(); err != nil {
+		return nil, err
+	}
+	return &VdoStream{Ptr: ptr}, nil
 }
 
 // Gets all existing video streams
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/vdostream/html/vdo-stream_8h.html#ac21dc2bb1e463b20cca05213739e505c
-func (v *VdoStream) GetAll() (*[]VdoStream, error) {
-	return nil, nil
+func StreamGetAll() ([]*VdoStream, error) {
+	var streams []*VdoStream
+	cError := clib.NewError()
+	vdoStreamsPtr := uintptr(
+		unsafe.Pointer(
+			C.vdo_stream_get_all(
+				(**C.GError)(unsafe.Pointer(cError.Ptr)),
+			),
+		),
+	)
+	if err := cError.IsError(); err != nil {
+		return nil, err
+	}
+	vdoStreamsList := glib.WrapList(vdoStreamsPtr)
+	vdoStreamsList.DataWrapper(wrapVdoStream)
+	vdoStreamsList.Foreach(func(item interface{}) {
+		vdoStream, ok := item.(*VdoStream)
+		if !ok {
+			panic("VdoChannelGetAll: item is not of type *VdoStream")
+		}
+		streams = append(streams, vdoStream)
+	})
+	return streams, nil
 }
 
 // Returns the id of this video stream.
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/vdostream/html/vdo-stream_8h.html#afbd3cb015a9d186123d534068db46749
 func (v *VdoStream) GetId() int {
-	return 0
+	return int(C.vdo_stream_get_id(v.Ptr))
 }
 
 // Returns a file descriptor representing the underlying socket connection.
@@ -45,7 +90,15 @@ func (v *VdoStream) GetId() int {
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/vdostream/html/vdo-stream_8h.html#a81faad176c49398f0a0b9826fb7c31f8
 func (v *VdoStream) GetFd() (int, error) {
-	return 0, nil
+	cError := clib.NewError()
+	id := int(C.vdo_stream_get_fd(v.Ptr, (**C.GError)(unsafe.Pointer(cError.Ptr))))
+	if err := cError.IsError(); err != nil {
+		return -1, err
+	}
+	if id == -1 {
+		return -1, errors.New("Error on getting fd (vdo_stream_get_fd returns -1)")
+	}
+	return id, nil
 }
 
 // Returns a file descriptor for prioritized events.
@@ -53,7 +106,15 @@ func (v *VdoStream) GetFd() (int, error) {
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/vdostream/html/vdo-stream_8h.html#acbdc222c597329e543ba85f330526b12
 func (v *VdoStream) GetEventFd() (int, error) {
-	return 0, nil
+	cError := clib.NewError()
+	id := int(C.vdo_stream_get_event_fd(v.Ptr, (**C.GError)(unsafe.Pointer(cError.Ptr))))
+	if err := cError.IsError(); err != nil {
+		return -1, err
+	}
+	if id == -1 {
+		return -1, errors.New("Error on getting fd (vdo_stream_get_fd returns -1)")
+	}
+	return id, nil
 }
 
 // Get the info for this video stream.
@@ -61,7 +122,12 @@ func (v *VdoStream) GetEventFd() (int, error) {
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/vdostream/html/vdo-stream_8h.html#a6368c8c989cbea997947d433dce6a3cb
 // VdoMap must unref by user
 func (v *VdoStream) GetInfo() (*VdoMap, error) {
-	return nil, nil
+	cError := clib.NewError()
+	ptr := C.vdo_stream_get_info(v.Ptr, (**C.GError)(unsafe.Pointer(cError.Ptr)))
+	if err := cError.IsError(); err != nil {
+		return nil, err
+	}
+	return &VdoMap{Ptr: ptr}, nil
 }
 
 // Get the settings for this video stream.
@@ -69,13 +135,23 @@ func (v *VdoStream) GetInfo() (*VdoMap, error) {
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/vdostream/html/vdo-stream_8h.html#ad1279257f13b9a406a0df2558f10123e
 // VdoMap must unref by user
 func (v *VdoStream) GetSettings() (*VdoMap, error) {
-	return nil, nil
+	cError := clib.NewError()
+	ptr := C.vdo_stream_get_settings(v.Ptr, (**C.GError)(unsafe.Pointer(cError.Ptr)))
+	if err := cError.IsError(); err != nil {
+		return nil, err
+	}
+	return &VdoMap{Ptr: ptr}, nil
 }
 
 // Update the settings for this video stream.
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/vdostream/html/vdo-stream_8h.html#affa9aec868d9c2fd1f39f44aa63adaf2
 func (v *VdoStream) SetSettings(settings *VdoMap) error {
+	cError := clib.NewError()
+	success := C.vdo_stream_set_settings(v.Ptr, settings.Ptr, (**C.GError)(unsafe.Pointer(cError.Ptr)))
+	if err := cError.IsErrorOrNotSuccess(int(success), "Unable to set settings"); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -87,6 +163,11 @@ func (v *VdoStream) SetSettings(settings *VdoMap) error {
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/vdostream/html/vdo-stream_8h.html#af43f6acfe327b99037ea1e046788e7b5
 func (v *VdoStream) SetFramerate(framerate float64) error {
+	cError := clib.NewError()
+	success := C.vdo_stream_set_framerate(v.Ptr, C.gdouble(framerate), (**C.GError)(unsafe.Pointer(cError.Ptr)))
+	if err := cError.IsErrorOrNotSuccess(int(success), "Unable to set framerate"); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -101,20 +182,36 @@ func (v *VdoStream) SetFramerate(framerate float64) error {
 // VDO_INTENT_EVENTFD	Monitor events using file descriptors
 // VDO_INTENT_UNIVERSE	Everything except VDO_INTENT_EVENTFD
 //
+// vdoMap.SetUint32("intent", VdoIntentEventFD)
+//
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/vdostream/html/vdo-stream_8h.html#aba5b4264502272caae02a621f3bad63c
-func (v *VdoStream) Attach(intent *VdoMap) {}
+func (v *VdoStream) Attach(intent *VdoMap) error {
+	cError := clib.NewError()
+	success := C.vdo_stream_attach(v.Ptr, intent.Ptr, (**C.GError)(unsafe.Pointer(cError.Ptr)))
+	if err := cError.IsErrorOrNotSuccess(int(success), "Unable to attach"); err != nil {
+		return err
+	}
+	return nil
+}
 
 // Start this video stream.
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/vdostream/html/vdo-stream_8h.html#a5a366f51af1a7171a6739d191ca1e113
 func (v *VdoStream) Start() error {
+	cError := clib.NewError()
+	success := C.vdo_stream_start(v.Ptr, (**C.GError)(unsafe.Pointer(cError.Ptr)))
+	if err := cError.IsErrorOrNotSuccess(int(success), "Unable to start"); err != nil {
+		return err
+	}
 	return nil
 }
 
 // Stop this video stream.
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/vdostream/html/vdo-stream_8h.html#a5e28776ff99b3ecf0b996630eacb4f89
-func (v *VdoStream) Stop() {}
+func (v *VdoStream) Stop() {
+	C.vdo_stream_stop(v.Ptr)
+}
 
 // Forces this video stream to insert a key frame.
 // This function is invoked in order to force a key frame into a video stream.
@@ -122,6 +219,11 @@ func (v *VdoStream) Stop() {}
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/vdostream/html/vdo-stream_8h.html#a32ba781b100c13c7b70e0f700bbce268
 func (v *VdoStream) ForceKeyFrame() error {
+	cError := clib.NewError()
+	success := C.vdo_stream_force_key_frame(v.Ptr, (**C.GError)(unsafe.Pointer(cError.Ptr)))
+	if err := cError.IsErrorOrNotSuccess(int(success), "Unable to force key frame"); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -131,21 +233,34 @@ func (v *VdoStream) ForceKeyFrame() error {
 // A handle to the allocated buffer is returned in the form of a VdoBuffer
 //
 // Note:
+//
 //	This function is synchronous and will block until a response from the vdo service is received.
 //	This function can only be invoked for non-encoded video streams.
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/vdostream/html/vdo-stream_8h.html#a18ff54d35650a8fa4a00da2198b4b2d3
-func (v *VdoStream) BufferAlloc(opaque C.gpointer) (*VdoBuffer, error) {
-	return nil, nil
+// TODO: add opaque
+func (v *VdoStream) BufferAlloc() (*VdoBuffer, error) {
+	cError := clib.NewError()
+	ptr := C.vdo_stream_buffer_alloc(v.Ptr, nil, (**C.GError)(unsafe.Pointer(cError.Ptr)))
+	if err := cError.IsError(); err != nil {
+		return nil, err
+	}
+	return &VdoBuffer{Ptr: ptr}, nil
 }
 
 // Decreases the reference count for the specified buffer.
 // The buffer is freed by the vdo service when the reference count reaches 0.
 // Note:
-// 	This function is synchronous and will block until a response from the vdo service is received.
+//
+//	This function is synchronous and will block until a response from the vdo service is received.
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/vdostream/html/vdo-stream_8h.html#a5c13ae89ffee889aebf1a9b6c3bc3594
 func (v *VdoStream) BufferUnref(buffer *VdoBuffer) error {
+	cError := clib.NewError()
+	success := C.vdo_stream_buffer_unref(v.Ptr, &buffer.Ptr, (**C.GError)(unsafe.Pointer(cError.Ptr)))
+	if err := cError.IsErrorOrNotSuccess(int(success), "Unable to unref buffer"); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -154,6 +269,11 @@ func (v *VdoStream) BufferUnref(buffer *VdoBuffer) error {
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/vdostream/html/vdo-stream_8h.html#a897b1e6d50e00aa8974511b4625cbad3
 func (v *VdoStream) BufferEnqueue(buffer *VdoBuffer) error {
+	cError := clib.NewError()
+	success := C.vdo_stream_buffer_enqueue(v.Ptr, buffer.Ptr, (**C.GError)(unsafe.Pointer(cError.Ptr)))
+	if err := cError.IsErrorOrNotSuccess(int(success), "Unable to unref buffer"); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -165,18 +285,12 @@ func (v *VdoStream) BufferEnqueue(buffer *VdoBuffer) error {
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/vdostream/html/vdo-stream_8h.html#a021f68451699a9ca04aa0e67d9b2917e
 func (v *VdoStream) GetBuffer() (*VdoBuffer, error) {
-	return nil, nil
-}
-
-// Create and start a new stream to already existing file descriptors.
-// This is a convenience function without VdoBuffer support, instead the stream will output data and metadata to two separate file descriptors.
-// NOTE:
-// 	metadata is not implemented yet, set meta_fd to -1.
-// When done with the stream, free it with unref before closing the file descriptors.
-//
-// https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/vdostream/html/vdo-stream_8h.html#aa327d3bc31376dd3edebc15a4491a13e
-func (v *VdoStream) ToFd(settings *VdoMap, data_fd int, meta_fd int) (*VdoStream, error) {
-	return nil, nil
+	cError := clib.NewError()
+	ptr := C.vdo_stream_get_buffer(v.Ptr, (**C.GError)(unsafe.Pointer(cError.Ptr)))
+	if err := cError.IsError(); err != nil {
+		return nil, err
+	}
+	return &VdoBuffer{Ptr: ptr}, nil
 }
 
 // Fetches a single VdoBuffer containing a frame.
@@ -184,8 +298,13 @@ func (v *VdoStream) ToFd(settings *VdoMap, data_fd int, meta_fd int) (*VdoStream
 // Free the buffer with unref.
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/vdostream/html/vdo-stream_8h.html#a4b4c0f2124280bde265491c08bd2f47c
-func (v *VdoStream) Snapshot(settings *VdoMap) (*VdoBuffer, error) {
-	return nil, nil
+func Snapshot(settings *VdoMap) (*VdoBuffer, error) {
+	cError := clib.NewError()
+	ptr := C.vdo_stream_snapshot(settings.Ptr, (**C.GError)(unsafe.Pointer(cError.Ptr)))
+	if err := cError.IsError(); err != nil {
+		return nil, err
+	}
+	return &VdoBuffer{Ptr: ptr}, nil
 }
 
 // Fetches the next Event.
@@ -195,6 +314,11 @@ func (v *VdoStream) Snapshot(settings *VdoMap) (*VdoBuffer, error) {
 // Complete VdoStream reinitialization is necessary. All remaining errors are fatal: Complete VdoStream reinitialization is necessary.
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/vdostream/html/vdo-stream_8h.html#af416bd3ec1edf4055c554e0f78b7b9f9
-func (v *VdoStream) GetEvent() error {
-	return nil
+func (v *VdoStream) GetEvent() (*VdoMap, error) {
+	cError := clib.NewError()
+	ptr := C.vdo_stream_get_event(v.Ptr, (**C.GError)(unsafe.Pointer(cError.Ptr)))
+	if err := cError.IsError(); err != nil {
+		return nil, err
+	}
+	return &VdoMap{Ptr: ptr}, nil
 }

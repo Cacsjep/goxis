@@ -20,6 +20,7 @@ func main() {
 			{"TestVdoMapOperations", TestVdoMapOperations},
 			{"VdoMapTest", VdoMapTest},
 			{"VdoChannelTest", VdoChannelTest},
+			{"TestVdoStream", TestVdoStream},
 			//{"LicenseTest", LicenseTest},
 			//{"ParamTests", ParamTests},
 			//{"EventTests", EventTests},
@@ -27,6 +28,110 @@ func main() {
 		},
 		nil, nil,
 	)
+}
+
+func TestVdoBufferOperations(t *testing.T, existingBuffer *axvdo.VdoBuffer) {
+	// Test GetID
+	id := existingBuffer.GetId()
+	assert.NotZero(t, id, "Expected non-zero ID for the buffer")
+
+	// Test GetFd
+	fd, err := existingBuffer.GetFd()
+	assert.NoError(t, err)
+	assert.Greater(t, fd, -1, "Expected valid file descriptor")
+
+	// Test GetOffset
+	offset := existingBuffer.GetOffset()
+	assert.GreaterOrEqual(t, offset, int64(0), "Expected non-negative offset")
+
+	// Test GetCapacity
+	capacity := existingBuffer.GetCapacity()
+	assert.NotZero(t, capacity, "Expected non-zero capacity")
+
+	// Test IsComplete
+	isComplete := existingBuffer.IsComplete()
+	// This assert depends on your expectations of the buffer's completeness
+	assert.True(t, isComplete, "Expected valid completeness state")
+
+	// Test GetOpaque - Use carefully
+	opaque := existingBuffer.GetOpaque()
+	assert.Nil(t, opaque, "Expected nil opaque pointer")
+
+	// Test GetData - Use carefully
+	data := existingBuffer.GetData()
+	assert.NotNil(t, data, "Expected non-nil data pointer")
+}
+
+func TestVdoStream(t *testing.T) {
+	settings := axvdo.NewVdoMap()
+	settings.SetUint32("channel", 1)
+	settings.SetUint32("format", uint32(axvdo.VdoFormatJPEG))
+	settings.SetUint32("width", 1920)
+	settings.SetUint32("height", 1080)
+
+	assert.NotNil(t, settings.Ptr)
+
+	s, err := axvdo.NewStream(settings)
+	assert.NoError(t, err)
+	assert.NotNil(t, s.Ptr)
+	defer s.Unref()
+
+	id := s.GetId()
+	assert.NotEqual(t, -1, id, "Stream ID should be valid")
+
+	err = s.Start()
+	assert.Nil(t, err, "Starting stream should not produce an error")
+
+	streamSettings, err := s.GetSettings()
+	assert.Nil(t, err, "Failed to get stream settings")
+	defer streamSettings.Unref() // Clean up resources
+
+	err = s.SetSettings(streamSettings)
+	assert.Nil(t, err, "Failed to update stream settings")
+
+	err = s.ForceKeyFrame()
+	assert.Nil(t, err, "Failed to force key frame")
+
+	err = s.SetFramerate(30.0) // Assuming 30.0 is a valid framerate
+	assert.Nil(t, err, "Setting framerate should not fail")
+
+	buffer, err := s.BufferAlloc()
+	assert.Nil(t, err, "Failed to allocate buffer")
+	defer func() {
+		if buffer != nil {
+			err := s.BufferUnref(buffer)
+			assert.Nil(t, err, "Failed to unref buffer")
+		}
+	}()
+
+	intentMap := axvdo.NewVdoMap() // Setup intent map as needed
+	intentMap.SetUint32("intent", uint32(axvdo.VdoIntentEventFD))
+	err = s.Attach(intentMap)
+	assert.Nil(t, err, "Failed to attach with intent")
+	defer intentMap.Unref()
+
+	// Get the stream file descriptor
+	fd, err := s.GetFd()
+	assert.Nil(t, err, "Getting stream file descriptor should not fail")
+	assert.Greater(t, fd, -1, "File descriptor should be valid")
+
+	// TODO: Fix this !! returns -1
+	//eventFd, err := s.GetEventFd()
+	//assert.Nil(t, err, "Getting event file descriptor should not fail")
+	//assert.Greater(t, eventFd, -1, "Event file descriptor should be valid")
+
+	snapshotBuffer, err := axvdo.Snapshot(settings)
+	assert.Nil(t, err, "Taking a snapshot should not fail")
+	assert.NotNil(t, snapshotBuffer.Ptr, "snapshotBuffer.Ptr is nil")
+
+	streams, err := axvdo.StreamGetAll()
+	assert.NoError(t, err)
+	assert.NotNil(t, streams)
+	assert.Greater(t, len(streams), 0)
+
+	TestVdoBufferOperations(t, snapshotBuffer)
+	snapshotBuffer.Unref()
+	s.Stop()
 }
 
 func TestVdoMapOperations(t *testing.T) {

@@ -96,11 +96,13 @@ func (v *VdoMap) Dump() {
 	C.vdo_map_dump(v.Ptr)
 }
 
-// Unref the map.
+// Unref/Free the map.
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/vdostream/html/vdo-map_8h.html#a98b42a54524038a2067ef2c7015c070b
 func (v *VdoMap) Unref() {
-	C.g_object_unref(C.gpointer(v.Ptr))
+	if v.Ptr != nil {
+		C.g_object_unref(C.gpointer(v.Ptr))
+	}
 }
 
 // Removes all of the entries from this map.
