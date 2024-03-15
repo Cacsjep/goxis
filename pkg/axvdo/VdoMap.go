@@ -1,7 +1,7 @@
 package axvdo
 
 /*
-#cgo pkg-config: glib-2.0 gio-2.0 gio-unix-2.0 vdostream
+#cgo pkg-config: vdostream
 #include "vdo-map.h"
 */
 import "C"
@@ -102,6 +102,7 @@ func (v *VdoMap) Dump() {
 func (v *VdoMap) Unref() {
 	if v.Ptr != nil {
 		C.g_object_unref(C.gpointer(v.Ptr))
+		v.Ptr = nil
 	}
 }
 

@@ -2,8 +2,8 @@
     "schemaVersion": "1.6.0",
     "acapPackageConf": {
         "setup": {
-            "appName": "dbustest",
-            "friendlyName": "Dbus Test APP",
+            "appName": "test",
+            "friendlyName": "Test APP",
             "vendor": "Commend Österreich GmbH",
             "version": "1.0.1",
             "appId": "414614",

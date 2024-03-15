@@ -26,6 +26,15 @@ func (e *Error) IsNil() bool {
 	return e.Ptr == nil
 }
 
+// Code returns the error code contained in the GError.
+// It returns 0 if the GError is nil.
+func (e *Error) Code() int {
+	if !e.IsNil() {
+		return int(e.Ptr.code)
+	}
+	return 0
+}
+
 // Message returns the error message contained in the GError.
 // It returns an empty string if the GError is nil.
 func (e *Error) Message() string {
@@ -43,6 +52,14 @@ func (e *Error) IsError() error {
 		return errors.New(e.Message())
 	}
 	return nil
+}
+
+func (e *Error) IsErrorReturnCode() (error, int) {
+	if !e.IsNil() {
+		defer e.Free()
+		return errors.New(e.Message()), e.Code()
+	}
+	return nil, 0
 }
 
 // IsErrorOrNotSuccess checks if the GError contains an error, converts it to a Go error, and frees the GError.

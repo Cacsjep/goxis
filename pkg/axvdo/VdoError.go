@@ -1,7 +1,7 @@
 package axvdo
 
 /*
-#cgo pkg-config: glib-2.0 gio-2.0 gio-unix-2.0 vdostream
+#cgo pkg-config: vdostream
 #include "vdo-error.h"
 */
 import "C"
@@ -32,3 +32,11 @@ const (
 	VdoErrorNotControlled    VdoError = 19
 	VdoErrorNoEvent          VdoError = 20
 )
+
+// Check if error is expected.
+// Expected errors typically occur as a result of force stopping 'com.axis.Vdo1.System'. This class of errors should not be logged as failures,
+// when they occur the recipient is expected to either silently recover or exit informing the user that vdo is currently unavailable.
+// https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/vdostream/html/vdo-error_8h.html#ac748fae792da6c96a4cba4619a3a3d90
+func VdoErrorIsExpected(gerr **C.GError) bool {
+	return C.vdo_error_is_expected(gerr) != C.FALSE
+}

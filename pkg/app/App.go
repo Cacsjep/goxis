@@ -9,6 +9,8 @@
 package app
 
 import (
+	"strconv"
+
 	"github.com/Cacsjep/goxis/pkg/axevent"
 	"github.com/Cacsjep/goxis/pkg/axlicense"
 	"github.com/Cacsjep/goxis/pkg/axparam"
@@ -18,11 +20,12 @@ import (
 )
 
 type AcapApplication struct {
-	Manifest     *manifest.ApplicationManifestSchema
-	Syslog       *syslog.Syslog
-	ParamHandler *axparam.AXParameter
-	EventHandler *axevent.AXEventHandler
-	Mainloop     *glib.GMainLoop
+	Manifest           *manifest.ApplicationManifestSchema
+	Syslog             *syslog.Syslog
+	AppParamHandler    *axparam.AXParameter
+	GlobalParamHandler *axparam.AXParameter
+	EventHandler       *axevent.AXEventHandler
+	Mainloop           *glib.GMainLoop
 }
 
 func NewAcapApplication() (*AcapApplication, error) {
@@ -31,29 +34,39 @@ func NewAcapApplication() (*AcapApplication, error) {
 		return nil, err
 	}
 
-	p, err := axparam.AXParameterNew(m.ACAPPackageConf.Setup.AppName)
+	pApp, err := axparam.AXParameterNew(&m.ACAPPackageConf.Setup.AppName)
+	if err != nil {
+		return nil, err
+	}
+
+	pGlobal, err := axparam.AXParameterNew(nil)
 	if err != nil {
 		return nil, err
 	}
 
 	app := AcapApplication{
-		Manifest:     m,
-		Syslog:       syslog.NewSyslog(m.ACAPPackageConf.Setup.AppName, syslog.LOG_PID|syslog.LOG_CONS, syslog.LOG_USER),
-		ParamHandler: p,
-		EventHandler: axevent.NewEventHandler(),
-		Mainloop:     glib.NewMainLoop(),
+		Manifest:           m,
+		Syslog:             syslog.NewSyslog(m.ACAPPackageConf.Setup.AppName, syslog.LOG_PID|syslog.LOG_CONS, syslog.LOG_USER),
+		AppParamHandler:    pApp,
+		GlobalParamHandler: pGlobal,
+		EventHandler:       axevent.NewEventHandler(),
+		Mainloop:           glib.NewMainLoop(),
 	}
 
 	return &app, nil
 }
 
-func (a *AcapApplication) IsLicenseValid(major_version int, minor_version int) bool {
+func (a *AcapApplication) IsLicenseValid(major_version int, minor_version int) (bool, error) {
+	appId, err := strconv.Atoi(a.Manifest.ACAPPackageConf.Setup.AppID)
+	if err != nil {
+		return false, err
+	}
 	return axlicense.LicensekeyVerify(
 		a.Manifest.ACAPPackageConf.Setup.AppName,
-		a.Manifest.ACAPPackageConf.Setup.AppID,
+		appId,
 		major_version,
 		minor_version,
-	)
+	), nil
 }
 
 func (a *AcapApplication) Start() {
@@ -62,7 +75,8 @@ func (a *AcapApplication) Start() {
 
 func (a *AcapApplication) Stop() {
 	a.Mainloop.Quit()
-	a.ParamHandler.Free()
+	a.AppParamHandler.Free()
+	a.GlobalParamHandler.Free()
 	a.EventHandler.Free()
 	a.Syslog.Close()
 }

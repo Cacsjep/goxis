@@ -1,7 +1,7 @@
 package axvdo
 
 /*
-#cgo pkg-config: glib-2.0 gio-2.0 gio-unix-2.0 vdostream
+#cgo pkg-config: vdostream
 #include "vdo-types.h"
 */
 import "C"

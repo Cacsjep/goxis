@@ -32,11 +32,12 @@ type BuildConfiguration struct {
 }
 
 type BuildFlags struct {
-	Ip        string
-	Pwd       string
-	Arch      string
-	DoStart   bool
-	DoInstall bool
+	Ip           string
+	Pwd          string
+	Arch         string
+	DoStart      bool
+	DoInstall    bool
+	AppDirectory string
 }
 
 func boolToStr(b bool) string {
@@ -55,6 +56,7 @@ func buildArm64(amf *manifest.ApplicationManifestSchema, bf BuildFlags) *BuildCo
 		"PASSWORD": ptr(bf.Pwd),
 		"START":    ptr(boolToStr(bf.DoStart)),
 		"INSTALL":  ptr(boolToStr(bf.DoInstall)),
+		"GO_APP":   ptr(bf.AppDirectory),
 	}
 	return &BuildConfiguration{buildArgs: buildArgs, imageName: "acaparm64"}
 }
@@ -69,6 +71,7 @@ func buildArmv7hf(amf *manifest.ApplicationManifestSchema, bf BuildFlags) *Build
 		"PASSWORD": ptr(bf.Pwd),
 		"START":    ptr(boolToStr(bf.DoStart)),
 		"INSTALL":  ptr(boolToStr(bf.DoInstall)),
+		"GO_APP":   ptr(bf.AppDirectory),
 	}
 	return &BuildConfiguration{buildArgs: buildArgs, imageName: "acaparmv7hf"}
 }
@@ -185,11 +188,15 @@ func main() {
 	doStart := flag.Bool("start", false, "Start after install")
 	doInstall := flag.Bool("install", false, "Install on camera")
 	getPackageLog := flag.Bool("watch", false, "Watch the package log after buil")
-
+	appDirectory := flag.String("appdir", "test", "Full path of application directroy to build from")
 	flag.Parse()
 
+	if *appDirectory == "" {
+		panic("appdir must be set")
+	}
+
 	fmt.Println("### Starting ACAP Builder ###")
-	amf, err := manifest.LoadManifest("app/manifest.json")
+	amf, err := manifest.LoadManifest(*appDirectory + "/manifest.json")
 	if err != nil {
 		panic(err)
 	}
@@ -208,7 +215,7 @@ func main() {
 		panic("When install/starting/watch is used, you need to provide both ip and pwd")
 	}
 
-	bf := BuildFlags{Ip: *ip, Pwd: *pwd, DoStart: *doStart, DoInstall: *doInstall, Arch: *arch}
+	bf := BuildFlags{Ip: *ip, Pwd: *pwd, DoStart: *doStart, DoInstall: *doInstall, Arch: *arch, AppDirectory: *appDirectory}
 
 	if *arch == "aarch64" {
 		dockerBuild(buildArm64(amf, bf))

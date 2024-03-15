@@ -28,14 +28,17 @@ type AXParameter struct {
 // Creates a new AXParameter.
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axparameter/html/ax__parameter_8h.html#adf2eefe79f53d60faede33ba71d5928c
-func AXParameterNew(appName string) (*AXParameter, error) {
-	cAppName := clib.NewString(&appName)
-	defer cAppName.Free()
+func AXParameterNew(appName *string) (*AXParameter, error) {
 	cError := clib.NewError()
-	axParam := C.ax_parameter_new(
-		(*C.char)(cAppName.Ptr),
-		(**C.GError)(unsafe.Pointer(cError.Ptr)),
-	)
+	cAppNamePtr := (*C.char)(nil) // Default to nil pointer if appName is nil
+
+	if appName != nil {
+		cAppName := clib.NewString(appName)
+		defer cAppName.Free()
+		cAppNamePtr = (*C.char)(cAppName.Ptr)
+	}
+
+	axParam := C.ax_parameter_new(cAppNamePtr, (**C.GError)(unsafe.Pointer(cError.Ptr)))
 	if err := cError.IsError(); err != nil {
 		return nil, err
 	}

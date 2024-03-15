@@ -1,7 +1,7 @@
 package axvdo
 
 /*
-#cgo pkg-config: glib-2.0 gio-2.0 gio-unix-2.0 vdostream
+#cgo pkg-config: vdostream
 #include "vdo-stream.h"
 */
 import "C"
@@ -34,6 +34,7 @@ func NewStream(settings *VdoMap) (*VdoStream, error) {
 func (v *VdoStream) Unref() {
 	if v.Ptr != nil {
 		C.g_object_unref(C.gpointer(v.Ptr))
+		v.Ptr = nil
 	}
 }
 
@@ -277,6 +278,12 @@ func (v *VdoStream) BufferEnqueue(buffer *VdoBuffer) error {
 	return nil
 }
 
+type VdoErr struct {
+	Err      error
+	Code     VdoError
+	Expected bool
+}
+
 // Fetches a VdoBuffer containing a frame.
 // Stream global settings which control the behavior of this function: "socket.blocking" (default: TRUE) "socket.timeout_ms"
 // The following errors are transient: VDO_ERROR_NO_DATA Recover by fetching the next buffer.
@@ -284,11 +291,13 @@ func (v *VdoStream) BufferEnqueue(buffer *VdoBuffer) error {
 // Complete VdoStream reinitialization is necessary. All remaining errors are fatal: Complete VdoStream reinitialization is necessary.
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/vdostream/html/vdo-stream_8h.html#a021f68451699a9ca04aa0e67d9b2917e
-func (v *VdoStream) GetBuffer() (*VdoBuffer, error) {
+func (v *VdoStream) GetBuffer() (*VdoBuffer, *VdoErr) {
 	cError := clib.NewError()
-	ptr := C.vdo_stream_get_buffer(v.Ptr, (**C.GError)(unsafe.Pointer(cError.Ptr)))
-	if err := cError.IsError(); err != nil {
-		return nil, err
+	errp := (**C.GError)(unsafe.Pointer(cError.Ptr))
+	ptr := C.vdo_stream_get_buffer(v.Ptr, errp)
+	exp := VdoErrorIsExpected(errp)
+	if err, rc := cError.IsErrorReturnCode(); err != nil {
+		return nil, &VdoErr{Err: err, Code: VdoError(rc), Expected: exp}
 	}
 	return &VdoBuffer{Ptr: ptr}, nil
 }
@@ -298,11 +307,13 @@ func (v *VdoStream) GetBuffer() (*VdoBuffer, error) {
 // Free the buffer with unref.
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/vdostream/html/vdo-stream_8h.html#a4b4c0f2124280bde265491c08bd2f47c
-func Snapshot(settings *VdoMap) (*VdoBuffer, error) {
+func Snapshot(settings *VdoMap) (*VdoBuffer, *VdoErr) {
 	cError := clib.NewError()
-	ptr := C.vdo_stream_snapshot(settings.Ptr, (**C.GError)(unsafe.Pointer(cError.Ptr)))
-	if err := cError.IsError(); err != nil {
-		return nil, err
+	errp := (**C.GError)(unsafe.Pointer(cError.Ptr))
+	ptr := C.vdo_stream_snapshot(settings.Ptr, errp)
+	exp := VdoErrorIsExpected(errp)
+	if err, rc := cError.IsErrorReturnCode(); err != nil {
+		return nil, &VdoErr{Err: err, Code: VdoError(rc), Expected: exp}
 	}
 	return &VdoBuffer{Ptr: ptr}, nil
 }

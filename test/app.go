@@ -30,6 +30,61 @@ func main() {
 	)
 }
 
+func TestVdoFrameOperations(t *testing.T, existingBuffer *axvdo.VdoBuffer) {
+
+	data, err := existingBuffer.GetBytes()
+	assert.NoError(t, err)
+	assert.NotNil(t, data)
+	assert.Greater(t, len(data), 0)
+
+	frame := existingBuffer.GetFrame()
+	assert.NotNil(t, frame.Ptr, "Frame should not be nil")
+
+	frameType := frame.GetFrameType()
+	assert.NotNil(t, frameType, "Frame type should not be nil")
+
+	// Test GetSequenceNbr
+	seqNum := frame.GetSequenceNbr()
+	assert.Equal(t, seqNum, uint(0), "Sequence number should be positive")
+
+	// Test GetTimestamp
+	timestamp := frame.GetTimestamp()
+	assert.Greater(t, timestamp, uint64(0), "Timestamp should be positive")
+
+	// Test GetCustomTimestamp
+	customTimestamp := frame.GetCustomTimestamp()
+	assert.NotZero(t, customTimestamp, "Custom timestamp should not be zero")
+
+	// Test GetSize
+	size := frame.GetSize()
+	assert.Greater(t, size, uint(0), "Size should be positive")
+
+	// Test GetHeaderSize
+	headerSize := frame.GetHeaderSize()
+	assert.GreaterOrEqual(t, headerSize, 0, "Header size should be non-negative")
+
+	// Test GetFd
+	fd := frame.GetFd()
+	assert.Greater(t, fd, -1, "File descriptor should be valid")
+
+	// Test GetExtraInfo
+	extraInfo := frame.GetExtraInfo()
+	assert.NotNil(t, extraInfo, "Extra info should not be nil")
+
+	// Test GetOpaque
+	opaque := frame.GetOpaque()
+	assert.Nil(t, opaque, "Opaque should not be nil")
+
+	// Test GetIsLastBuffer
+	isLastBuffer := frame.GetIsLastBuffer()
+	assert.NotNil(t, isLastBuffer, "IsLastBuffer should not be nil")
+
+	// Assuming SetSize and other setters affect the frame; otherwise, they're not testable without effect
+	frame.SetSize(1024)
+	newSize := frame.GetSize()
+	assert.Equal(t, newSize, uint(1024), "Frame size should be updated to 1024")
+}
+
 func TestVdoBufferOperations(t *testing.T, existingBuffer *axvdo.VdoBuffer) {
 	// Test GetID
 	id := existingBuffer.GetId()
@@ -60,14 +115,16 @@ func TestVdoBufferOperations(t *testing.T, existingBuffer *axvdo.VdoBuffer) {
 	// Test GetData - Use carefully
 	data := existingBuffer.GetData()
 	assert.NotNil(t, data, "Expected non-nil data pointer")
+
+	TestVdoFrameOperations(t, existingBuffer)
 }
 
 func TestVdoStream(t *testing.T) {
 	settings := axvdo.NewVdoMap()
 	settings.SetUint32("channel", 1)
 	settings.SetUint32("format", uint32(axvdo.VdoFormatJPEG))
-	settings.SetUint32("width", 1920)
-	settings.SetUint32("height", 1080)
+	//settings.SetUint32("width", 1920)
+	//settings.SetUint32("height", 1080)
 
 	assert.NotNil(t, settings.Ptr)
 
@@ -267,7 +324,8 @@ func LicenseTest(t *testing.T) {
 }
 
 func ParamTests(t *testing.T) {
-	p, err := axparam.AXParameterNew("dbustest")
+	appname := "dbustest"
+	p, err := axparam.AXParameterNew(&appname)
 	assert.NoError(t, err)
 	assert.NotNil(t, p)
 

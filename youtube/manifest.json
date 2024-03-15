@@ -1,0 +1,21 @@
+{
+    "schemaVersion": "1.6.0",
+    "acapPackageConf": {
+        "setup": {
+            "appName": "youtube",
+            "friendlyName": "Youtube APP",
+            "vendor": "Commend Österreich GmbH",
+            "version": "1.0.1",
+            "appId": "414614",
+            "runMode": "never",
+            "embeddedSdkVersion": "3.0",
+            "user": {
+                "group": "root",
+                "username": "root"
+            }
+        },
+        "copyProtection": {
+            "method": "axis"
+        }
+    }
+}
