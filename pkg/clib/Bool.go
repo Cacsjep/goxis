@@ -1,7 +1,8 @@
 package clib
 
 /*
-#include <glib.h> // Make sure to include glib.h for gboolean definition
+#cgo pkg-config: glib-2.0
+#include <glib.h>
 #include <stdio.h>
 */
 import "C"

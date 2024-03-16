@@ -49,29 +49,31 @@ func boolToStr(b bool) string {
 
 func buildArm64(amf *manifest.ApplicationManifestSchema, bf BuildFlags) *BuildConfiguration {
 	buildArgs := map[string]*string{
-		"ARCH":     ptr("aarch64"),
-		"GO_ARCH":  ptr("arm64"),
-		"APP_NAME": ptr(amf.ACAPPackageConf.Setup.AppName),
-		"IP_ADDR":  ptr(bf.Ip),
-		"PASSWORD": ptr(bf.Pwd),
-		"START":    ptr(boolToStr(bf.DoStart)),
-		"INSTALL":  ptr(boolToStr(bf.DoInstall)),
-		"GO_APP":   ptr(bf.AppDirectory),
+		"ARCH":       ptr("aarch64"),
+		"GO_ARCH":    ptr("arm64"),
+		"APP_NAME":   ptr(amf.ACAPPackageConf.Setup.AppName),
+		"IP_ADDR":    ptr(bf.Ip),
+		"PASSWORD":   ptr(bf.Pwd),
+		"START":      ptr(boolToStr(bf.DoStart)),
+		"INSTALL":    ptr(boolToStr(bf.DoInstall)),
+		"GO_APP":     ptr(bf.AppDirectory),
+		"CROSS_FILE": ptr("cross_aarch64.txt"),
 	}
 	return &BuildConfiguration{buildArgs: buildArgs, imageName: "acaparm64"}
 }
 
 func buildArmv7hf(amf *manifest.ApplicationManifestSchema, bf BuildFlags) *BuildConfiguration {
 	buildArgs := map[string]*string{
-		"ARCH":     ptr("armv7hf"),
-		"GO_ARCH":  ptr("arm"),
-		"GO_ARM":   ptr("7"),
-		"APP_NAME": ptr(amf.ACAPPackageConf.Setup.AppName),
-		"IP_ADDR":  ptr(bf.Ip),
-		"PASSWORD": ptr(bf.Pwd),
-		"START":    ptr(boolToStr(bf.DoStart)),
-		"INSTALL":  ptr(boolToStr(bf.DoInstall)),
-		"GO_APP":   ptr(bf.AppDirectory),
+		"ARCH":       ptr("armv7hf"),
+		"GO_ARCH":    ptr("arm"),
+		"GO_ARM":     ptr("7"),
+		"APP_NAME":   ptr(amf.ACAPPackageConf.Setup.AppName),
+		"IP_ADDR":    ptr(bf.Ip),
+		"PASSWORD":   ptr(bf.Pwd),
+		"START":      ptr(boolToStr(bf.DoStart)),
+		"INSTALL":    ptr(boolToStr(bf.DoInstall)),
+		"GO_APP":     ptr(bf.AppDirectory),
+		"CROSS_FILE": ptr("cross_armv7hf.txt"),
 	}
 	return &BuildConfiguration{buildArgs: buildArgs, imageName: "acaparmv7hf"}
 }

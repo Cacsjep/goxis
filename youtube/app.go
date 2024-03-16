@@ -2,18 +2,20 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"net/http"
-	_ "net/http/pprof"
+	"os"
 
 	"github.com/Cacsjep/goxis/pkg/app"
 	"github.com/Cacsjep/goxis/pkg/axvdo"
+	"github.com/tinyzimmer/go-gst/gst"
 )
 
 func main() {
-	go func() {
-		log.Println(http.ListenAndServe("0.0.0.0:42111", nil))
-	}()
+	gst.Init(&os.Args)
+	pipeline, err := gst.NewPipelineFromString("videotestsrc ! videoconvert ! autovideosink")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(pipeline)
 	acapApp, err := app.NewAcapApplication()
 	if err != nil {
 		panic(err)
@@ -25,7 +27,7 @@ func main() {
 	}
 
 	var stream *axvdo.VdoStream
-	format := axvdo.VdoFormatJPEG
+	format := axvdo.VdoFormatH265
 	if stream, err = acapApp.NewVideoStream(app.VideoSteamConfiguration{
 		Format: &format,
 		Width:  &reso.Width,
