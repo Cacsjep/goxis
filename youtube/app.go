@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
+	"github.com/Cacsjep/goxis"
 	"github.com/Cacsjep/goxis/pkg/acap"
-	"github.com/Cacsjep/goxis/pkg/acapapp"
 )
 
 const VDO_CHANNEL = 0
@@ -22,7 +22,7 @@ var (
 )
 
 func main() {
-	if app, err = acapapp.NewAcapApplication(); err != nil {
+	if app, err = goxis.NewAcapApplication(); err != nil {
 		panic(err)
 	}
 

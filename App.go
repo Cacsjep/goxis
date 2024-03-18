@@ -6,7 +6,7 @@
 //	   AXEventHandler Instance
 //	   GMainLoop Instance
 
-package acapapp
+package goxis
 
 import (
 	"strconv"
