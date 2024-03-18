@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/Cacsjep/goxis"
 	"github.com/Cacsjep/goxis/pkg/acap"
@@ -10,9 +11,6 @@ import (
 const VDO_CHANNEL = 0
 
 var (
-	err              error
-	app              *acapapp.AcapApplication
-	stream           *acap.VdoStream
 	VDO_FORMAT       = acap.VdoFormatH265
 	VDO_H265_PROFILE = acap.VdoH265ProfileMain
 	VDO_STREAM_CFG   = acap.VideoSteamConfiguration{
@@ -22,29 +20,33 @@ var (
 )
 
 func main() {
+	var err error
+	var fp *goxis.FrameProvider
+	var app *goxis.AcapApplication
+
 	if app, err = goxis.NewAcapApplication(); err != nil {
 		panic(err)
 	}
 
-	if stream, err = acap.CreateAndStartStream(VDO_STREAM_CFG); err != nil {
+	if fp, err = goxis.NewFrameProvider(VDO_STREAM_CFG); err != nil {
 		app.Syslog.Error(err.Error())
 		panic(err)
 	}
 
+	fp.Start()
+	defer fp.Stop()
+
 	for {
-		video_frame := acap.GetVideoFrame(stream)
-		if video_frame.Error != nil {
-			if video_frame.ErrorExpected {
-				app.Syslog.Warn(fmt.Sprintf("Vdo stream error, attempting to restart stream..., %s", video_frame.Error.Error()))
-				stream, err = acap.RestartStream(stream, VDO_STREAM_CFG)
-				if err != nil {
-					app.Syslog.Warn(fmt.Sprintf("Unable to restart vdo stream, %s", err.Error()))
-				}
+		select {
+		case frame := <-fp.FrameStreamChannel:
+			if frame.Error != nil {
+				fmt.Println("ERR", frame.Error.Error())
 				continue
 			}
-			app.Syslog.Error(err.Error())
-			panic(err)
+			fmt.Println(frame.String())
+
+		case <-time.After(10 * time.Second):
+			fmt.Println("No frame received in 10 seconds.")
 		}
-		app.Syslog.Info(video_frame.String())
 	}
 }

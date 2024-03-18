@@ -83,7 +83,6 @@ type VideoFrame struct {
 	Size          uint
 	Data          []byte
 	Type          VdoFrameType
-	Info          *VdoMap
 	Error         error
 	ErrorExpected bool
 }

@@ -25,18 +25,19 @@ type FrameProvider struct {
 	restartRetries     int
 }
 
-func (fp *FrameProvider) NewFrameProvider(config acap.VideoSteamConfiguration) (*FrameProvider, error) {
-	stream, err := fp.createStream()
-	if err != nil {
-		return nil, err
-	}
-	return &FrameProvider{
-		stream:             stream,
+func NewFrameProvider(config acap.VideoSteamConfiguration) (*FrameProvider, error) {
+	fp := &FrameProvider{
 		Config:             config,
 		state:              FrameProviderStateInit,
 		FrameStreamChannel: make(chan *acap.VideoFrame, 1),
 		running:            false,
-	}, nil
+	}
+	stream, err := fp.createStream()
+	if err != nil {
+		return nil, err
+	}
+	fp.stream = stream
+	return fp, nil
 }
 
 func (fp *FrameProvider) createStream() (*acap.VdoStream, error) {
