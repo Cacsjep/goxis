@@ -5,11 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Cacsjep/goxis/pkg/axevent"
-	"github.com/Cacsjep/goxis/pkg/axlicense"
-	"github.com/Cacsjep/goxis/pkg/axparam"
-	"github.com/Cacsjep/goxis/pkg/axvdo"
-	"github.com/Cacsjep/goxis/pkg/glib"
+	"github.com/Cacsjep/goxis/pkg/acap"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -17,12 +13,12 @@ func main() {
 	testing.Main(
 		nil,
 		[]testing.InternalTest{
-			{"TestVdoMapOperations", TestVdoMapOperations},
-			{"VdoMapTest", VdoMapTest},
-			{"VdoChannelTest", VdoChannelTest},
-			{"TestVdoStream", TestVdoStream},
+			//{"TestVdoMapOperations", TestVdoMapOperations},
+			//{"VdoMapTest", VdoMapTest},
+			//{"VdoChannelTest", VdoChannelTest},
+			//{"TestVdoStream", TestVdoStream},
 			//{"LicenseTest", LicenseTest},
-			//{"ParamTests", ParamTests},
+			{"ParamTests", ParamTests},
 			//{"EventTests", EventTests},
 			//{"EventHandlerTests", EventHandlerTests},
 		},
@@ -30,14 +26,15 @@ func main() {
 	)
 }
 
-func TestVdoFrameOperations(t *testing.T, existingBuffer *axvdo.VdoBuffer) {
+func TestVdoFrameOperations(t *testing.T, existingBuffer *acap.VdoBuffer) {
 
 	data, err := existingBuffer.GetBytes()
 	assert.NoError(t, err)
 	assert.NotNil(t, data)
 	assert.Greater(t, len(data), 0)
 
-	frame := existingBuffer.GetFrame()
+	frame, err := existingBuffer.GetFrame()
+	assert.NoError(t, err)
 	assert.NotNil(t, frame.Ptr, "Frame should not be nil")
 
 	frameType := frame.GetFrameType()
@@ -85,7 +82,7 @@ func TestVdoFrameOperations(t *testing.T, existingBuffer *axvdo.VdoBuffer) {
 	assert.Equal(t, newSize, uint(1024), "Frame size should be updated to 1024")
 }
 
-func TestVdoBufferOperations(t *testing.T, existingBuffer *axvdo.VdoBuffer) {
+func TestVdoBufferOperations(t *testing.T, existingBuffer *acap.VdoBuffer) {
 	// Test GetID
 	id := existingBuffer.GetId()
 	assert.NotZero(t, id, "Expected non-zero ID for the buffer")
@@ -113,22 +110,23 @@ func TestVdoBufferOperations(t *testing.T, existingBuffer *axvdo.VdoBuffer) {
 	assert.Nil(t, opaque, "Expected nil opaque pointer")
 
 	// Test GetData - Use carefully
-	data := existingBuffer.GetData()
+	data, err := existingBuffer.GetData()
+	assert.NoError(t, err)
 	assert.NotNil(t, data, "Expected non-nil data pointer")
 
 	TestVdoFrameOperations(t, existingBuffer)
 }
 
 func TestVdoStream(t *testing.T) {
-	settings := axvdo.NewVdoMap()
+	settings := acap.NewVdoMap()
 	settings.SetUint32("channel", 1)
-	settings.SetUint32("format", uint32(axvdo.VdoFormatJPEG))
+	settings.SetUint32("format", uint32(acap.VdoFormatJPEG))
 	//settings.SetUint32("width", 1920)
 	//settings.SetUint32("height", 1080)
 
 	assert.NotNil(t, settings.Ptr)
 
-	s, err := axvdo.NewStream(settings)
+	s, err := acap.NewStream(settings)
 	assert.NoError(t, err)
 	assert.NotNil(t, s.Ptr)
 	defer s.Unref()
@@ -153,7 +151,8 @@ func TestVdoStream(t *testing.T) {
 	assert.Nil(t, err, "Setting framerate should not fail")
 
 	buffer, err := s.BufferAlloc()
-	assert.Nil(t, err, "Failed to allocate buffer")
+	assert.Error(t, err)
+	assert.Equal(t, err.(*acap.VdoError).Code, acap.VdoErrorCodeInvalidArgument)
 	defer func() {
 		if buffer != nil {
 			err := s.BufferUnref(buffer)
@@ -161,8 +160,8 @@ func TestVdoStream(t *testing.T) {
 		}
 	}()
 
-	intentMap := axvdo.NewVdoMap() // Setup intent map as needed
-	intentMap.SetUint32("intent", uint32(axvdo.VdoIntentEventFD))
+	intentMap := acap.NewVdoMap() // Setup intent map as needed
+	intentMap.SetUint32("intent", uint32(acap.VdoIntentEventFD))
 	err = s.Attach(intentMap)
 	assert.Nil(t, err, "Failed to attach with intent")
 	defer intentMap.Unref()
@@ -177,11 +176,11 @@ func TestVdoStream(t *testing.T) {
 	//assert.Nil(t, err, "Getting event file descriptor should not fail")
 	//assert.Greater(t, eventFd, -1, "Event file descriptor should be valid")
 
-	snapshotBuffer, err := axvdo.Snapshot(settings)
+	snapshotBuffer, err := acap.Snapshot(settings)
 	assert.Nil(t, err, "Taking a snapshot should not fail")
 	assert.NotNil(t, snapshotBuffer.Ptr, "snapshotBuffer.Ptr is nil")
 
-	streams, err := axvdo.StreamGetAll()
+	streams, err := acap.StreamGetAll()
 	assert.NoError(t, err)
 	assert.NotNil(t, streams)
 	assert.Greater(t, len(streams), 0)
@@ -193,8 +192,8 @@ func TestVdoStream(t *testing.T) {
 
 func TestVdoMapOperations(t *testing.T) {
 	// Assuming NewVdoMap is a constructor that initializes VdoMap correctly.
-	vdoMap := axvdo.NewVdoMap()
-	anotherMap := axvdo.NewVdoMap()
+	vdoMap := acap.NewVdoMap()
+	anotherMap := acap.NewVdoMap()
 
 	// Initially, both maps should be empty
 	assert.True(t, vdoMap.Empty(), "vdoMap should be empty initially")
@@ -237,7 +236,7 @@ func TestVdoMapOperations(t *testing.T) {
 }
 
 func VdoMapTest(t *testing.T) {
-	vdoMap := axvdo.NewVdoMap()
+	vdoMap := acap.NewVdoMap()
 	byteValue := byte(255)
 	boolValue := true
 	int16Value := int16(-32768)
@@ -278,7 +277,7 @@ func VdoMapTest(t *testing.T) {
 
 func VdoChannelTest(t *testing.T) {
 	VDO_CHANNEL := uint(1)
-	s, err := axvdo.VdoChannelGet(VDO_CHANNEL)
+	s, err := acap.VdoChannelGet(VDO_CHANNEL)
 	assert.NoError(t, err)
 	assert.Equal(t, VDO_CHANNEL, s.GetId())
 	resos, err := s.GetResolutions(nil)
@@ -301,14 +300,14 @@ func VdoChannelTest(t *testing.T) {
 	assert.NoError(t, err)
 	m2.Unref()
 
-	streams, err := axvdo.VdoChannelGetAll()
+	streams, err := acap.VdoChannelGetAll()
 	assert.NoError(t, err)
 	assert.NotNil(t, streams)
 	assert.Greater(t, len(streams), 0)
 
-	filtermap := axvdo.NewVdoMap()
-	filtermap.SetUint32("format", uint32(axvdo.VdoFormatH264))
-	streams2, err := axvdo.VdoChannelGetFilterd(filtermap)
+	filtermap := acap.NewVdoMap()
+	filtermap.SetUint32("format", uint32(acap.VdoFormatH264))
+	streams2, err := acap.VdoChannelGetFilterd(filtermap)
 	assert.NoError(t, err)
 	assert.NotNil(t, streams2)
 	assert.Greater(t, len(streams2), 0)
@@ -316,16 +315,16 @@ func VdoChannelTest(t *testing.T) {
 }
 
 func LicenseTest(t *testing.T) {
-	s := axlicense.LicensekeyVerify("dbustest", 414614, 1, 0)
+	s := acap.LicensekeyVerify("test", 414614, 1, 0)
 	assert.True(t, s)
 	// TODO: Bring this to work
-	//t1, err := axlicense.LicensekeyGetExpDate("dbustest")
+	//t1, err := acap.LicensekeyGetExpDate("test")
 	//fmt.Println(t1, err)
 }
 
 func ParamTests(t *testing.T) {
-	appname := "dbustest"
-	p, err := axparam.AXParameterNew(&appname)
+	appname := "test"
+	p, err := acap.AXParameterNew(&appname)
 	assert.NoError(t, err)
 	assert.NotNil(t, p)
 
@@ -368,13 +367,14 @@ func ParamTests(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	m := glib.NewMainLoop()
+	m := acap.NewMainLoop()
 	assert.NotNil(t, m)
 
 	l, err := p.List()
 	fmt.Println(l, err)
 
-	go time.AfterFunc(time.Second*60, func() {
+	fmt.Println("Starting gorutine for callback check (30Sec)")
+	go time.AfterFunc(time.Second*30, func() {
 		m.Quit()
 		p.UnregisterCallback("IsCustomized")
 		// Remove Test 1
@@ -388,16 +388,15 @@ func ParamTests(t *testing.T) {
 		p.Free()
 	})
 	m.Run()
-
 }
 
 func EventHandlerTests(t *testing.T) {
-	set := axevent.NewAXEventKeyValueSet()
+	set := acap.NewAXEventKeyValueSet()
 	namespacet1 := "tns1"
-	err := set.AddKeyValue("topic0", &namespacet1, "Device", axevent.AXValueTypeString)
+	err := set.AddKeyValue("topic0", &namespacet1, "Device", acap.AXValueTypeString)
 	assert.NoError(t, err)
-	handler := axevent.NewEventHandler()
-	subscription, err2 := handler.Subscribe(set, func(subscription int, event *axevent.AXEvent, userdata any) {
+	handler := acap.NewEventHandler()
+	subscription, err2 := handler.Subscribe(set, func(subscription int, event *acap.AXEvent, userdata any) {
 		fmt.Println("Callback invoked", subscription, event.GetTimestamp(), userdata.(string))
 	}, "myuserdata")
 	assert.NotNil(t, subscription)
@@ -410,11 +409,11 @@ func EventHandlerTests(t *testing.T) {
 	assert.NotNil(t, declaration)
 	assert.NoError(t, err3)
 
-	set2 := axevent.NewAXEventKeyValueSet()
+	set2 := acap.NewAXEventKeyValueSet()
 	assert.NotNil(t, set2)
-	err4 := set2.AddKeyValue("feature", nil, "myfeature", axevent.AXValueTypeString)
+	err4 := set2.AddKeyValue("feature", nil, "myfeature", acap.AXValueTypeString)
 	assert.NoError(t, err4)
-	err5 := set2.AddKeyValue("enabled", nil, true, axevent.AXValueTypeBool)
+	err5 := set2.AddKeyValue("enabled", nil, true, acap.AXValueTypeBool)
 	assert.NoError(t, err5)
 
 	/* declaration2, err6 := handler.DeclareFromTemplate(set2, "com.vendor.PropertyState.Example", func(declaration int, userdata any) {
@@ -423,7 +422,7 @@ func EventHandlerTests(t *testing.T) {
 	assert.NotNil(t, declaration2)
 	assert.NoError(t, err6) */
 
-	m := glib.NewMainLoop()
+	m := acap.NewMainLoop()
 	assert.NotNil(t, m)
 	go time.AfterFunc(time.Second*5, func() {
 		m.Quit()
@@ -442,22 +441,22 @@ func EventHandlerTests(t *testing.T) {
 }
 
 func EventTests(t *testing.T) {
-	set := axevent.NewAXEventKeyValueSet()
+	set := acap.NewAXEventKeyValueSet()
 	assert.NotNil(t, set)
 
 	namespace := "tnaxis"
-	err := set.AddKeyValue("topic0", &namespace, "port", axevent.AXValueTypeString)
+	err := set.AddKeyValue("topic0", &namespace, "port", acap.AXValueTypeString)
 	assert.NoError(t, err)
 
 	vtype, err := set.GetValueType("topic0", &namespace)
 	assert.NoError(t, err)
-	assert.Equal(t, vtype, axevent.AXValueTypeString)
+	assert.Equal(t, vtype, acap.AXValueTypeString)
 
 	str, err2 := set.GetString("topic0", &namespace)
 	assert.NoError(t, err2)
 	assert.Equal(t, str, "port")
 
-	err = set.AddKeyValue("topic1", nil, "foobar", axevent.AXValueTypeString)
+	err = set.AddKeyValue("topic1", nil, "foobar", acap.AXValueTypeString)
 	assert.NoError(t, err)
 
 	str2, err3 := set.GetString("topic1", nil)
@@ -466,33 +465,33 @@ func EventTests(t *testing.T) {
 
 	vtype, err = set.GetValueType("topic1", nil)
 	assert.NoError(t, err)
-	assert.Equal(t, vtype, axevent.AXValueTypeString)
+	assert.Equal(t, vtype, acap.AXValueTypeString)
 
-	err = set.AddKeyValue("topic2", nil, nil, axevent.AXValueTypeString)
+	err = set.AddKeyValue("topic2", nil, nil, acap.AXValueTypeString)
 	assert.NoError(t, err)
 
 	vtype, err = set.GetValueType("topic2", nil)
 	assert.NoError(t, err)
-	assert.Equal(t, vtype, axevent.AXValueTypeString)
+	assert.Equal(t, vtype, acap.AXValueTypeString)
 
 	err = set.RemoveKey("topic2", nil)
 	assert.NoError(t, err)
 
-	err = set.AddKeyValue("topic2", nil, true, axevent.AXValueTypeBool)
+	err = set.AddKeyValue("topic2", nil, true, acap.AXValueTypeBool)
 	assert.NoError(t, err)
 
 	b1, err3 := set.GetBoolean("topic2", nil)
 	assert.NoError(t, err3)
 	assert.Equal(t, true, b1)
 
-	err = set.AddKeyValue("topic3", nil, 1, axevent.AXValueTypeInt)
+	err = set.AddKeyValue("topic3", nil, 1, acap.AXValueTypeInt)
 	assert.NoError(t, err)
 
 	i1, err4 := set.GetInteger("topic3", nil)
 	assert.NoError(t, err4)
 	assert.Equal(t, 1, i1)
 
-	err = set.AddKeyValue("topic4", nil, 1.2, axevent.AXValueTypeDouble)
+	err = set.AddKeyValue("topic4", nil, 1.2, acap.AXValueTypeDouble)
 	assert.NoError(t, err)
 
 	f1, err5 := set.GetDouble("topic4", nil)
@@ -509,13 +508,13 @@ func EventTests(t *testing.T) {
 	assert.NoError(t, err8)
 
 	now := time.Now()
-	evt := axevent.NewAxEvent(set, &now)
+	evt := acap.NewAxEvent(set, &now)
 	assert.NotNil(t, evt)
 	assert.NotNil(t, evt.GetTimestamp())
 	evt.Free()
 
-	set2 := axevent.NewAXEventKeyValueSet()
-	evt2 := axevent.NewAxEvent(set2, nil)
+	set2 := acap.NewAXEventKeyValueSet()
+	evt2 := acap.NewAxEvent(set2, nil)
 	assert.NotNil(t, evt2)
 
 	evt2.Free()

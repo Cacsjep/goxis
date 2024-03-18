@@ -1,4 +1,4 @@
-ARG ARCH=aarch64
+ARG ARCH=
 ARG VERSION=1.13
 ARG UBUNTU_VERSION=22.04
 ARG REPO=axisecp
@@ -10,13 +10,17 @@ ARG ARCH
 RUN echo "Architecture is: ${ARCH}"
 ARG SDK_LIB_PATH_BASE=/opt/axis/acapsdk/sysroots/${ARCH}/usr
 RUN echo "SDK library path base is: ${SDK_LIB_PATH_BASE}"
+ARG APP_DIR=/opt/goaxis/
+RUN mkdir ${APP_DIR}
 
 # Install Meson, Ninja, and other build dependencies
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    ninja-build \
+    wget \
+    yasm \
+    nasm \
     git \
-    curl
+    build-essential 
 
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 RUN pip3 install meson>=1.1
@@ -37,31 +41,37 @@ RUN mkdir -p "${GOPATH}/src" "${GOPATH}/bin" "${GOPATH}/pkg" \
 #-------------------------------------------------------------------------------
 # Gstreamer build
 #-------------------------------------------------------------------------------
-ARG BUILD_DIR=/opt/build
-ARG GSTREAMER_VER=1.18.5
-WORKDIR ${BUILD_DIR}
-RUN git clone https://gitlab.freedesktop.org/gstreamer/gstreamer.git
-WORKDIR ${BUILD_DIR}/gstreamer
-ARG CROSS_FILE=
-COPY ./meson/${CROSS_FILE} ${BUILD_DIR}/gstreamer
-RUN apt-get update && apt-get install -y gcc g++ flex bison libfontconfig1-dev libdrm-dev --no-install-recommends 
-ARG GST_NOBUILD_MAIN="-Drtsp_server=disabled -Dlibav=disabled -Ddevtools=disabled -Dgst-examples=disabled -Dpython=disabled -Dtests=disabled -Dtools=disabled -Dexamples=disabled -Ddoc=disabled"
-ARG GST_NOBUILD_BASE_PLUGS="-Dgst-plugins-base:alsa=disabled -Dgst-plugins-base:ogg=disabled -Dgst-plugins-base:vorbis=disabled -Dgst-plugins-base:opus=disabled -Dgst-plugins-base:pango=disabled"
-ARG GST_NOBUILD_GOOD_PLUGS="-Dgst-plugins-good:vpx=disabled -Dgst-plugins-good:isomp4=disabled -Dgst-plugins-good:cairo=disabled -Dgst-plugins-good:dv=disabled -Dgst-plugins-good:flac=disabled -Dgst-plugins-good:lame=disabled -Dgst-plugins-good:png=disabled"
-ARG GST_NOBUILD_BAD_PLUGS="-Dgst-plugins-bad:nvcodec=disabled -Dgst-plugins-bad:qsv=disabled -Dgst-plugins-bad:aja=disabled -Dgst-plugins-bad:openjpeg=disabled -Dgst-plugins-bad:fdkaac=disabled -Dgst-plugins-bad:microdns=disabled -Dgst-plugins-bad:avtp=disabled -Dgst-plugins-bad:openh264=disabled"
-# Setup the Meson build directory
-RUN meson setup builddir \
-        --cross-file=${CROSS_FILE} \
-        --prefix=${SDK_LIB_PATH_BASE} \
-        --libdir=${SDK_LIB_PATH_BASE}/lib \
-        ${GST_NOBUILD_MAIN} \
-        ${GST_NOBUILD_BASE_PLUGS} \
-        ${GST_NOBUILD_GOOD_PLUGS} \
-        ${GST_NOBUILD_BAD_PLUGS}
-
-# Build and install using Ninja
-RUN ninja -C builddir && \
-    ninja -C builddir install
+ARG FF_BUILD_DIR=/opt/build
+ARG COMP_LIBAV=
+ARG FFMPEG_VERSION=5.1.4
+ARG FFMPEG_URL="https://ffmpeg.org/releases/ffmpeg-$FFMPEG_VERSION.tar.bz2"
+ARG CROSS_PREFIX=
+RUN mkdir ${FF_BUILD_DIR}
+RUN mkdir -p ${FF_BUILD_DIR} && \
+    if [ "${COMP_LIBAV}" = "YES" ]; then \
+      wget -O ffmpeg.tar.bz2 "${FFMPEG_URL}" && \
+      tar -xjf ffmpeg.tar.bz2 -C ${FF_BUILD_DIR} && \
+      cd ${FF_BUILD_DIR}/ffmpeg-${FFMPEG_VERSION} && \
+      ./configure \
+        --arch=${ARCH} \
+        --target-os=linux \
+        --cross-prefix=${CROSS_PREFIX} \
+        --enable-cross-compile \
+        --prefix=${FF_BUILD_DIR} \
+        --disable-everything \
+        --enable-parser=h264,mjpeg,hevc \
+        --enable-bsf=h264_metadata,h264_mp4toannexb \
+        --enable-protocol=file,rtmp,data \
+        --enable-encoder=h264,mjpeg,hevc \
+        --enable-decoder=h264,mjpeg,hevc \
+        --enable-muxer=flv \
+        --enable-shared && \
+      make && make install && \
+      export CGO_LDFLAGS="-L${FF_BUILD_DIR}/lib/" && \
+      export CGO_CFLAGS="-I${FF_BUILD_DIR}/include/" && \
+      mkdir -p ${APP_DIR}/lib && \
+      cp -a ${FF_BUILD_DIR}/lib/. ${APP_DIR}/lib; \
+    fi
 
 #-------------------------------------------------------------------------------
 # Perpare the ACAP Build
@@ -75,14 +85,8 @@ ARG START=
 ARG INSTALL=
 ARG GO_APP=test
 ENV GO_APP=${GO_APP}
-COPY . /opt/goaxis/
-WORKDIR /opt/goaxis/${GO_APP}
-
-#-------------------------------------------------------------------------------
-# Copy gstreamer into app directory
-#-------------------------------------------------------------------------------
-RUN mkdir -p lib && \
-    cp -a ${SDK_LIB_PATH_BASE}/lib/. lib/
+COPY . ${APP_DIR}
+WORKDIR ${APP_DIR}/${GO_APP}
 
 #-------------------------------------------------------------------------------
 # Perpare final build of golang acap app, check for install and start 
@@ -93,8 +97,7 @@ ENV GOARCH=${GO_ARCH}
 ENV GOARM=${GO_ARM}
 ENV APP_NAME=${APP_NAME}
 RUN . /opt/axis/acapsdk/environment-setup* && \
-    unset PKG_CONFIG_SYSROOT_DIR && \
-    printenv && \
+    export PKG_CONFIG_PATH=${FF_BUILD_DIR}/lib/pkgconfig:$PKG_CONFIG_PATH && \
     go build -ldflags "-s -w  -extldflags '-L./lib -Wl,-rpath,./lib'" -o ${APP_NAME} . && \
     acap-build --build no-build ./ && \
     if [ "${INSTALL}" = "YES" ]; then eap-install.sh ${IP_ADDR} ${PASSWORD} install; fi && \

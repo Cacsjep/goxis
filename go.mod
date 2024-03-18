@@ -4,6 +4,7 @@ go 1.22.0
 
 require (
 	github.com/Snawoot/go-http-digest-auth-client v1.1.3
+	github.com/asticode/go-astiav v0.13.1
 	github.com/docker/docker v25.0.4+incompatible
 	github.com/godbus/dbus/v5 v5.1.0
 	github.com/stretchr/testify v1.9.0
@@ -11,6 +12,7 @@ require (
 
 require (
 	github.com/Microsoft/go-winio v0.6.1 // indirect
+	github.com/asticode/go-astikit v0.42.0 // indirect
 	github.com/containerd/containerd v1.7.13 // indirect
 	github.com/containerd/log v0.1.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -22,7 +24,6 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/klauspost/compress v1.17.7 // indirect
-	github.com/mattn/go-pointer v0.0.1 // indirect
 	github.com/moby/patternmatcher v0.6.0 // indirect
 	github.com/moby/sys/sequential v0.5.0 // indirect
 	github.com/moby/sys/user v0.1.0 // indirect
@@ -33,8 +34,6 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
-	github.com/tinyzimmer/go-glib v0.0.25 // indirect
-	github.com/tinyzimmer/go-gst v0.2.33 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.49.0 // indirect
 	go.opentelemetry.io/otel v1.24.0 // indirect
 	go.opentelemetry.io/otel/metric v1.24.0 // indirect

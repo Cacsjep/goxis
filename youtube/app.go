@@ -2,61 +2,49 @@ package main
 
 import (
 	"fmt"
-	"os"
 
-	"github.com/Cacsjep/goxis/pkg/app"
-	"github.com/Cacsjep/goxis/pkg/axvdo"
-	"github.com/tinyzimmer/go-gst/gst"
+	"github.com/Cacsjep/goxis/pkg/acap"
+	"github.com/Cacsjep/goxis/pkg/acapapp"
+)
+
+const VDO_CHANNEL = 0
+
+var (
+	err              error
+	app              *acapapp.AcapApplication
+	stream           *acap.VdoStream
+	VDO_FORMAT       = acap.VdoFormatH265
+	VDO_H265_PROFILE = acap.VdoH265ProfileMain
+	VDO_STREAM_CFG   = acap.VideoSteamConfiguration{
+		Format:      &VDO_FORMAT,
+		H265Profile: &VDO_H265_PROFILE,
+	}
 )
 
 func main() {
-	gst.Init(&os.Args)
-	pipeline, err := gst.NewPipelineFromString("videotestsrc ! videoconvert ! autovideosink")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(pipeline)
-	acapApp, err := app.NewAcapApplication()
-	if err != nil {
+	if app, err = acapapp.NewAcapApplication(); err != nil {
 		panic(err)
 	}
 
-	reso, err := acapApp.GetVdoChannelMaxResolution(0)
-	if err != nil {
+	if stream, err = acap.CreateAndStartStream(VDO_STREAM_CFG); err != nil {
+		app.Syslog.Error(err.Error())
 		panic(err)
 	}
 
-	var stream *axvdo.VdoStream
-	format := axvdo.VdoFormatH265
-	if stream, err = acapApp.NewVideoStream(app.VideoSteamConfiguration{
-		Format: &format,
-		Width:  &reso.Width,
-		Height: &reso.Height,
-	}); err != nil {
-		panic(err)
-	}
-
-	if err = stream.Start(); err != nil {
-		panic(err)
-	}
-
-	for true {
-		buf, vdo_err := stream.GetBuffer()
-		if err != nil {
-			panic(fmt.Sprintf("Vdo Error: %s, Vdo Error Code: %d, Vdo Error Excepted: %t", vdo_err.Err.Error(), vdo_err.Code, vdo_err.Expected))
-		}
-
-		frame, err := buf.GetFrame()
-		if err != nil {
-			fmt.Println("ERROR", err)
-			continue
-		}
-
-		data, err := buf.GetBytesUnsafe()
-		if err != nil {
+	for {
+		video_frame := acap.GetVideoFrame(stream)
+		if video_frame.Error != nil {
+			if video_frame.ErrorExpected {
+				app.Syslog.Warn(fmt.Sprintf("Vdo stream error, attempting to restart stream..., %s", video_frame.Error.Error()))
+				stream, err = acap.RestartStream(stream, VDO_STREAM_CFG)
+				if err != nil {
+					app.Syslog.Warn(fmt.Sprintf("Unable to restart vdo stream, %s", err.Error()))
+				}
+				continue
+			}
+			app.Syslog.Error(err.Error())
 			panic(err)
 		}
-		fmt.Println("Got jpeg frame with size:", len(data), "TS:", frame.GetTimestamp())
-		stream.BufferUnref(buf)
+		app.Syslog.Info(video_frame.String())
 	}
 }

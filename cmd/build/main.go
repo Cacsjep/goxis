@@ -38,42 +38,48 @@ type BuildFlags struct {
 	DoStart      bool
 	DoInstall    bool
 	AppDirectory string
+	WithLibav    bool
 }
 
 func boolToStr(b bool) string {
 	if b {
 		return "YES"
 	}
+
 	return "NO"
 }
 
 func buildArm64(amf *manifest.ApplicationManifestSchema, bf BuildFlags) *BuildConfiguration {
 	buildArgs := map[string]*string{
-		"ARCH":       ptr("aarch64"),
-		"GO_ARCH":    ptr("arm64"),
-		"APP_NAME":   ptr(amf.ACAPPackageConf.Setup.AppName),
-		"IP_ADDR":    ptr(bf.Ip),
-		"PASSWORD":   ptr(bf.Pwd),
-		"START":      ptr(boolToStr(bf.DoStart)),
-		"INSTALL":    ptr(boolToStr(bf.DoInstall)),
-		"GO_APP":     ptr(bf.AppDirectory),
-		"CROSS_FILE": ptr("cross_aarch64.txt"),
+		"ARCH":         ptr("aarch64"),
+		"GO_ARCH":      ptr("arm64"),
+		"APP_NAME":     ptr(amf.ACAPPackageConf.Setup.AppName),
+		"IP_ADDR":      ptr(bf.Ip),
+		"PASSWORD":     ptr(bf.Pwd),
+		"START":        ptr(boolToStr(bf.DoStart)),
+		"INSTALL":      ptr(boolToStr(bf.DoInstall)),
+		"GO_APP":       ptr(bf.AppDirectory),
+		"CROSS_FILE":   ptr("cross_aarch64.txt"),
+		"CROSS_PREFIX": ptr("aarch64-linux-gnu-"),
+		"COMP_LIBAV":   ptr(boolToStr(bf.WithLibav)),
 	}
 	return &BuildConfiguration{buildArgs: buildArgs, imageName: "acaparm64"}
 }
 
 func buildArmv7hf(amf *manifest.ApplicationManifestSchema, bf BuildFlags) *BuildConfiguration {
 	buildArgs := map[string]*string{
-		"ARCH":       ptr("armv7hf"),
-		"GO_ARCH":    ptr("arm"),
-		"GO_ARM":     ptr("7"),
-		"APP_NAME":   ptr(amf.ACAPPackageConf.Setup.AppName),
-		"IP_ADDR":    ptr(bf.Ip),
-		"PASSWORD":   ptr(bf.Pwd),
-		"START":      ptr(boolToStr(bf.DoStart)),
-		"INSTALL":    ptr(boolToStr(bf.DoInstall)),
-		"GO_APP":     ptr(bf.AppDirectory),
-		"CROSS_FILE": ptr("cross_armv7hf.txt"),
+		"ARCH":         ptr("armv7hf"),
+		"GO_ARCH":      ptr("arm"),
+		"GO_ARM":       ptr("7"),
+		"APP_NAME":     ptr(amf.ACAPPackageConf.Setup.AppName),
+		"IP_ADDR":      ptr(bf.Ip),
+		"PASSWORD":     ptr(bf.Pwd),
+		"START":        ptr(boolToStr(bf.DoStart)),
+		"INSTALL":      ptr(boolToStr(bf.DoInstall)),
+		"GO_APP":       ptr(bf.AppDirectory),
+		"CROSS_FILE":   ptr("cross_armv7hf.txt"),
+		"CROSS_PREFIX": ptr("arm-linux-gnueabihf-"),
+		"COMP_LIBAV":   ptr(boolToStr(bf.WithLibav)),
 	}
 	return &BuildConfiguration{buildArgs: buildArgs, imageName: "acaparmv7hf"}
 }
@@ -191,6 +197,7 @@ func main() {
 	doInstall := flag.Bool("install", false, "Install on camera")
 	getPackageLog := flag.Bool("watch", false, "Watch the package log after buil")
 	appDirectory := flag.String("appdir", "test", "Full path of application directroy to build from")
+	withLibav := flag.Bool("libav", false, "Compile libav for binding it with go-astiav")
 	flag.Parse()
 
 	if *appDirectory == "" {
@@ -203,9 +210,10 @@ func main() {
 		panic(err)
 	}
 	fmt.Printf("Build: %s \n", amf.ACAPPackageConf.Setup.AppName)
-	fmt.Printf("Architecture: %s \n", amf.ACAPPackageConf.Setup.Architecture)
+	fmt.Printf("Architecture: %s \n", *arch)
 	fmt.Printf("Version: %s \n", amf.ACAPPackageConf.Setup.Version)
 	fmt.Printf("Vendor: %s \n", amf.ACAPPackageConf.Setup.Vendor)
+	fmt.Printf("Build Libav: %t \n", *withLibav)
 
 	fmt.Printf("IP: %s \n", *ip)
 	fmt.Printf("Pwd: %s \n", *pwd)
@@ -217,7 +225,7 @@ func main() {
 		panic("When install/starting/watch is used, you need to provide both ip and pwd")
 	}
 
-	bf := BuildFlags{Ip: *ip, Pwd: *pwd, DoStart: *doStart, DoInstall: *doInstall, Arch: *arch, AppDirectory: *appDirectory}
+	bf := BuildFlags{Ip: *ip, Pwd: *pwd, DoStart: *doStart, DoInstall: *doInstall, Arch: *arch, AppDirectory: *appDirectory, WithLibav: *withLibav}
 
 	if *arch == "aarch64" {
 		dockerBuild(buildArm64(amf, bf))
