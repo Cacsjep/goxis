@@ -216,8 +216,9 @@ func main() {
 			example := fmt.Sprintf("examples/%s", e)
 			buildApp(&example, arch, ip, pwd, doInstall, &doNot, &doNot, &doNot)
 		}
+	} else {
+		buildApp(appDirectory, arch, ip, pwd, doInstall, withLibav, doStart, getPackageLog)
 	}
-	buildApp(appDirectory, arch, ip, pwd, doInstall, withLibav, doStart, getPackageLog)
 }
 
 func buildApp(appDirectory *string, arch *string, ip *string, pwd *string, doInstall *bool, withLibav *bool, doStart *bool, getPackageLog *bool) {
