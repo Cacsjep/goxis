@@ -197,16 +197,21 @@ func dockerBuild(bc *BuildConfiguration) {
 }
 
 func main() {
+	showHelp := flag.Bool("h", false, "Show usage")
 	ip := flag.String("ip", "", "IP for camera where eap is installed")
 	pwd := flag.String("pwd", "", "Root password for camera where eap is installed")
 	arch := flag.String("arch", "aarch64", "ACAP Architecture: aarch64 or armv7hf")
 	doStart := flag.Bool("start", false, "Start after install")
 	doInstall := flag.Bool("install", false, "Install on camera")
 	buildExamples := flag.Bool("build-examples", false, "Build Examples")
-	getPackageLog := flag.Bool("watch", false, "Watch the package log after buil")
+	getPackageLog := flag.Bool("watch", false, "Watch the package log after build")
 	appDirectory := flag.String("appdir", "", "Full path of application directroy to build from")
 	withLibav := flag.Bool("libav", false, "Compile libav for binding it with go-astiav")
 	flag.Parse()
+	if *showHelp {
+		flag.Usage()
+		os.Exit(1)
+	}
 
 	if *appDirectory == "" {
 		if !*buildExamples {

@@ -15,3 +15,8 @@ const (
 	AXValueTypeString  AXEventValueType = AXEventValueType(C.AX_VALUE_TYPE_STRING)
 	AXValueTypeElement AXEventValueType = AXEventValueType(C.AX_VALUE_TYPE_ELEMENT)
 )
+
+var (
+	OnfivNameSpaceTns1    string = "tns1"
+	OnfivNameSpaceTnsAxis string = "tnsaxis"
+)

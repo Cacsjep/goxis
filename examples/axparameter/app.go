@@ -19,6 +19,7 @@ func main() {
 	defer app.Close()
 
 	// Parameters outside the application's group requires qualification.
+	// This could also done via vapix and dbus acap.RetrieveVapixCredentials() and acap.VapixGet()
 	if serial_nbr, err = app.ParamHandler.Get("Properties.System.SerialNumber"); err != nil {
 		app.Syslog.Error(err.Error())
 	} else {
@@ -32,7 +33,5 @@ func main() {
 
 	// Signal handler automatically internally created for SIGTERM, SIGINT
 	// This blocks now the main thread.
-	app.Start()
-
-	app.Syslog.Info("Application was stopped")
+	app.Run()
 }

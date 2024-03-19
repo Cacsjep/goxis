@@ -1,220 +1,61 @@
 
-# Nativ SDK API's
+# Goxis - The Golang AXIS Camera Framework
+Goxis provides golang bindings for AXIS ACAP,
+and some other helpers for interact with AXIS Cameras.
 
-## Axparameter
+This is a hobby project and is still in progress !
 
-https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/#parameter-api
+The acap package of goxis is the low level wrappers around ACAP.
+Goxis main package contains more high level interface to create ACAP Applications.
 
-Its possible to get any parameter (Camera, ACAP) via this API, but you can only add or set parameters,
-for your ACAP App.
-
-#### Get Parameter
+## Install
+Goxis provides also its own docker build command to easy build apps for aarch64 and armv7hf.
 ```
-if mac, err := app.ParamGet("Properties.System.SerialNumber"); err != nil {
-    app.Syslog.Error(err.Error())
-} else {
-    app.Syslog.Info(fmt.Sprintf("Mac-Address: %s", mac))
-}
-```
-
-#### Add Parameter
-```
-if err := app.ParamAdd("IsCustomized", "yes", "bool:no,yes"); err != nil {
-    app.Syslog.Error(err.Error())
-}
-```
-#### Parameter Change callback
-```
-myparam := "IsCustomized"
-if err := app.ParamAddCallback(myparam, func(name, value string, app *goxis.AcapApplication) {
-	app.Syslog.Info(fmt.Sprintf("Callback invoked for param: %s, new-value: %s", name, value))
-}); err != nil {
-	app.Syslog.Error(err.Error())
-} else {
-	app.Syslog.Info(fmt.Sprintf("Callback registerd for param: %s", myparam))
-}
+go get github.com/Cacsjep/goxis
 ```
 
 
-# Event Channels
-To enable retrival of event via an channel enable them via the AppConfiguration,
-for example to get IO events enable RegisterIOChannel.
-
-### IO Example
+## Goxisbuilder
+Goxis provides also its own docker build command to easy build apps for aarch64 and armv7hf.
 ```
-package main
-
-import (
-	"fmt"
-
-	"github.com/Cacsjep/goxis"
-)
-
-func main() {
-	app, err := goxis.NewApp(&goxis.AppConfiguration{RegisterIOChannel: true})
-	if err != nil {
-		panic(err)
-	}
-	defer app.Shutdown()
-
-	if err = app.Load(); err != nil {
-		panic(err)
-	}
-
-	go func() {
-		for {
-			select {
-			case value, ok := <-app.IoEventChannel:
-				if !ok {
-					fmt.Println("IoEventChannel closed. Exiting goroutine.")
-					return
-				}
-				fmt.Printf("IO Event | %s:%d=%t \n", value.PortTypeName, value.Port, value.State)
-			}
-		}
-	}()
-
-	app.Run()
-}
-```
-# CGI API's
-
-## Parameters
-https://www.axis.com/vapix-library/subjects/t10175981/section/t10036014/display
-
-#### Get a map of all existing parameters
-```
-paramMap, err := app.VapixParamCgiGetAll()
-if err != nil {
-    app.Syslog.Error(err.Error())
-} else {
-    app.Syslog.Info(fmt.Sprintf("I0.Appearance.Resolution: %s", paramMap["root.Image.I0.Appearance.Resolution"]))
-}
-```
-#### Update multiple params
-```
-toUpdate := []*goxis.Param{
-    {Key: "root.Audio.A0.Name", Value: "acs"},
-}
-err = app.VapixParamCgiUpdate(toUpdate)
-if err != nil {
-    app.Syslog.Error(err.Error())
-} else {
-    app.Syslog.Info("root.Audio.A0.Name update successfully")
-}
+go install github.com/Cacsjep/goxis/cmd/goxisbuilder@latest
 ```
 
-
-# VAPIX API's
-
-## Virtual Input
-https://www.axis.com/vapix-library/subjects/t10175981/section/t10074527/display?section=t10074527-t10036012
-
-#### Activate
+### Usage
 ```
-if state_changed, err := app.VapixVirtualInputChange(goxis.VIO_Activate, 2); err != nil {
-    app.Syslog.Error(err.Error())
-} else {
-    app.Syslog.Info(fmt.Sprintf("VIO 2 ON State Changed: %t", state_changed))
-}
-```
-    
+goxisbuilder -h                            
 
-#### Deactivate
-```
-if state_changed, err := app.VapixVirtualInputChange(goxis.VIO_Deactivate, 2); err != nil {
-    app.Syslog.Error(err.Error())
-} else {
-    app.Syslog.Info(fmt.Sprintf("VIO 2 OFF State Changed: %t", state_changed))
-}
-```
-    
+Usage of C:\Users\c.acs\go\bin\goxisbuilder.exe:
+  -appdir string
+        ***Full path*** of application directroy to build from
+  -arch string
+        ACAP Architecture: aarch64 or armv7hf (default "aarch64")
+  -build-examples
+        Build Examples
+  -install
+        Install on camera
 
-# Webserver with Reverse Proxy
-https://github.com/AxisCommunications/acap-native-sdk-examples/tree/main/web-server
-
-To use a webserver like fiber we use the reverse proxy support for ACAP,
-therefrore we need to declare reverseProxy item to Manifest.
-
-Currently there is now way to declare a settingsPage directly to the reverseProxy path,
-so we need a redirect.html that redirects to the correct path.
-Thats needed because we want to server our own html files and dont want that Camera Apache 
-server did this for us.
-
-### Redirect HTML
-- Create a folder called "html" in app directory and place the redirect.html in it.
-We replace the current location href with the apiPath that is configured in the Manifest.
-```
-<!DOCTYPE html>
-<html lang="en">
-<script>
-    window.onload = function() {
-        window.location.href = window.location.href.replace("redirect.html", "goxis"); // apiPath
-    }
-</script>
-</html>
+  -libav
+        Compile libav for binding it with go-astiav
+  -pwd string
+        Root password for camera where eap is installed
+  -ip string
+        IP for camera where eap is installed
+  -start
+        Start after install
+  -watch
+        Watch the package log after build
 ```
 
-### Mainfest
-Adding a reverse proxy configuration like this example shown
-```
-"configuration": {
-    "settingPage": "redirect.html",
-    "reverseProxy": [
-        {
-            "apiPath": "goxis",
-            "target": "http://localhost:2001",
-            "access": "admin"
-        }
-    ]
-}
-```
+## Examples
+Just digg into examples to see how you can use goxis.
+Currently we had:
+  - axevent 	| Demonstrate how to subscribe to an Virutal Input state change
+  - axparameter | Demonstrate how to get an parameter and listen to changes
+  - license 	| Show how to obtain the license state
+  - vdostream 	| High level wrapper demonstration to get video frames (stream)
+  - webserver   | Reverse proxy webserver with fiber
 
-### Fiber example
-An Example for an fiber webserver with embeding static files and index.html
-
-- Create a folder called "static" in app directory and place your static files in there.
-- Create and index.html file in the app directory
-```
-package main
-
-import (
-	"embed"
-	"fmt"
-	"net/http"
-
-	"github.com/Cacsjep/goxis"
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/filesystem"
-)
-
-//go:embed index.html
-var f embed.FS
-
-//go:embed static/*
-var embedDirStatic embed.FS
-
-func main() {
-	app, err := goxis.NewApp(&goxis.AppConfiguration{})
-	if err != nil {
-		panic(err)
-	}
-	defer app.Shutdown()
-	baseUrl := app.ReversProxyUrlFirstEntry()
-	fapp := fiber.New()
-	fapp.Use(baseUrl, filesystem.New(filesystem.Config{
-		Root: http.FS(f),
-	}))
-	fapp.Use(baseUrl+"/static", filesystem.New(filesystem.Config{
-		Root:       http.FS(embedDirStatic),
-		PathPrefix: "static",
-		Browse:     true,
-	}))
-	go fapp.Listen("127.0.0.1:2001")
-	fmt.Println("Start Gmain loop")
-	app.Run()
-}
-```
 
 # ACAP API Docs
 https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/
@@ -285,3 +126,8 @@ It’s recommended to use the latest manifest version available for the minimum 
 | 4.12         | 1.12                          | 11.8 and later until LTS        |
 | 4.13         | 1.13                          | 11.9 and later until LTS        |
 
+
+# Todos:
+  - Adding Storage API
+  - Adding Overlay API
+  - Adding Larod API

@@ -62,7 +62,7 @@ func (a *AcapApplication) IsLicenseValid(major_version int, minor_version int) (
 }
 
 // Start initiates the main event loop of the application, beginning its execution.
-func (a *AcapApplication) Start() {
+func (a *AcapApplication) Run() {
 	a.Mainloop.Run()
 }
 

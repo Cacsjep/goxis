@@ -53,4 +53,5 @@ func main() {
 		Browse:     true,
 	}))
 	fapp.Listen("127.0.0.1:2001")
+	app.Syslog.Info("Application was stopped")
 }
