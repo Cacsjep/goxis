@@ -44,6 +44,8 @@ type BuildFlags struct {
 var examples []string = []string{
 	"webserver",
 	"axparameter",
+	"axevent",
+	"axstorage",
 	"license",
 	"vdostream",
 }

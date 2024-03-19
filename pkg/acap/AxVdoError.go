@@ -54,6 +54,7 @@ func newVdoError(gerr *C.GError) *VdoError {
 	if gerr == nil {
 		return nil
 	}
+	defer C.g_error_free(gerr)
 	return &VdoError{Message: C.GoString(gerr.message), Code: VdoErrorCode(gerr.code), Expected: VdoErrorIsExpected(&gerr)}
 }
 

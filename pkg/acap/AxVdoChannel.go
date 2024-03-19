@@ -24,7 +24,6 @@ func VdoChannelGet(channel_nbr uint) (*VdoChannel, error) {
 	var gerr *C.GError
 	ch := C.vdo_channel_get(C.uint(channel_nbr), &gerr)
 	if ch == nil {
-		defer C.g_error_free(gerr)
 		return nil, newVdoError(gerr)
 	}
 	return &VdoChannel{Ptr: ch}, nil
@@ -46,7 +45,6 @@ func VdoChannelGetAll() ([]*VdoStream, error) {
 	)
 
 	if err := newGError(gerr); err != nil {
-		defer err.Free()
 		return streams, err
 	}
 
@@ -197,7 +195,6 @@ func (c *VdoChannel) GetSettings() (*VdoMap, error) {
 func (c *VdoChannel) SetFramerate(framerate float32) error {
 	var gerr *C.GError
 	if int(C.vdo_channel_set_framerate(c.Ptr, C.gdouble(framerate), &gerr)) == 0 {
-		defer C.g_error_free(gerr)
 		return newVdoError(gerr)
 	}
 	return nil
@@ -209,7 +206,6 @@ func (c *VdoChannel) SetFramerate(framerate float32) error {
 func (c *VdoChannel) SetSettings(settings *VdoMap) error {
 	var gerr *C.GError
 	if int(C.vdo_channel_set_settings(c.Ptr, settings.Ptr, &gerr)) == 0 {
-		defer C.g_error_free(gerr)
 		return newVdoError(gerr)
 	}
 	return nil

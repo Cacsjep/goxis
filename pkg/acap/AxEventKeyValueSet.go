@@ -44,7 +44,6 @@ func (axEventKeyValueSet *AXEventKeyValueSet) AddKeyValue(key string, namespace 
 	)
 
 	if int(success) == 0 {
-		defer C.g_error_free(gerr)
 		return newVdoError(gerr)
 	}
 	return nil
@@ -68,7 +67,6 @@ func (axEventKeyValueSet *AXEventKeyValueSet) GetValueType(key string, namespace
 	)
 
 	if int(success) == 0 {
-		defer C.g_error_free(gerr)
 		return 0, newVdoError(gerr)
 	}
 	return AXEventValueType(cValueType), nil
@@ -90,7 +88,6 @@ func (axEventKeyValueSet *AXEventKeyValueSet) GetString(key string, namespace *s
 	)
 
 	if int(success) == 0 {
-		defer C.g_error_free(gerr)
 		return "", newVdoError(gerr)
 	}
 	defer cValue.Free()
@@ -114,7 +111,6 @@ func (axEventKeyValueSet *AXEventKeyValueSet) GetInteger(key string, namespace *
 	)
 
 	if int(success) == 0 {
-		defer C.g_error_free(gerr)
 		return 0, newVdoError(gerr)
 	}
 
@@ -138,7 +134,6 @@ func (axEventKeyValueSet *AXEventKeyValueSet) GetBoolean(key string, namespace *
 	)
 
 	if int(success) == 0 {
-		defer C.g_error_free(gerr)
 		return false, newVdoError(gerr)
 	}
 
@@ -162,7 +157,6 @@ func (axEventKeyValueSet *AXEventKeyValueSet) GetDouble(key string, namespace *s
 	)
 
 	if int(success) == 0 {
-		defer C.g_error_free(gerr)
 		return 0, newVdoError(gerr)
 	}
 
@@ -189,7 +183,6 @@ func (axEventKeyValueSet *AXEventKeyValueSet) MarkAsSource(key string, namespace
 	)
 
 	if int(success) == 0 {
-		defer C.g_error_free(gerr)
 		return newVdoError(gerr)
 	}
 
@@ -214,7 +207,6 @@ func (axEventKeyValueSet *AXEventKeyValueSet) MarkAsData(key string, namespace *
 	)
 
 	if int(success) == 0 {
-		defer C.g_error_free(gerr)
 		return newVdoError(gerr)
 	}
 
@@ -238,7 +230,6 @@ func (axEventKeyValueSet *AXEventKeyValueSet) MarkAsUserDefined(key string, name
 	)
 
 	if int(success) == 0 {
-		defer C.g_error_free(gerr)
 		return newVdoError(gerr)
 	}
 
@@ -260,7 +251,6 @@ func (axEventKeyValueSet *AXEventKeyValueSet) RemoveKey(key string, namespace *s
 	)
 
 	if int(success) == 0 {
-		defer C.g_error_free(gerr)
 		return newVdoError(gerr)
 	}
 

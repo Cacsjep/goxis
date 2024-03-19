@@ -21,7 +21,6 @@ func NewStream(settings *VdoMap) (*VdoStream, error) {
 	var gerr *C.GError
 	ptr := C.vdo_stream_new(settings.Ptr, nil, &gerr)
 	if ptr == nil {
-		defer C.g_error_free(gerr)
 		return nil, newVdoError(gerr)
 	}
 	return &VdoStream{Ptr: ptr}, nil
@@ -34,7 +33,6 @@ func StreamGet(id int) (*VdoStream, error) {
 	var gerr *C.GError
 	ptr := C.vdo_stream_get(C.guint(id), &gerr)
 	if ptr == nil {
-		defer C.g_error_free(gerr)
 		return nil, newVdoError(gerr)
 	}
 	return &VdoStream{Ptr: ptr}, nil
@@ -48,7 +46,6 @@ func StreamGetAll() ([]*VdoStream, error) {
 	var gerr *C.GError
 	list_ptr := C.vdo_stream_get_all(&gerr)
 	if list_ptr == nil {
-		defer C.g_error_free(gerr)
 		return nil, newVdoError(gerr)
 	}
 	vdoStreamsPtr := uintptr(unsafe.Pointer(list_ptr))
@@ -80,7 +77,6 @@ func (v *VdoStream) GetFd() (int, error) {
 	var gerr *C.GError
 	id := int(C.vdo_stream_get_fd(v.Ptr, &gerr))
 	if id == -1 {
-		defer C.g_error_free(gerr)
 		return 0, newVdoError(gerr)
 	}
 	return id, nil
@@ -94,7 +90,6 @@ func (v *VdoStream) GetEventFd() (int, error) {
 	var gerr *C.GError
 	id := int(C.vdo_stream_get_event_fd(v.Ptr, &gerr))
 	if id == -1 {
-		defer C.g_error_free(gerr)
 		return 0, newVdoError(gerr)
 	}
 	return id, nil
@@ -108,7 +103,6 @@ func (v *VdoStream) GetInfo() (*VdoMap, error) {
 	var gerr *C.GError
 	ptr := C.vdo_stream_get_info(v.Ptr, &gerr)
 	if ptr == nil {
-		defer C.g_error_free(gerr)
 		return nil, newVdoError(gerr)
 	}
 	return &VdoMap{Ptr: ptr}, nil
@@ -122,7 +116,6 @@ func (v *VdoStream) GetSettings() (*VdoMap, error) {
 	var gerr *C.GError
 	ptr := C.vdo_stream_get_settings(v.Ptr, &gerr)
 	if ptr == nil {
-		defer C.g_error_free(gerr)
 		return nil, newVdoError(gerr)
 	}
 	return &VdoMap{Ptr: ptr}, nil
@@ -134,7 +127,6 @@ func (v *VdoStream) GetSettings() (*VdoMap, error) {
 func (v *VdoStream) SetSettings(settings *VdoMap) error {
 	var gerr *C.GError
 	if int(C.vdo_stream_set_settings(v.Ptr, settings.Ptr, &gerr)) == 0 {
-		defer C.g_error_free(gerr)
 		return newVdoError(gerr)
 	}
 	return nil
@@ -150,7 +142,6 @@ func (v *VdoStream) SetSettings(settings *VdoMap) error {
 func (v *VdoStream) SetFramerate(framerate float64) error {
 	var gerr *C.GError
 	if int(C.vdo_stream_set_framerate(v.Ptr, C.gdouble(framerate), &gerr)) == 0 {
-		defer C.g_error_free(gerr)
 		return newVdoError(gerr)
 	}
 	return nil
@@ -173,7 +164,6 @@ func (v *VdoStream) SetFramerate(framerate float64) error {
 func (v *VdoStream) Attach(intent *VdoMap) error {
 	var gerr *C.GError
 	if int(C.vdo_stream_attach(v.Ptr, intent.Ptr, &gerr)) == 0 {
-		defer C.g_error_free(gerr)
 		return newVdoError(gerr)
 	}
 	return nil
@@ -185,7 +175,6 @@ func (v *VdoStream) Attach(intent *VdoMap) error {
 func (v *VdoStream) Start() error {
 	var gerr *C.GError
 	if int(C.vdo_stream_start(v.Ptr, &gerr)) == 0 {
-		defer C.g_error_free(gerr)
 		return newVdoError(gerr)
 	}
 	return nil
@@ -206,7 +195,6 @@ func (v *VdoStream) Stop() {
 func (v *VdoStream) ForceKeyFrame() error {
 	var gerr *C.GError
 	if int(C.vdo_stream_force_key_frame(v.Ptr, &gerr)) == 0 {
-		defer C.g_error_free(gerr)
 		return newVdoError(gerr)
 	}
 	return nil
@@ -228,7 +216,6 @@ func (v *VdoStream) BufferAlloc() (*VdoBuffer, error) {
 	var gerr *C.GError
 	ptr := C.vdo_stream_buffer_alloc(v.Ptr, nil, &gerr)
 	if ptr == nil {
-		defer C.g_error_free(gerr)
 		return nil, newVdoError(gerr)
 	}
 	return &VdoBuffer{Ptr: ptr}, nil
@@ -244,7 +231,6 @@ func (v *VdoStream) BufferAlloc() (*VdoBuffer, error) {
 func (v *VdoStream) BufferUnref(buffer *VdoBuffer) error {
 	var gerr *C.GError
 	if int(C.vdo_stream_buffer_unref(v.Ptr, &buffer.Ptr, &gerr)) == 0 {
-		defer C.g_error_free(gerr)
 		return newVdoError(gerr)
 	}
 	return nil
@@ -257,7 +243,6 @@ func (v *VdoStream) BufferUnref(buffer *VdoBuffer) error {
 func (v *VdoStream) BufferEnqueue(buffer *VdoBuffer) error {
 	var gerr *C.GError
 	if int(C.vdo_stream_buffer_enqueue(v.Ptr, buffer.Ptr, &gerr)) == 0 {
-		defer C.g_error_free(gerr)
 		return newVdoError(gerr)
 	}
 	return nil
@@ -274,7 +259,6 @@ func (v *VdoStream) GetBuffer() (*VdoBuffer, error) {
 	var gerr *C.GError
 	ptr := C.vdo_stream_get_buffer(v.Ptr, &gerr)
 	if ptr == nil {
-		defer C.g_error_free(gerr)
 		return nil, newVdoError(gerr)
 	}
 	return &VdoBuffer{Ptr: ptr}, nil
@@ -289,7 +273,6 @@ func Snapshot(settings *VdoMap) (*VdoBuffer, error) {
 	var gerr *C.GError
 	ptr := C.vdo_stream_snapshot(settings.Ptr, &gerr)
 	if ptr == nil {
-		defer C.g_error_free(gerr)
 		return nil, newVdoError(gerr)
 	}
 	return &VdoBuffer{Ptr: ptr}, nil
@@ -306,7 +289,6 @@ func (v *VdoStream) GetEvent() (*VdoMap, error) {
 	var gerr *C.GError
 	ptr := C.vdo_stream_get_event(v.Ptr, &gerr)
 	if ptr == nil {
-		defer C.g_error_free(gerr)
 		return nil, newVdoError(gerr)
 	}
 	return &VdoMap{Ptr: ptr}, nil

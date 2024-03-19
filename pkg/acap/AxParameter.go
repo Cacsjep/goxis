@@ -33,7 +33,6 @@ func AXParameterNew(appName *string) (*AXParameter, error) {
 	defer cAppName.Free()
 
 	if axParam = C.ax_parameter_new(cAppName.Ptr, &gerr); axParam == nil {
-		defer C.g_error_free(gerr)
 		return nil, newGError(gerr)
 	}
 
@@ -50,7 +49,6 @@ func (axp *AXParameter) Add(name string, initialValue string, ptype string) erro
 	cptype := newString(&ptype)
 	axp.cStrings = append(axp.cStrings, cName, cInitialValue, cptype)
 	if int(C.ax_parameter_add(axp.Ptr, cName.Ptr, cInitialValue.Ptr, cptype.Ptr, &gerr)) == 0 {
-		defer C.g_error_free(gerr)
 		return newGError(gerr)
 	}
 	return nil
@@ -64,7 +62,6 @@ func (axp *AXParameter) Remove(name string) error {
 	defer cName.Free()
 	var gerr *C.GError
 	if int(C.ax_parameter_remove(axp.Ptr, cName.Ptr, &gerr)) == 0 {
-		defer C.g_error_free(gerr)
 		return newGError(gerr)
 	}
 	return nil
@@ -79,7 +76,6 @@ func (axp *AXParameter) Set(name string, value string, doSync bool) error {
 	var gerr *C.GError
 	axp.cStrings = append(axp.cStrings, cName, cValue)
 	if int(C.ax_parameter_set(axp.Ptr, cName.Ptr, cValue.Ptr, goBooleanToC(doSync), &gerr)) == 0 {
-		defer C.g_error_free(gerr)
 		return newGError(gerr)
 	}
 	return nil
@@ -96,7 +92,6 @@ func (axp *AXParameter) Get(name string) (string, error) {
 	defer cValue.Free()
 	var gerr *C.GError
 	if int(C.ax_parameter_get(axp.Ptr, cName.Ptr, cValue.Ptr, &gerr)) == 0 {
-		defer C.g_error_free(gerr)
 		return "", newGError(gerr)
 	}
 	return cValue.ToGolang(), nil
@@ -120,7 +115,6 @@ func (axp *AXParameter) List() ([]string, error) {
 	defer C.g_list_free_full(gList, (C.GDestroyNotify)(C.g_free))
 
 	if err := newGError(gerr); err != nil {
-		defer err.Free()
 		return params, err
 	}
 
@@ -173,7 +167,6 @@ func (axp *AXParameter) RegisterCallback(name string, callback ParameterCallback
 	)
 
 	if int(success) == 0 {
-		defer C.g_error_free(gerr)
 		return newGError(gerr)
 	}
 

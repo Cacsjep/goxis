@@ -41,7 +41,6 @@ func NewEventHandler() *AXEventHandler {
 func (ev *AXEventHandler) SendEvent(declaration int, evt *AXEvent) error {
 	var gerr *C.GError
 	if int(C.ax_event_handler_send_event(ev.Ptr, C.guint(declaration), evt.Ptr, &gerr)) == 0 {
-		defer C.g_error_free(gerr)
 		return newGError(gerr)
 	}
 	return nil
@@ -57,7 +56,6 @@ func (evt *AXEventHandler) Undeclare(declaration int) error {
 		delete(evt.declarationCompleteHandles, declaration)
 	}
 	if int(C.ax_event_handler_undeclare(evt.Ptr, C.guint(declaration), &gerr)) == 0 {
-		defer C.g_error_free(gerr)
 		return newGError(gerr)
 	}
 	return nil
@@ -101,7 +99,6 @@ func (eh *AXEventHandler) Subscribe(kvs *AXEventKeyValueSet, callback Subscripti
 		(C.gpointer)(unsafe.Pointer(handle)),
 		&gerr,
 	)) == 0 {
-		defer C.g_error_free(gerr)
 		return 0, newGError(gerr)
 	}
 
@@ -147,7 +144,6 @@ func (eh *AXEventHandler) Declare(keyValueSet *AXEventKeyValueSet, stateless boo
 		(C.gpointer)(unsafe.Pointer(handle)),
 		&gerr,
 	)) == 0 {
-		defer C.g_error_free(gerr)
 		return 0, newGError(gerr)
 	}
 
@@ -175,7 +171,6 @@ func (eh *AXEventHandler) DeclareFromTemplate(keyValueSet *AXEventKeyValueSet, t
 		(C.gpointer)(unsafe.Pointer(handle)),
 		&gerr,
 	)) == 0 {
-		defer C.g_error_free(gerr)
 		return 0, newVdoError(gerr)
 	}
 
@@ -193,7 +188,6 @@ func (eh *AXEventHandler) Unsubscribe(subscription int) error {
 		delete(eh.subscriptionHandles, subscription)
 	}
 	if int(C.ax_event_handler_unsubscribe(eh.Ptr, C.guint(subscription), &gerr)) == 0 {
-		defer C.g_error_free(gerr)
 		return newVdoError(gerr)
 	}
 	return nil

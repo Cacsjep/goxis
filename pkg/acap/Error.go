@@ -18,7 +18,9 @@ func newGError(gerr *C.GError) *GError {
 	if gerr == nil {
 		return nil
 	}
-	return &GError{Message: C.GoString(gerr.message), Code: int(gerr.code), Ptr: gerr}
+	err := &GError{Message: C.GoString(gerr.message), Code: int(gerr.code), Ptr: gerr}
+	defer err.Free()
+	return err
 }
 
 func (e *GError) Error() string {
