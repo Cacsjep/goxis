@@ -121,7 +121,7 @@ func (m *VdoMap) GetByte(name string, def byte) byte {
 func (m *VdoMap) GetBoolean(name string, def bool) bool {
 	cName := newString(&name)
 	defer cName.Free()
-	return C.vdo_map_get_boolean(m.Ptr, cName.Ptr, GoBooleanToC(def)) != C.FALSE
+	return C.vdo_map_get_boolean(m.Ptr, cName.Ptr, goBooleanToC(def)) != C.FALSE
 }
 
 // GetInt16 gets a int16 value by name from VdoMap.
@@ -194,7 +194,7 @@ func (m *VdoMap) SetByte(name string, value byte) {
 func (m *VdoMap) SetBoolean(name string, value bool) {
 	cName := newString(&name)
 	defer cName.Free()
-	C.vdo_map_set_boolean(m.Ptr, cName.Ptr, GoBooleanToC(value))
+	C.vdo_map_set_boolean(m.Ptr, cName.Ptr, goBooleanToC(value))
 }
 
 // SetInt16 sets an int16 value by name in VdoMap.

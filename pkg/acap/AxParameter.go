@@ -19,7 +19,7 @@ import (
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axparameter/html/ax__parameter_8h.html#a454ef604d7741f45804e708a56f7bf24
 type AXParameter struct {
 	Ptr              *C.AXParameter
-	cStrings         []*CString
+	cStrings         []*cString
 	parameterHandles map[string]cgo.Handle
 }
 
@@ -78,7 +78,7 @@ func (axp *AXParameter) Set(name string, value string, doSync bool) error {
 	cValue := newString(&value)
 	var gerr *C.GError
 	axp.cStrings = append(axp.cStrings, cName, cValue)
-	if int(C.ax_parameter_set(axp.Ptr, cName.Ptr, cValue.Ptr, GoBooleanToC(doSync), &gerr)) == 0 {
+	if int(C.ax_parameter_set(axp.Ptr, cName.Ptr, cValue.Ptr, goBooleanToC(doSync), &gerr)) == 0 {
 		defer C.g_error_free(gerr)
 		return newGError(gerr)
 	}

@@ -1,12 +1,3 @@
-// Package glib provides Go bindings for GLib, a low-level core library that forms the basis
-// for projects such as GTK+ and GNOME. It provides data structure handling for C, portability
-// wrappers, and interfaces for such runtime functionality as an event loop, threads, dynamic
-// loading, and an object system.
-//
-// This particular implementation focuses on the GMainLoop functionality, enabling the creation,
-// control, and cleanup of main event loops within Go applications using GLib.
-//
-// The use of this package requires the GLib library to be installed on your system.
 package acap
 
 /*

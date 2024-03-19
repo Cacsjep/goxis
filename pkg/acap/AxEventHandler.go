@@ -141,7 +141,7 @@ func (eh *AXEventHandler) Declare(keyValueSet *AXEventKeyValueSet, stateless boo
 	if int(C.ax_event_handler_declare(
 		eh.Ptr,
 		keyValueSet.Ptr,
-		GoBooleanToC(stateless),
+		goBooleanToC(stateless),
 		&cdeclaration,
 		(C.AXDeclarationCompleteCallback)(C.GoDeclarationCompleteCallback),
 		(C.gpointer)(unsafe.Pointer(handle)),

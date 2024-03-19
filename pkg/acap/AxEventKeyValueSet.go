@@ -12,7 +12,7 @@ import (
 // https://axiscommunications.github.io/acap-documentation/3.5/api/axevent/html/ax__event__key__value__set_8h.html
 type AXEventKeyValueSet struct {
 	Ptr      *C.AXEventKeyValueSet
-	cStrings []*CString
+	cStrings []*cString
 }
 
 // Creates a new AXEventKeyValueSet
