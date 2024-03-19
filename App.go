@@ -1,6 +1,8 @@
 package goxis
 
 import (
+	"errors"
+	"fmt"
 	"strconv"
 
 	"github.com/Cacsjep/goxis/pkg/acap"
@@ -88,4 +90,15 @@ func (a *AcapApplication) GetSnapshot(video_channel int) ([]byte, error) {
 	defer snapshotBuffer.Unref() // Ensure the snapshot buffer is unreferenced after use.
 
 	return snapshotBuffer.GetBytes() // Return the snapshot data.
+}
+
+// AcapWebBaseUri returns the base path for an webserver that is used with reverse proxy
+// reverse proxy uri for acap are:
+// /local/<appname>/<apipath>
+func (a *AcapApplication) AcapWebBaseUri() (string, error) {
+	if len(a.Manifest.ACAPPackageConf.Configuration.ReverseProxy) == 0 {
+		return "", errors.New("No reverse proxy configuration set in manifest")
+	}
+	pkgcfg := a.Manifest.ACAPPackageConf
+	return fmt.Sprintf("/local/%s/%s", pkgcfg.Setup.AppName, pkgcfg.Configuration.ReverseProxy[0].ApiPath), nil
 }

@@ -1,0 +1,24 @@
+{
+    "schemaVersion": "1.6.0",
+    "acapPackageConf": {
+        "setup": {
+            "friendlyName": "Goxis Reverse Proxy Webserver Example",
+            "appName": "webserverexample",
+            "vendor": "Goxis",
+            "embeddedSdkVersion": "3.0",
+            "runMode": "never",
+            "version": "1.0.0",
+            "appId": "0"
+        },
+        "configuration": {
+            "settingPage": "redirect.html",
+            "reverseProxy": [
+                {
+                    "apiPath": "goxis",
+                    "target": "http://localhost:2001",
+                    "access": "admin"
+                }
+            ]
+        }
+    }
+}
