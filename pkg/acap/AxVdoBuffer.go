@@ -104,13 +104,13 @@ func (b *VdoBuffer) GetBytes() ([]byte, error) {
 		return nil, errors.New("Get data of buffer returns a nil pointer !")
 	}
 	size := b.GetCapacity()
-	data := make([]byte, size)
 	if size > 0 {
+		data := make([]byte, size)
 		C.memcpy(unsafe.Pointer(&data[0]), dataPtr, C.size_t(size))
+		return data, nil
 	} else {
 		return nil, errors.New("Size of buffer is 0")
 	}
-	return data, nil
 }
 
 // GetBytes returns the data of the VdoBuffer as a directly mapped byte slice.

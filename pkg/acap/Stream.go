@@ -77,6 +77,45 @@ type VideoSteamConfiguration struct {
 	AbrRetention_time *uint32 // Retention time in seconds
 }
 
+type StreamStats struct {
+	Bitrate                       uint32
+	BufferType                    string
+	Channel                       uint32
+	Format                        uint32
+	Framerate                     uint32
+	GOPLength                     uint32
+	H26xIntraRefresh              uint32
+	Height                        uint32
+	HorizontalFlip                bool
+	ID                            uint32
+	InitialBitrate                uint32
+	InitialQPb                    uint32
+	InitialQPi                    uint32
+	InitialQPp                    uint32
+	Overlays                      string
+	Peers                         uint32
+	QPb                           uint32
+	QPi                           uint32
+	QPp                           uint32
+	Rotation                      uint32
+	Running                       bool
+	SquarePixel                   uint32
+	StatisticsAccumulatedBytes    uint64
+	StatisticsAccumulatedIDRBytes uint64
+	StatisticsBitCount            uint32
+	StatisticsBitrate             uint32
+	StatisticsDuration            int64
+	StatisticsDynamicFramerate    uint32
+	StatisticsFailedFrames        uint32
+	StatisticsFrameCount          uint32
+	StatisticsFramerate           uint32
+	StatisticsIDRFrameCount       uint32
+	StatisticsLastFrameTS         uint64
+	StatisticsReclaimCount        uint32
+	Width                         uint32
+	ZipProfile                    uint32
+}
+
 type VideoFrame struct {
 	SequenceNbr   uint
 	Timestamp     time.Time
@@ -232,4 +271,11 @@ func CreateAndStartStream(stream_cfg VideoSteamConfiguration) (*VdoStream, error
 		return nil, err
 	}
 	return stream, nil
+}
+
+func (vsc *VideoSteamConfiguration) GetChannel() int {
+	if vsc.Channel != nil {
+		return *vsc.Channel
+	}
+	return 0
 }
