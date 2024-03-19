@@ -41,6 +41,12 @@ type BuildFlags struct {
 	WithLibav    bool
 }
 
+var examples []string = []string{
+	"axparameter",
+	"license",
+	"vdostream",
+}
+
 func boolToStr(b bool) string {
 	if b {
 		return "YES"
@@ -195,15 +201,26 @@ func main() {
 	arch := flag.String("arch", "aarch64", "ACAP Architecture: aarch64 or armv7hf")
 	doStart := flag.Bool("start", false, "Start after install")
 	doInstall := flag.Bool("install", false, "Install on camera")
+	buildExamples := flag.Bool("build-examples", false, "Build Examples")
 	getPackageLog := flag.Bool("watch", false, "Watch the package log after buil")
-	appDirectory := flag.String("appdir", "test", "Full path of application directroy to build from")
+	appDirectory := flag.String("appdir", "", "Full path of application directroy to build from")
 	withLibav := flag.Bool("libav", false, "Compile libav for binding it with go-astiav")
 	flag.Parse()
 
 	if *appDirectory == "" {
-		panic("appdir must be set")
+		if !*buildExamples {
+			panic("appdir must be set")
+		}
+		for _, e := range examples {
+			doNot := false
+			example := fmt.Sprintf("examples/%s", e)
+			buildApp(&example, arch, ip, pwd, doInstall, &doNot, &doNot, &doNot)
+		}
 	}
+	buildApp(appDirectory, arch, ip, pwd, doInstall, withLibav, doStart, getPackageLog)
+}
 
+func buildApp(appDirectory *string, arch *string, ip *string, pwd *string, doInstall *bool, withLibav *bool, doStart *bool, getPackageLog *bool) {
 	fmt.Println("### Starting ACAP Builder ###")
 	amf, err := manifest.LoadManifest(*appDirectory + "/manifest.json")
 	if err != nil {
@@ -255,7 +272,6 @@ func main() {
 			}
 		}
 	}
-
 }
 
 func ptr(s string) *string {

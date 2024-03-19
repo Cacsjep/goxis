@@ -9,25 +9,14 @@ import (
 var (
 	err        error
 	serial_nbr string
-	// High level acap wrapper
-	app *goxis.AcapApplication
+	app        *goxis.AcapApplication
 )
 
 func main() {
-	// Creates a new ACAP Application based on manifest
-	// Internal it creates:
-	//    Syslog instance
-	//    AxParamter instance
-	//    AxEventHandler instance
-	//    Gmainloop instance
 	if app, err = goxis.NewAcapApplication(); err != nil {
 		panic(err)
 	}
 	defer app.Close()
-
-	// Use of ParamHandler
-	// ParamHandler has all axparameter functions wrapped for golang.
-	// Add, Get, Set, List or callback registering.
 
 	// Parameters outside the application's group requires qualification.
 	if serial_nbr, err = app.ParamHandler.Get("Properties.System.SerialNumber"); err != nil {
@@ -42,8 +31,8 @@ func main() {
 	}, "myuserdata")
 
 	// Signal handler automatically internally created for SIGTERM, SIGINT
-	// This blocks not the main thread
-	app.Mainloop.Run()
+	// This blocks now the main thread.
+	app.Start()
 
 	app.Syslog.Info("Application was stopped")
 }

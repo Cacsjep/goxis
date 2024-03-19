@@ -7,35 +7,44 @@ import (
 	"github.com/Cacsjep/goxis/pkg/acap"
 )
 
+// FrameProviderState defines the possible states of a FrameProvider.
 type FrameProviderState int
 
 const (
+	// FrameProviderStateError indicates an error state where the frame provider cannot recover without intervention.
 	FrameProviderStateError FrameProviderState = iota
+	// FrameProviderStateStopped indicates the frame provider is stopped and not currently providing frames.
 	FrameProviderStateStopped
+	// FrameProviderStateStarted indicates the frame provider is actively providing frames.
 	FrameProviderStateStarted
+	// FrameProviderStateRestarting indicates the frame provider is in the process of restarting.
 	FrameProviderStateRestarting
+	// FrameProviderStateInit indicates the frame provider is initialized but not yet started.
 	FrameProviderStateInit
+	// MaxRestartRetries defines the maximum number of restart attempts for the frame provider before entering an error state.
 	MaxRestartRetries int = 4
 )
 
+// FrameProvider encapsulates the management of video frame streaming, including starting, stopping, and restarting the stream.
 type FrameProvider struct {
-	Config             acap.VideoSteamConfiguration
-	stream             *acap.VdoStream
-	state              FrameProviderState
-	running            bool
-	FrameStreamChannel chan *acap.VideoFrame
-	restartRetries     int
-	app                *AcapApplication
+	Config             acap.VideoSteamConfiguration // Configuration for the video stream.
+	stream             *acap.VdoStream              // Internal video stream reference.
+	state              FrameProviderState           // Current state of the frame provider.
+	running            bool                         // Flag indicating whether the frame provider is actively running.
+	FrameStreamChannel chan *acap.VideoFrame        // Channel for delivering video frames to consumers.
+	restartRetries     int                          // Counter for the number of restart attempts.
+	app                *AcapApplication             // Reference to the application managing this frame provider.
 }
 
+// FrameProviderStats provides statistical information about the operation of a FrameProvider.
 type FrameProviderStats struct {
-	InternalChannelBufferLen int
-	RestartRetries           int
-	StreamStats              acap.StreamStats
+	InternalChannelBufferLen int              // The current length of the frame stream channel buffer.
+	RestartRetries           int              // The number of restart attempts made since the last successful start.
+	StreamStats              acap.StreamStats // Statistics gathered from the video stream.
 }
 
-// Provides a golang channels based recv way to interact with vdo
-// It automatically restarts stream when VDO is in maintance
+// NewFrameProvider initializes a new FrameProvider with the given configuration and application context.
+// It prepares the frame provider for operation but does not start streaming frames until Start is called.
 func (a *AcapApplication) NewFrameProvider(config acap.VideoSteamConfiguration) (*FrameProvider, error) {
 	fp := &FrameProvider{
 		Config:             config,
@@ -52,10 +61,15 @@ func (a *AcapApplication) NewFrameProvider(config acap.VideoSteamConfiguration) 
 	return fp, nil
 }
 
+// createStream initializes the video stream based on the FrameProvider's configuration.
+// This is a helper method used internally by the FrameProvider.
 func (fp *FrameProvider) createStream() (*acap.VdoStream, error) {
 	return acap.NewVideoStreamFromConfig(fp.Config)
 }
 
+// Start begins the frame streaming process, marking the FrameProvider as running and initiating the frame fetching loop.
+// If an error occurs while starting the stream, it returns the error without altering the provider's state.
+// Handles automatic restart in case of an expected Vdo error
 func (fp *FrameProvider) Start() error {
 	if err := fp.stream.Start(); err != nil {
 		return err
@@ -96,6 +110,7 @@ func (fp *FrameProvider) Start() error {
 	return nil
 }
 
+// Stop halts the frame streaming process, changing the state of the FrameProvider to stopped and cleaning up resources.
 func (fp *FrameProvider) Stop() {
 	fp.running = false
 	fp.state = FrameProviderStateStopped
@@ -104,6 +119,8 @@ func (fp *FrameProvider) Stop() {
 	fp.app.Syslog.Info(fmt.Sprintf("VDO Channel(%d): Stream is stopped", fp.Config.GetChannel()))
 }
 
+// Restart attempts to restart the video stream, first stopping the current stream and then re-initializing and starting a new stream.
+// It applies a delay before attempting the restart to give the system time to release resources.
 func (fp *FrameProvider) Restart() error {
 	time.Sleep(time.Second * 2)
 	fp.app.Syslog.Info(fmt.Sprintf("VDO Channel(%d): Try to restart stream", fp.Config.GetChannel()))
@@ -116,14 +133,17 @@ func (fp *FrameProvider) Restart() error {
 	return fp.stream.Start()
 }
 
+// State returns the current state of the FrameProvider, providing insight into whether it's running, stopped, or in an error state.
 func (fp *FrameProvider) State() FrameProviderState {
 	return fp.state
 }
 
+// IsRunning checks if the FrameProvider is currently active and streaming frames.
 func (fp *FrameProvider) IsRunning() bool {
 	return fp.running
 }
 
+// Stats gathers and returns statistical information about the frame provider's operation, including internal buffer lengths and stream statistics.
 func (fp *FrameProvider) Stats() (*FrameProviderStats, error) {
 	m, err := fp.stream.GetInfo()
 	if err != nil {

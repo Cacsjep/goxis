@@ -7,18 +7,10 @@ import (
 var (
 	err     error
 	isValid bool
-	// High level acap wrapper
-	app *goxis.AcapApplication
+	app     *goxis.AcapApplication
 )
 
 func main() {
-	// Creates a new ACAP Application based on manifest
-	// Internal it creates:
-	//    Syslog instance
-	//    AxParamter instance
-	//    AxEventHandler instance
-	//    Gmainloop instance
-	// In this example we just need the IsLicenseValid from the AcapApplication
 	if app, err = goxis.NewAcapApplication(); err != nil {
 		panic(err)
 	}

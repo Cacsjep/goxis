@@ -77,60 +77,103 @@ type VideoSteamConfiguration struct {
 	AbrRetention_time *uint32 // Retention time in seconds
 }
 
+// StreamStats holds statistical information about a video stream, including metrics such as bitrate, frame rate, resolution, and more.
+// It provides a detailed view of the stream's current configuration and performance.
 type StreamStats struct {
-	Bitrate                       uint32
-	BufferType                    string
-	Channel                       uint32
-	Format                        uint32
-	Framerate                     uint32
-	GOPLength                     uint32
-	H26xIntraRefresh              uint32
-	Height                        uint32
-	HorizontalFlip                bool
-	ID                            uint32
-	InitialBitrate                uint32
-	InitialQPb                    uint32
-	InitialQPi                    uint32
-	InitialQPp                    uint32
-	Overlays                      string
-	Peers                         uint32
-	QPb                           uint32
-	QPi                           uint32
-	QPp                           uint32
-	Rotation                      uint32
-	Running                       bool
-	SquarePixel                   uint32
-	StatisticsAccumulatedBytes    uint64
+	// Bitrate of the video stream in bits per second.
+	Bitrate uint32
+	// BufferType describes the type of buffering strategy used for the stream.
+	BufferType string
+	// Channel represents the specific channel or stream identifier.
+	Channel uint32
+	// Format specifies the video format used in the stream.
+	Format uint32
+	// Framerate is the number of frames per second in the video stream.
+	Framerate uint32
+	// GOPLength represents the length of a Group of Pictures in frames.
+	GOPLength uint32
+	// H26xIntraRefresh indicates the intra refresh rate for H.264/H.265 video streams.
+	H26xIntraRefresh uint32
+	// Height of the video stream in pixels.
+	Height uint32
+	// HorizontalFlip indicates whether the video stream is flipped horizontally.
+	HorizontalFlip bool
+	// ID is a unique identifier for the stream.
+	ID uint32
+	// InitialBitrate is the initial bitrate of the video stream in bits per second.
+	InitialBitrate uint32
+	// InitialQPb is the initial quantization parameter for B-frames.
+	InitialQPb uint32
+	// InitialQPi is the initial quantization parameter for I-frames.
+	InitialQPi uint32
+	// InitialQPp is the initial quantization parameter for P-frames.
+	InitialQPp uint32
+	// Overlays describes any overlays applied to the video stream.
+	Overlays string
+	// Peers represents the number of peers connected to the video stream.
+	Peers uint32
+	// QPb is the current quantization parameter for B-frames.
+	QPb uint32
+	// QPi is the current quantization parameter for I-frames.
+	QPi uint32
+	// QPp is the current quantization parameter for P-frames.
+	QPp uint32
+	// Rotation indicates the rotation applied to the video stream, in degrees.
+	Rotation uint32
+	// Running indicates whether the video stream is currently active.
+	Running bool
+	// SquarePixel indicates whether square pixels are used in the video stream.
+	SquarePixel uint32
+	// StatisticsAccumulatedBytes is the total number of bytes processed by the stream.
+	StatisticsAccumulatedBytes uint64
+	// StatisticsAccumulatedIDRBytes is the total number of IDR frame bytes processed by the stream.
 	StatisticsAccumulatedIDRBytes uint64
-	StatisticsBitCount            uint32
-	StatisticsBitrate             uint32
-	StatisticsDuration            int64
-	StatisticsDynamicFramerate    uint32
-	StatisticsFailedFrames        uint32
-	StatisticsFrameCount          uint32
-	StatisticsFramerate           uint32
-	StatisticsIDRFrameCount       uint32
-	StatisticsLastFrameTS         uint64
-	StatisticsReclaimCount        uint32
-	Width                         uint32
-	ZipProfile                    uint32
+	// StatisticsBitCount is the total number of bits processed by the stream.
+	StatisticsBitCount uint32
+	// StatisticsBitrate is the current bitrate of the video stream in bits per second.
+	StatisticsBitrate uint32
+	// StatisticsDuration is the total duration of video processed by the stream, in milliseconds.
+	StatisticsDuration int64
+	// StatisticsDynamicFramerate is the current dynamic frame rate of the video stream.
+	StatisticsDynamicFramerate uint32
+	// StatisticsFailedFrames is the total number of frames that failed to process.
+	StatisticsFailedFrames uint32
+	// StatisticsFrameCount is the total number of frames processed by the stream.
+	StatisticsFrameCount uint32
+	// StatisticsFramerate is the current frame rate of the video stream.
+	StatisticsFramerate uint32
+	// StatisticsIDRFrameCount is the total number of IDR frames processed by the stream.
+	StatisticsIDRFrameCount uint32
+	// StatisticsLastFrameTS is the timestamp of the last frame processed.
+	StatisticsLastFrameTS uint64
+	// StatisticsReclaimCount is the number of times stream resources have been reclaimed.
+	StatisticsReclaimCount uint32
+	// Width of the video stream in pixels.
+	Width uint32
+	// ZipProfile indicates the compression profile used for the video stream.
+	ZipProfile uint32
 }
 
+// VideoFrame represents a single frame of video data, including metadata such as the sequence number, timestamp, and size.
+// It also includes information about the type of frame and any errors encountered.
 type VideoFrame struct {
-	SequenceNbr   uint
-	Timestamp     time.Time
-	Size          uint
-	Data          []byte
-	Type          VdoFrameType
-	Error         error
-	ErrorExpected bool
+	SequenceNbr   uint         // The sequence number of the frame.
+	Timestamp     time.Time    // The timestamp when the frame was captured.
+	Size          uint         // The size of the frame data in bytes.
+	Data          []byte       // The raw data of the video frame
+	Type          VdoFrameType // Type describes the frame type (e.g., I-frame, P-frame, B-frame).
+	Error         error        // Error contains any error that occurred while processing the frame.
+	ErrorExpected bool         // ErrorExpected indicates whether the error was expected on vdo maintance
 }
 
+// String returns a string representation of the VideoFrame, including sequence number, timestamp, size, and frame type.
 func (f *VideoFrame) String() string {
 	return fmt.Sprintf("SequenceNbr: %d, Timestamp: %s, Size: %d, Type: %s",
 		f.SequenceNbr, f.Timestamp.Format("2006-01-02 15:04:05"), f.Size, f.Type.String())
 }
 
+// NewVideoFrame creates a new VideoFrame instance from a VdoFrame and its data.
+// This function extracts relevant information from the VdoFrame, including the sequence number, timestamp, size, and frame type, and packages it into a VideoFrame structure.
 func NewVideoFrame(frame *VdoFrame, data []byte) *VideoFrame {
 	return &VideoFrame{
 		SequenceNbr: frame.GetSequenceNbr(),
@@ -141,15 +184,17 @@ func NewVideoFrame(frame *VdoFrame, data []byte) *VideoFrame {
 	}
 }
 
+// NewVideoStreamFromConfig creates and initializes a new video stream based on the provided configuration.
+// It converts the configuration into a format understood by the underlying video streaming system and starts the stream.
 func NewVideoStreamFromConfig(stream_cfg VideoSteamConfiguration) (*VdoStream, error) {
 	vdoMap := VideoStreamConfigToVdoMap(stream_cfg)
 	defer vdoMap.Unref()
 	return NewStream(vdoMap)
 }
 
-// Gets a vdo buffer and frame data and wraps it into a *VideoFrame
-// Errors are set in the struct if vdo error expected ErrorExpected is set.
-// ErrorExpected should use to restart a stream because it means maintance like WDR change.
+// GetVideoFrame retrieves a video frame from a video stream.
+// If an expected error occurs (e.g., for stream maintenance), the function returns a VideoFrame with the Error and ErrorExpected fields set.
+// This function is recursive and will retry fetching a frame if a recoverable error occurs.
 func GetVideoFrame(vdo_stream *VdoStream) *VideoFrame {
 	vdo_buf, err := vdo_stream.GetBuffer()
 	if err != nil {
@@ -174,10 +219,12 @@ func GetVideoFrame(vdo_stream *VdoStream) *VideoFrame {
 	return NewVideoFrame(vdo_frame, buff_data)
 }
 
+// VideoStreamConfigToVdoMap converts a VideoSteamConfiguration object into a VdoMap.
+// This conversion allows the configuration to be applied to the video stream by translating high-level configuration options into the format expected by the streaming system.
 func VideoStreamConfigToVdoMap(cfg VideoSteamConfiguration) *VdoMap {
 	m := NewVdoMap()
 
-	// Utilizing a helper function to streamline nil checks and assignments
+	// Utility functions to streamline conditional setting of configuration parameters
 	setUint32IfNotNil := func(key string, value *uint32) {
 		if value != nil {
 			m.SetUint32(key, *value)
@@ -255,24 +302,8 @@ func VideoStreamConfigToVdoMap(cfg VideoSteamConfiguration) *VdoMap {
 	return m
 }
 
-func RestartStream(stream *VdoStream, stream_cfg VideoSteamConfiguration) (*VdoStream, error) {
-	stream.Stop()
-	stream.Unref()
-	time.Sleep(time.Second * 2)
-	return CreateAndStartStream(stream_cfg)
-}
-
-func CreateAndStartStream(stream_cfg VideoSteamConfiguration) (*VdoStream, error) {
-	stream, err := NewVideoStreamFromConfig(stream_cfg)
-	if err != nil {
-		return nil, err
-	}
-	if err = stream.Start(); err != nil {
-		return nil, err
-	}
-	return stream, nil
-}
-
+// GetChannel extracts the channel number from a VideoSteamConfiguration if it's set, otherwise returns a default value of 0.
+// This method simplifies accessing the channel value, providing a safe way to handle nil pointers within the configuration.
 func (vsc *VideoSteamConfiguration) GetChannel() int {
 	if vsc.Channel != nil {
 		return *vsc.Channel

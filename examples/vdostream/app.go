@@ -9,10 +9,9 @@ import (
 
 var (
 	err error
+	app *goxis.AcapApplication
 	// FrameProvider for easy go channeld based frame recv
 	fp *goxis.FrameProvider
-	// High level acap wrapper
-	app *goxis.AcapApplication
 	// The format for the vdo example
 	vdo_format = acap.VdoFormatH265
 	// Stream configuration
@@ -22,13 +21,6 @@ var (
 )
 
 func main() {
-	// Creates a new ACAP Application based on manifest
-	// Internal it creates:
-	//    Syslog instance
-	//    AxParamter instance
-	//    AxEventHandler instance
-	//    Gmainloop instance
-	// In this example we just need the FrameProvider from the AcapApplication
 	if app, err = goxis.NewAcapApplication(); err != nil {
 		panic(err)
 	}
