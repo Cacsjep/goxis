@@ -12,6 +12,7 @@ extern void GoStorageReleaseCallback(gpointer user_data, GError *error);
 */
 import "C"
 import (
+	"errors"
 	"runtime/cgo"
 	"unsafe"
 )
@@ -54,7 +55,7 @@ func AxStorageList() ([]StorageId, error) {
 
 	disks_list_ptr := C.ax_storage_list(&gerr)
 	if disks_list_ptr == nil {
-		return nil, newGError(gerr)
+		return nil, errors.New("Unable to get storage list, ax_storage_list retuns NULL")
 	}
 
 	if err := newGError(gerr); err != nil {
@@ -124,21 +125,8 @@ func (s *AXStorage) GetType() (AXStorageType, error) {
 	return AXStorageType(cType), nil
 }
 
-type DiskItem struct {
-	storage        AXStorage
-	storageType    AXStorageType
-	storageID      string
-	storagePath    string
-	subscriptionID int
-	setup          bool
-	writable       bool
-	available      bool
-	full           bool
-	exiting        bool
-}
-
-func NewAxStorage() *AXStorage {
-	return &AXStorage{}
+func NewAxStorageFromC(storage *C.AXStorage) *AXStorage {
+	return &AXStorage{Ptr: storage}
 }
 
 // StorageSubscriptionCallback is the Go equivalent of AXStorageSubscriptionCallback.
@@ -191,7 +179,7 @@ func GoStorageReleaseCallback(user_data unsafe.Pointer, gError *C.GError) {
 
 // Subscribe subscribes to storage events for the provided storage ID.
 func AxStorageSubscribe(storageID StorageId, callback StorageSubscriptionCallback, userdata any) (uint, error) {
-	cStorageID := C.CString(storageID)
+	cStorageID := C.CString(string(storageID))
 	defer C.free(unsafe.Pointer(cStorageID))
 
 	var gerr *C.GError
@@ -220,7 +208,7 @@ func AxStorageUnsubscribe(subscriptionID int) error {
 
 // SetupAsync sets up storage for use asynchronously.
 func AxStorageSetupAsync(storageID StorageId, callback StorageSetupCallback, userdata any) error {
-	cStorageID := C.CString(storageID)
+	cStorageID := C.CString(string(storageID))
 	defer C.free(unsafe.Pointer(cStorageID))
 
 	var gerr *C.GError
