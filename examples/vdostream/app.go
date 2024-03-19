@@ -32,6 +32,7 @@ func main() {
 	if app, err = goxis.NewAcapApplication(); err != nil {
 		panic(err)
 	}
+	defer app.Close()
 
 	// FrameProvider for easy interact with VDO
 	// Easy method to creates VDO streams via go struct acap.VideoSteamConfiguration

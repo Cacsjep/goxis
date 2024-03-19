@@ -9,6 +9,9 @@
             "runMode": "never",
             "version": "1.0.0",
             "appId": "0"
+        },
+        "copyProtection": {
+            "method": "axis"
         }
     }
 }

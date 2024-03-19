@@ -62,7 +62,8 @@ func (a *AcapApplication) Start() {
 	a.Mainloop.Run()
 }
 
-func (a *AcapApplication) Stop() {
+// Close Syslog, Paramhandler, Eventhandler, and Mainloop
+func (a *AcapApplication) Close() {
 	a.Mainloop.Quit()
 	a.ParamHandler.Free()
 	a.EventHandler.Free()
