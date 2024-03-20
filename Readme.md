@@ -128,6 +128,5 @@ It’s recommended to use the latest manifest version available for the minimum 
 
 
 # Todos:
-  - Adding Storage API
   - Adding Overlay API
   - Adding Larod API
