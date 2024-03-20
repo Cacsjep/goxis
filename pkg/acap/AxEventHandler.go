@@ -17,9 +17,7 @@ import (
 
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axevent/html/ax__event__handler_8h.html#ae40c17762e9ed663356e34c5a9ea05fe
 type AXEventHandler struct {
-	Ptr                        *C.AXEventHandler
-	subscriptionHandles        map[int]cgo.Handle
-	declarationCompleteHandles map[int]cgo.Handle
+	Ptr *C.AXEventHandler
 }
 
 type Subcription uint
@@ -29,9 +27,7 @@ type Subcription uint
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axevent/html/ax__event__handler_8h.html#aeb60d443c4006c0deb4ea3763f896de2
 func NewEventHandler() *AXEventHandler {
 	return &AXEventHandler{
-		Ptr:                        C.ax_event_handler_new(),
-		subscriptionHandles:        make(map[int]cgo.Handle),
-		declarationCompleteHandles: make(map[int]cgo.Handle),
+		Ptr: C.ax_event_handler_new(),
 	}
 }
 
@@ -51,10 +47,6 @@ func (ev *AXEventHandler) SendEvent(declaration int, evt *AXEvent) error {
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axevent/html/ax__event__handler_8h.html#a61d4484571aacc5547f9e5bf524fd01d
 func (evt *AXEventHandler) Undeclare(declaration int) error {
 	var gerr *C.GError
-	if handle, exists := evt.declarationCompleteHandles[declaration]; exists {
-		handle.Delete()
-		delete(evt.declarationCompleteHandles, declaration)
-	}
 	if int(C.ax_event_handler_undeclare(evt.Ptr, C.guint(declaration), &gerr)) == 0 {
 		return newGError(gerr)
 	}
@@ -79,6 +71,7 @@ func GoSubscriptionCallback(subscription C.guint, event *C.AXEvent, user_data un
 		return
 	}
 	data.Callback(int(subscription), &AXEvent{Ptr: event}, data.Userdata)
+	h.Delete()
 }
 
 // Subscribes to an event or a set of events.
@@ -102,7 +95,6 @@ func (eh *AXEventHandler) Subscribe(kvs *AXEventKeyValueSet, callback Subscripti
 		return 0, newGError(gerr)
 	}
 
-	eh.subscriptionHandles[int(csubscription)] = handle
 	return int(csubscription), nil
 }
 
@@ -124,6 +116,7 @@ func GoDeclarationCompleteCallback(declaration C.guint, user_data unsafe.Pointer
 		return
 	}
 	data.Callback(int(declaration), data.Userdata)
+	h.Delete()
 }
 
 // Declares a new event.
@@ -147,7 +140,6 @@ func (eh *AXEventHandler) Declare(keyValueSet *AXEventKeyValueSet, stateless boo
 		return 0, newGError(gerr)
 	}
 
-	eh.declarationCompleteHandles[int(cdeclaration)] = handle
 	return int(cdeclaration), nil
 }
 
@@ -174,7 +166,6 @@ func (eh *AXEventHandler) DeclareFromTemplate(keyValueSet *AXEventKeyValueSet, t
 		return 0, newVdoError(gerr)
 	}
 
-	eh.declarationCompleteHandles[int(declaration)] = handle
 	return int(declaration), nil
 }
 
@@ -183,10 +174,6 @@ func (eh *AXEventHandler) DeclareFromTemplate(keyValueSet *AXEventKeyValueSet, t
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axevent/html/ax__event__handler_8h.html#ae18cd4f8d25c6fc555d91fde187dac8d
 func (eh *AXEventHandler) Unsubscribe(subscription int) error {
 	var gerr *C.GError
-	if handle, exists := eh.subscriptionHandles[subscription]; exists {
-		handle.Delete()
-		delete(eh.subscriptionHandles, subscription)
-	}
 	if int(C.ax_event_handler_unsubscribe(eh.Ptr, C.guint(subscription), &gerr)) == 0 {
 		return newVdoError(gerr)
 	}
