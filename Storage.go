@@ -148,6 +148,16 @@ func (sp *StorageProvider) Open() error {
 	return nil
 }
 
+// Get DiskItem with storage id SD_DISK
+func (sp *StorageProvider) GetDiskItemById(storageId string) (sdCardDiskItem *acap.DiskItem, found bool) {
+	for _, d := range sp.DiskItems {
+		if string(d.StorageId) == storageId {
+			return d, true
+		}
+	}
+	return nil, false
+}
+
 // Unsubscribe Stop subscribing to storage events.
 func (sp *StorageProvider) Unsubscribe(d *acap.DiskItem) error {
 	return acap.AxStorageUnsubscribe(d.SubscriptionId)

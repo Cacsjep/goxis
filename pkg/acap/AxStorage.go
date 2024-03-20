@@ -47,6 +47,9 @@ const (
 // Just a string for the storage id
 type StorageId string
 
+// subscription callbacks
+var subscriptionHandles map[int]cgo.Handle = make(map[int]cgo.Handle)
+
 // Lists all connected storage devices. The returned list and its members must be freed by the caller. Use g_free for the members and g_list_free for the list.
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axstorage/html/ax__storage_8h.html#aa32bdb91706c44a86071c1c14889536f
@@ -206,7 +209,6 @@ func GoStorageSubscriptionCallback(storageID *C.char, user_data unsafe.Pointer, 
 		err = newGError(gError)
 	}
 	callbackData.Callback((StorageId)(C.GoString(storageID)), callbackData.Userdata, err)
-	handle.Delete()
 }
 
 //export GoStorageSetupCallback
@@ -225,7 +227,7 @@ func GoStorageSetupCallback(storage *C.AXStorage, user_data unsafe.Pointer, gErr
 func GoStorageReleaseCallback(user_data unsafe.Pointer, gError *C.GError) {
 	var err error
 	handle := cgo.Handle(user_data)
-	callbackData := handle.Value().(StorageReleaseCallbackData)
+	callbackData := handle.Value().(*StorageReleaseCallbackData)
 	if gError != nil {
 		err = newGError(gError)
 	}
@@ -251,6 +253,8 @@ func AxStorageSubscribe(storageID StorageId, callback StorageSubscriptionCallbac
 	if subscriptionID == 0 {
 		return 0, newGError(gerr) // Assume newGError converts a GError to a Go error.
 	}
+
+	subscriptionHandles[int(subscriptionID)] = handle
 	return int(subscriptionID), nil
 }
 
@@ -259,6 +263,10 @@ func AxStorageSubscribe(storageID StorageId, callback StorageSubscriptionCallbac
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axstorage/html/ax__storage_8h.html#a49676a4baae47e9407f3641fefcd365c
 func AxStorageUnsubscribe(subscriptionID int) error {
 	var gerr *C.GError
+	if handle, exists := subscriptionHandles[subscriptionID]; exists {
+		handle.Delete()
+		delete(subscriptionHandles, subscriptionID)
+	}
 	success := C.ax_storage_unsubscribe(C.guint(subscriptionID), &gerr)
 	if success == C.FALSE {
 		return newGError(gerr)
