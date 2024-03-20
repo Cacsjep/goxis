@@ -9,5 +9,14 @@
             "runMode": "never",
             "version": "1.0.0"
         }
+    },
+    "resources": {
+        "linux": {
+            "user": {
+                "groups": [
+                    "storage"
+                ]
+            }
+        }
     }
 }
