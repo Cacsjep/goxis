@@ -13,6 +13,7 @@ extern void GoStorageReleaseCallback(gpointer user_data, GError *error);
 import "C"
 import (
 	"errors"
+	"fmt"
 	"runtime/cgo"
 	"unsafe"
 )
@@ -130,13 +131,13 @@ func NewAxStorageFromC(storage *C.AXStorage) *AXStorage {
 }
 
 // StorageSubscriptionCallback is the Go equivalent of AXStorageSubscriptionCallback.
-type StorageSubscriptionCallback func(storageID StorageId, userdata any, err error, cleanup func())
+type StorageSubscriptionCallback func(storageID StorageId, userdata any, err error)
 
 // StorageSetupCallback is the Go equivalent of AXStorageSetupCallback.
-type StorageSetupCallback func(storage *AXStorage, userdata any, err error, cleanup func())
+type StorageSetupCallback func(storage *AXStorage, userdata any, err error)
 
 // StorageReleaseCallback is the Go equivalent of AXStorageReleaseCallback.
-type StorageReleaseCallback func(userdata any, err error, cleanup func())
+type StorageReleaseCallback func(userdata any, err error)
 
 type StorageSubscriptionCallbackData struct {
 	Callback StorageSubscriptionCallback
@@ -154,7 +155,7 @@ type StorageReleaseCallbackData struct {
 }
 
 type DiskItem struct {
-	SubscriptionId uint          // Subscription ID for storage events
+	SubscriptionId int           // Subscription ID for storage events
 	Setup          bool          // TRUE: storage was set up async, FALSE otherwise
 	Writable       bool          // Storage is writable or not
 	Available      bool          // Storage is available or not
@@ -166,56 +167,76 @@ type DiskItem struct {
 	StoragePath    string        // Storage path
 }
 
-func NewDiskItemFromSubscription(storageID StorageId) (*DiskItem, error) {
-	available, err := AXStorageGetStatus(storageID, AXStorageAvailableEvent)
-	if err != nil {
-		return nil, err
-	}
-	writable, err := AXStorageGetStatus(storageID, AXStorageWritableEvent)
-	if err != nil {
-		return nil, err
-	}
-	full, err := AXStorageGetStatus(storageID, AXStorageFullEvent)
-	if err != nil {
-		return nil, err
-	}
-	exiting, err := AXStorageGetStatus(storageID, AXStorageExitingEvent)
-	if err != nil {
-		return nil, err
-	}
+func (d *DiskItem) String() string {
+	return fmt.Sprintf("%s, Writeable: %t, Available: %t, Setup: %t, Exiting: %t, Full: %t, StoragePath: %s", d.StorageId, d.Writable, d.Available, d.Setup, d.Exiting, d.Full, d.StoragePath)
+}
 
+// NewDiskItem returns a new disk item
+func NewDiskItem(storageID StorageId, subscriptionId int) *DiskItem {
 	return &DiskItem{
-		Available: available,
-		Writable:  writable,
-		Full:      full,
-		Exiting:   exiting,
-		StorageId: storageID,
-	}, nil
+		StorageId:      storageID,
+		SubscriptionId: subscriptionId,
+	}
+}
+
+// Update the Available, Writable, Full, Exiting Event fields
+func UpdateDiskItemEvents(d *DiskItem) error {
+	var err error
+	if d.Available, err = AXStorageGetStatus(d.StorageId, AXStorageAvailableEvent); err != nil {
+		return err
+	}
+	if d.Writable, err = AXStorageGetStatus(d.StorageId, AXStorageWritableEvent); err != nil {
+		return err
+	}
+	if d.Full, err = AXStorageGetStatus(d.StorageId, AXStorageFullEvent); err != nil {
+		return err
+	}
+	if d.Exiting, err = AXStorageGetStatus(d.StorageId, AXStorageExitingEvent); err != nil {
+		return err
+	}
+	return nil
 }
 
 //export GoStorageSubscriptionCallback
 func GoStorageSubscriptionCallback(storageID *C.char, user_data unsafe.Pointer, gError *C.GError) {
+	var err error
 	handle := cgo.Handle(user_data)
 	callbackData := handle.Value().(*StorageSubscriptionCallbackData)
-	callbackData.Callback((StorageId)(C.GoString(storageID)), callbackData.Userdata, newGError(gError).AsError(), handle.Delete)
+	if gError != nil {
+		err = newGError(gError)
+	}
+	callbackData.Callback((StorageId)(C.GoString(storageID)), callbackData.Userdata, err)
+	handle.Delete()
 }
 
 //export GoStorageSetupCallback
 func GoStorageSetupCallback(storage *C.AXStorage, user_data unsafe.Pointer, gError *C.GError) {
+	var err error
 	handle := cgo.Handle(user_data)
 	callbackData := handle.Value().(*StorageSetupCallbackData)
-	callbackData.Callback(&AXStorage{Ptr: storage}, callbackData.Userdata, newGError(gError).AsError(), handle.Delete)
+	if gError != nil {
+		err = newGError(gError)
+	}
+	callbackData.Callback(&AXStorage{Ptr: storage}, callbackData.Userdata, err)
+	handle.Delete()
 }
 
 //export GoStorageReleaseCallback
 func GoStorageReleaseCallback(user_data unsafe.Pointer, gError *C.GError) {
+	var err error
 	handle := cgo.Handle(user_data)
 	callbackData := handle.Value().(StorageReleaseCallbackData)
-	callbackData.Callback(callbackData.Userdata, newGError(gError).AsError(), handle.Delete)
+	if gError != nil {
+		err = newGError(gError)
+	}
+	callbackData.Callback(callbackData.Userdata, err)
+	handle.Delete()
 }
 
 // Subscribe subscribes to storage events for the provided storage ID.
-func AxStorageSubscribe(storageID StorageId, callback StorageSubscriptionCallback, userdata any) (uint, error) {
+//
+// https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axstorage/html/ax__storage_8h.html#ae64f800e6d88b54cf68cce925bb16312
+func AxStorageSubscribe(storageID StorageId, callback StorageSubscriptionCallback, userdata any) (subscriptionId int, err error) {
 	cStorageID := C.CString(string(storageID))
 	defer C.free(unsafe.Pointer(cStorageID))
 
@@ -230,10 +251,12 @@ func AxStorageSubscribe(storageID StorageId, callback StorageSubscriptionCallbac
 	if subscriptionID == 0 {
 		return 0, newGError(gerr) // Assume newGError converts a GError to a Go error.
 	}
-	return uint(subscriptionID), nil
+	return int(subscriptionID), nil
 }
 
 // Unsubscribe stops subscribing to storage events for the provided subscription ID.
+//
+// https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axstorage/html/ax__storage_8h.html#a49676a4baae47e9407f3641fefcd365c
 func AxStorageUnsubscribe(subscriptionID int) error {
 	var gerr *C.GError
 	success := C.ax_storage_unsubscribe(C.guint(subscriptionID), &gerr)
@@ -244,6 +267,10 @@ func AxStorageUnsubscribe(subscriptionID int) error {
 }
 
 // SetupAsync sets up storage for use asynchronously.
+// Setup storage for use asynchronously. This method must be called before the storage is to be used in any way (for instance read or write).
+// When done using the storage, AxStorageReleaseAsync must be called.
+//
+// https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axstorage/html/ax__storage_8h.html#abb7bf1c1cab1961dc4c2fffedaaa73cd
 func AxStorageSetupAsync(storageID StorageId, callback StorageSetupCallback, userdata any) error {
 	cStorageID := C.CString(string(storageID))
 	defer C.free(unsafe.Pointer(cStorageID))
@@ -262,6 +289,8 @@ func AxStorageSetupAsync(storageID StorageId, callback StorageSetupCallback, use
 }
 
 // ReleaseAsync releases the use of storage asynchronously.
+//
+// https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axstorage/html/ax__storage_8h.html#a27909ecc692b78af43ce23bf0369fe95
 func (s *AXStorage) AxStorageReleaseAsync(callback StorageReleaseCallback, userdata any) error {
 	var gerr *C.GError
 	data := &StorageReleaseCallbackData{

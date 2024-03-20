@@ -10,6 +10,7 @@ void syslog_helper(int priority, const char *message) {
 */
 import "C"
 import (
+	"fmt"
 	"unsafe"
 )
 
@@ -49,14 +50,36 @@ func (s *Syslog) Info(message string) {
 	s.Log(LOG_INFO, message)
 }
 
+func (s *Syslog) Infof(format string, a ...interface{}) {
+	message := fmt.Sprintf(format, a...)
+	s.Info(message)
+}
+
 func (s *Syslog) Warn(message string) {
 	s.Log(LOG_WARN, message)
+}
+
+func (s *Syslog) Warnf(format string, a ...interface{}) {
+	message := fmt.Sprintf(format, a...)
+	s.Warn(message)
 }
 
 func (s *Syslog) Error(message string) {
 	s.Log(LOG_ERR, message)
 }
 
+func (s *Syslog) Errorf(format string, a ...interface{}) {
+	message := fmt.Sprintf(format, a...)
+	s.Error(message)
+}
+
+// Crit also do a golang panic
 func (s *Syslog) Crit(message string) {
 	s.Log(LOG_CRIT, message)
+	panic(message)
+}
+
+func (s *Syslog) Critf(format string, a ...interface{}) {
+	message := fmt.Sprintf(format, a...)
+	s.Crit(message) // Note that s.Crit will log the message and then panic.
 }

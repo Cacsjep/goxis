@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/Cacsjep/goxis"
 	"github.com/Cacsjep/goxis/pkg/acap"
 )
@@ -51,7 +49,7 @@ func main() {
 		select {
 		case frame := <-fp.FrameStreamChannel:
 			if frame.Error != nil {
-				app.Syslog.Error(fmt.Sprintf("Unexpected Vdo Error: %s", frame.Error.Error()))
+				app.Syslog.Errorf("Unexpected Vdo Error: %s", frame.Error.Error())
 				continue
 			}
 			app.Syslog.Info(frame.String())

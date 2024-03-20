@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/Cacsjep/goxis"
 	"github.com/Cacsjep/goxis/pkg/acap"
 )
@@ -69,13 +67,13 @@ func main() {
 			return
 		}
 
-		app.Syslog.Info(fmt.Sprintf(
+		app.Syslog.Infof(
 			"VIO Callback, Port: %d, Active: %t, Timestamp: %s, Userdata: %s",
 			port,
 			active,
 			event.GetTimestamp().Format("2006-01-02 15:04:05"),
 			userdata,
-		))
+		)
 
 	}, "my importand user data")
 

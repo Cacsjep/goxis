@@ -23,10 +23,6 @@ func newGError(gerr *C.GError) *GError {
 	return err
 }
 
-func (e *GError) AsError() error {
-	return e
-}
-
 func (e *GError) Error() string {
 	return fmt.Sprintf("%s, ErrorCode: %d", e.Message, e.Code)
 }

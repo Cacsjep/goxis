@@ -1,7 +1,6 @@
 package goxis
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/Cacsjep/goxis/pkg/acap"
@@ -77,30 +76,30 @@ func (fp *FrameProvider) Start() error {
 
 	fp.running = true
 	fp.state = FrameProviderStateStarted
-	fp.app.Syslog.Info(fmt.Sprintf("VDO Channel(%d): Stream is started", fp.Config.GetChannel()))
+	fp.app.Syslog.Infof("VDO Channel(%d): Stream is started", fp.Config.GetChannel())
 
 	go func() {
 		for fp.running {
 			video_frame := acap.GetVideoFrame(fp.stream)
 			if video_frame.Error != nil {
 				if video_frame.ErrorExpected {
-					fp.app.Syslog.Warn(fmt.Sprintf("VDO Channel(%d): Restarting stream because vdo is in maintanance mode %s", fp.Config.GetChannel(), video_frame.Error.Error()))
+					fp.app.Syslog.Warnf("VDO Channel(%d): Restarting stream because vdo is in maintanance mode %s", fp.Config.GetChannel(), video_frame.Error.Error())
 					if err := fp.Restart(); err != nil {
-						fp.app.Syslog.Warn(fmt.Sprintf("VDO Channel(%d): Unable to restart stream, try again...: %s", fp.Config.GetChannel(), err.Error()))
+						fp.app.Syslog.Warnf("VDO Channel(%d): Unable to restart stream, try again...: %s", fp.Config.GetChannel(), err.Error())
 						if fp.restartRetries >= MaxRestartRetries {
 							fp.state = FrameProviderStateError
-							fp.app.Syslog.Error(fmt.Sprintf("VDO Channel(%d): Max retries for stream restart reached, stream is stopped", fp.Config.GetChannel()))
+							fp.app.Syslog.Errorf("VDO Channel(%d): Max retries for stream restart reached, stream is stopped", fp.Config.GetChannel())
 							break
 						}
 						fp.restartRetries++
 					} else {
-						fp.app.Syslog.Info(fmt.Sprintf("VDO Channel(%d): Successfully restart stream", fp.Config.GetChannel()))
+						fp.app.Syslog.Infof("VDO Channel(%d): Successfully restart stream", fp.Config.GetChannel())
 						fp.running = true
 						fp.state = FrameProviderStateStarted
 					}
 					continue
 				}
-				fp.app.Syslog.Error(fmt.Sprintf("VDO Channel(%d): Vdo returns an error when getting buffer/frame data %s", fp.Config.Channel, video_frame.Error.Error()))
+				fp.app.Syslog.Errorf("VDO Channel(%d): Vdo returns an error when getting buffer/frame data %s", fp.Config.Channel, video_frame.Error.Error())
 				continue
 			}
 			fp.restartRetries = 0
@@ -116,14 +115,14 @@ func (fp *FrameProvider) Stop() {
 	fp.state = FrameProviderStateStopped
 	fp.stream.Stop()
 	fp.stream.Unref()
-	fp.app.Syslog.Info(fmt.Sprintf("VDO Channel(%d): Stream is stopped", fp.Config.GetChannel()))
+	fp.app.Syslog.Infof("VDO Channel(%d): Stream is stopped", fp.Config.GetChannel())
 }
 
 // Restart attempts to restart the video stream, first stopping the current stream and then re-initializing and starting a new stream.
 // It applies a delay before attempting the restart to give the system time to release resources.
 func (fp *FrameProvider) Restart() error {
 	time.Sleep(time.Second * 2)
-	fp.app.Syslog.Info(fmt.Sprintf("VDO Channel(%d): Try to restart stream", fp.Config.GetChannel()))
+	fp.app.Syslog.Infof("VDO Channel(%d): Try to restart stream", fp.Config.GetChannel())
 	var err error
 	fp.state = FrameProviderStateRestarting
 	fp.Stop()

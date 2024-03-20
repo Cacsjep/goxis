@@ -18,9 +18,8 @@ import (
 
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axparameter/html/ax__parameter_8h.html#a454ef604d7741f45804e708a56f7bf24
 type AXParameter struct {
-	Ptr              *C.AXParameter
-	cStrings         []*cString
-	parameterHandles map[string]cgo.Handle
+	Ptr      *C.AXParameter
+	cStrings []*cString
 }
 
 // Creates a new AXParameter.
@@ -36,7 +35,7 @@ func AXParameterNew(appName *string) (*AXParameter, error) {
 		return nil, newGError(gerr)
 	}
 
-	return &AXParameter{Ptr: axParam, parameterHandles: make(map[string]cgo.Handle)}, nil
+	return &AXParameter{Ptr: axParam}, nil
 }
 
 // Adds a new parameter. Returns failure if the parameter already exists.
@@ -146,6 +145,7 @@ func GoParameterCallback(name *C.gchar, value *C.gchar, user_data unsafe.Pointer
 		return
 	}
 	data.Callback(C.GoString(name), C.GoString(value), data.Userdata)
+	h.Delete()
 }
 
 // Registers a callback function to be run whenever a parameter value is updated.
@@ -169,8 +169,6 @@ func (axp *AXParameter) RegisterCallback(name string, callback ParameterCallback
 	if int(success) == 0 {
 		return newGError(gerr)
 	}
-
-	axp.parameterHandles[name] = handle
 	return nil
 }
 
@@ -180,11 +178,6 @@ func (axp *AXParameter) RegisterCallback(name string, callback ParameterCallback
 func (axp *AXParameter) UnregisterCallback(name string) error {
 	cName := newString(&name)
 	defer cName.Free()
-
-	if handle, exists := axp.parameterHandles[name]; exists {
-		handle.Delete()
-		delete(axp.parameterHandles, name)
-	}
 	C.ax_parameter_unregister_callback(
 		axp.Ptr,
 		cName.Ptr,
