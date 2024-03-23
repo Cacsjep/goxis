@@ -9,7 +9,6 @@ package acap
 */
 import "C"
 import (
-	"fmt"
 	"image/color"
 	"unsafe"
 )
@@ -34,18 +33,22 @@ func (ctx *CairoContext) DrawText(text string, x float64, y float64, size float6
 	ctx.SetFontSize(size)
 	e := ctx.TextExtents(text)
 	ctx.MoveTo(x, y+e.Height)
-	fmt.Println("DRAW TEXT", x, y+e.Height)
 	ctx.ShowText(text)
 }
+
 func (ctx *CairoContext) DrawRect(x float64, y float64, width float64, height float64, color color.RGBA, linewidth float64) {
 	ctx.SetSourceRGBA(color)
 	ctx.SetOperator(OPERATOR_SOURCE)
-	fmt.Println("Set LineWidth", linewidth)
 	ctx.SetLineWidth(linewidth)
-	fmt.Println("Get LineWidth", ctx.GetLineWidth())
-	fmt.Println("DRAW RECT", x, y, width, height)
 	ctx.Rectangle(x, y, width, height)
 	ctx.Stroke()
+}
+
+func (ctx *CairoContext) DrawTransparent(width, height int) {
+	ctx.SetSourceRGBA(ColorTransparent)
+	ctx.SetOperator(OPERATOR_SOURCE)
+	ctx.Rectangle(0, 0, float64(width), float64(height))
+	ctx.Fill()
 }
 
 func (ctx *CairoContext) NewPath() {

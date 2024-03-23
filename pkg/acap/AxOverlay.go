@@ -6,22 +6,21 @@ package acap
 #include <axoverlay.h>
 #include <cairo/cairo.h>
 
-extern gboolean GoAxOverlayStreamSelectFunction(gint camera, gint width, gint height, gint rotation, gboolean is_mirrored, enum axoverlay_stream_type type);
-extern void GoAxOverlayAdjustmentFunction(gint id, struct axoverlay_stream_data *stream, enum axoverlay_position_type *postype, gfloat *overlay_x, gfloat *overlay_y, gint *overlay_width, gint *overlay_height, gpointer user_data);
-extern void GoAxOverlayRenderFunction(gpointer rendering_context, gint id, struct axoverlay_stream_data *stream, enum axoverlay_position_type postype, gfloat overlay_x, gfloat overlay_y, gint overlay_width, gint overlay_height, gpointer user_data);
+extern gboolean GoAxOverlayStreamSelectCallback(gint camera, gint width, gint height, gint rotation, gboolean is_mirrored, enum axoverlay_stream_type type);
+extern void GoAxOverlayAdjustmentCallback(gint id, struct axoverlay_stream_data *stream, enum axoverlay_position_type *postype, gfloat *overlay_x, gfloat *overlay_y, gint *overlay_width, gint *overlay_height, gpointer user_data);
+extern void GoAxOverlayRenderCallback(gpointer rendering_context, gint id, struct axoverlay_stream_data *stream, enum axoverlay_position_type postype, gfloat overlay_x, gfloat overlay_y, gint overlay_width, gint overlay_height, gpointer user_data);
 */
 import "C"
 import (
-	"fmt"
 	"runtime/cgo"
 	"unsafe"
 )
 
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axoverlay/html/axoverlaypage.html
 
-var streamSelectCallback AxOverlayStreamSelectFunc
-var adjustmentCallback AxOverlayAdjustmentFunc
-var renderCallback AxOverlayRenderFunc
+var streamSelectCallback AxOverlayStreamSelectCallback
+var adjustmentCallback AxOverlayAdjustmentCallback
+var renderCallback AxOverlayRenderCallback
 var overlayUserDataHandle cgo.Handle
 
 // axoverlay_error_code mirrors the error codes from the C API.
@@ -172,9 +171,9 @@ type AxOverlayPaletteColor struct {
 
 // Callback function types for stream selection, adjustment, and rendering.
 type (
-	AxOverlayStreamSelectFunc func(camera, width, height, rotation int, isMirrored bool, streamType AxOverlayStreamType) bool
-	AxOverlayAdjustmentFunc   func(id int, stream *AxOverlayStreamData, positionType *AxOverlayPositionType, x, y *float32, width, height *int, userData any)
-	AxOverlayRenderFunc       func(cairoCtx *CairoContext, id int, stream *AxOverlayStreamData, positionType AxOverlayPositionType, x, y float32, width, height int, userData any)
+	AxOverlayStreamSelectCallback func(streamSelectEvent *OverlayStreamSelectEvent) bool
+	AxOverlayAdjustmentCallback   func(adjustmentEvent *OverlayAdjustmentEvent)
+	AxOverlayRenderCallback       func(renderEvent *OverlayRenderEvent)
 )
 
 // axoverlay_settings is a struct to hold overlay settings.
@@ -184,7 +183,7 @@ type AxOverlaySettings struct {
 }
 
 // AxoverlayInitAxoverlaySettings initializes axoverlay_settings with default values.
-func NewAxOverlaySettings(render AxOverlayRenderFunc, adjustment AxOverlayAdjustmentFunc, selectCallback AxOverlayStreamSelectFunc, backend AxOverlayBackendType) *AxOverlaySettings {
+func NewAxOverlaySettings(render AxOverlayRenderCallback, adjustment AxOverlayAdjustmentCallback, selectCallback AxOverlayStreamSelectCallback, backend AxOverlayBackendType) *AxOverlaySettings {
 	settings := &AxOverlaySettings{}
 
 	settings.ptr = (*C.struct_axoverlay_settings)(C.malloc(C.size_t(unsafe.Sizeof(*settings.ptr))))
@@ -195,17 +194,17 @@ func NewAxOverlaySettings(render AxOverlayRenderFunc, adjustment AxOverlayAdjust
 	C.axoverlay_init_axoverlay_settings(settings.ptr)
 
 	if render != nil {
-		settings.ptr.render_callback = (C.axoverlay_render_function)(C.GoAxOverlayRenderFunction)
+		settings.ptr.render_callback = (C.axoverlay_render_function)(C.GoAxOverlayRenderCallback)
 		renderCallback = render
 	}
 
 	if adjustment != nil {
-		settings.ptr.adjustment_callback = (C.axoverlay_adjustment_function)(C.GoAxOverlayAdjustmentFunction)
+		settings.ptr.adjustment_callback = (C.axoverlay_adjustment_function)(C.GoAxOverlayAdjustmentCallback)
 		adjustmentCallback = adjustment
 	}
 
 	if selectCallback != nil {
-		settings.ptr.select_callback = (C.axoverlay_stream_select_function)(C.GoAxOverlayStreamSelectFunction)
+		settings.ptr.select_callback = (C.axoverlay_stream_select_function)(C.GoAxOverlayStreamSelectCallback)
 		streamSelectCallback = selectCallback
 	}
 	settings.ptr.backend = C.enum_axoverlay_backend_type(backend)
@@ -216,16 +215,24 @@ func (s *AxOverlaySettings) Free() {
 	C.free(unsafe.Pointer(s.ptr))
 }
 
-//export GoAxOverlayStreamSelectFunction
-func GoAxOverlayStreamSelectFunction(camera C.gint, width C.gint, height C.gint, rotation C.gint, isMirrored C.gboolean, streamType C.enum_axoverlay_stream_type) C.gboolean {
+//export GoAxOverlayStreamSelectCallback
+func GoAxOverlayStreamSelectCallback(camera C.gint, width C.gint, height C.gint, rotation C.gint, isMirrored C.gboolean, streamType C.enum_axoverlay_stream_type) C.gboolean {
 	if streamSelectCallback != nil {
-		return goBooleanToC(streamSelectCallback(int(camera), int(width), int(height), int(rotation), ctoGoBoolean(isMirrored), AxOverlayStreamType(streamType)))
+		streamSelectEvent := OverlayStreamSelectEvent{
+			Camera:     int(camera),
+			Width:      int(width),
+			Height:     int(height),
+			Rotation:   int(rotation),
+			IsMirrored: ctoGoBoolean(isMirrored),
+			StreamType: AxOverlayStreamType(streamType),
+		}
+		return goBooleanToC(streamSelectCallback(&streamSelectEvent))
 	}
 	return C.FALSE
 }
 
-//export GoAxOverlayAdjustmentFunction
-func GoAxOverlayAdjustmentFunction(id C.gint, stream *C.struct_axoverlay_stream_data, postype *C.enum_axoverlay_position_type, overlayX *C.gfloat, overlayY *C.gfloat, overlayWidth *C.gint, overlayHeight *C.gint, userData unsafe.Pointer) {
+//export GoAxOverlayAdjustmentCallback
+func GoAxOverlayAdjustmentCallback(id C.gint, stream *C.struct_axoverlay_stream_data, postype *C.enum_axoverlay_position_type, overlayX *C.gfloat, overlayY *C.gfloat, overlayWidth *C.gint, overlayHeight *C.gint, userData unsafe.Pointer) {
 	if adjustmentCallback != nil {
 		var goOverlayX float32 = float32(*overlayX)
 		var goOverlayY float32 = float32(*overlayY)
@@ -233,7 +240,17 @@ func GoAxOverlayAdjustmentFunction(id C.gint, stream *C.struct_axoverlay_stream_
 		var goOverlayHeight int = int(*overlayHeight)
 		goPostype := AxOverlayPositionType(*postype)
 		handle := cgo.Handle(userData)
-		adjustmentCallback(int(id), newStreamDataFromC(stream), &goPostype, &goOverlayX, &goOverlayY, &goOverlayWidth, &goOverlayHeight, handle.Value())
+		adjustmentEvent := OverlayAdjustmentEvent{
+			OverlayId:     int(id),
+			Stream:        newStreamDataFromC(stream),
+			PositionType:  &goPostype,
+			OverlayX:      &goOverlayX,
+			OverlayY:      &goOverlayY,
+			OverlayWidth:  &goOverlayWidth,
+			OverlayHeight: &goOverlayHeight,
+			Userdata:      handle.Value(),
+		}
+		adjustmentCallback(&adjustmentEvent)
 		*overlayX = C.gfloat(goOverlayX)
 		*overlayY = C.gfloat(goOverlayY)
 		*overlayWidth = C.gint(goOverlayWidth)
@@ -247,11 +264,22 @@ func newStreamDataFromC(stream *C.struct_axoverlay_stream_data) *AxOverlayStream
 	return &AxOverlayStreamData{Ptr: stream, ID: int(stream.id), Camera: int(stream.camera), Width: int(stream.width), Height: int(stream.height), Rotation: int(stream.rotation)}
 }
 
-//export GoAxOverlayRenderFunction
-func GoAxOverlayRenderFunction(renderingContext C.gpointer, id C.gint, stream *C.struct_axoverlay_stream_data, postype C.enum_axoverlay_position_type, overlayX C.gfloat, overlayY C.gfloat, overlayWidth C.gint, overlayHeight C.gint, userData unsafe.Pointer) {
+//export GoAxOverlayRenderCallback
+func GoAxOverlayRenderCallback(renderingContext C.gpointer, id C.gint, stream *C.struct_axoverlay_stream_data, postype C.enum_axoverlay_position_type, overlayX C.gfloat, overlayY C.gfloat, overlayWidth C.gint, overlayHeight C.gint, userData unsafe.Pointer) {
 	if renderCallback != nil {
 		handle := cgo.Handle(userData)
-		renderCallback(NewCairoCtxFromC(renderingContext), int(id), newStreamDataFromC(stream), AxOverlayPositionType(postype), float32(overlayX), float32(overlayY), int(overlayWidth), int(overlayHeight), handle.Value())
+		renderEvent := OverlayRenderEvent{
+			CairoCtx:      NewCairoCtxFromC(renderingContext),
+			OverlayId:     int(id),
+			Stream:        newStreamDataFromC(stream),
+			PositionType:  AxOverlayPositionType(postype),
+			OverlayX:      float32(overlayX),
+			OverlayY:      float32(overlayY),
+			OverlayWidth:  int(overlayWidth),
+			OverlayHeight: int(overlayHeight),
+			Userdata:      handle.Value(),
+		}
+		renderCallback(&renderEvent)
 	}
 }
 
@@ -299,7 +327,6 @@ func AxOvlerayDeleteHandle() {
 
 // axoverlayDestroyOverlay destroys the overlay with the given ID.
 func AxOverlayDestroyOverlay(id int) error {
-	fmt.Println("Destroy")
 	var gerr *C.GError
 	C.axoverlay_destroy_overlay(C.gint(id), &gerr)
 	return newGError(gerr)
@@ -349,43 +376,4 @@ func AxOverlayGetMaxResolution(camera int) (int, int, error) {
 // axoverlayIsBackendSupported checks if a specified backend is supported.
 func AxOverlayIsBackendSupported(backend AxOverlayBackendType) bool {
 	return ctoGoBoolean(C.axoverlay_is_backend_supported(C.enum_axoverlay_backend_type(backend)))
-}
-
-// axoverlayGetNumberOfPaletteColors returns the number of palette colors.
-func AxOverlayGetNumberOfPaletteColors() (int, error) {
-	var gerr *C.GError
-	count := C.axoverlay_get_number_of_palette_colors(&gerr)
-	return int(count), newGError(gerr)
-}
-
-// axoverlayGetPaletteColor retrieves a palette color by index.
-func AxOverlayGetPaletteColor(index int) (AxOverlayPaletteColor, error) {
-	var gerr *C.GError
-	var color C.struct_axoverlay_palette_color
-	C.axoverlay_get_palette_color(C.gint(index), &color, &gerr)
-	err := newGError(gerr)
-	if err != nil {
-		return AxOverlayPaletteColor{}, err
-	}
-	return AxOverlayPaletteColor{
-		R:        uint8(color.red),
-		G:        uint8(color.green),
-		B:        uint8(color.blue),
-		A:        uint8(color.alpha),
-		Pixelate: ctoGoBoolean(color.pixelate),
-	}, nil
-}
-
-// axoverlaySetPaletteColor sets a palette color by index.
-func AxOverlaySetPaletteColor(index int, color AxOverlayPaletteColor) error {
-	var gerr *C.GError
-	cColor := C.struct_axoverlay_palette_color{
-		red:      C.guchar(color.R),
-		green:    C.guchar(color.G),
-		blue:     C.guchar(color.B),
-		alpha:    C.guchar(color.A),
-		pixelate: goBooleanToC(color.Pixelate),
-	}
-	C.axoverlay_set_palette_color(C.gint(index), &cColor, &gerr)
-	return newGError(gerr)
 }

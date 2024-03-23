@@ -2,91 +2,103 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/Cacsjep/goxis"
 	"github.com/Cacsjep/goxis/pkg/acap"
 )
 
+// https://github.com/AxisCommunications/acap-native-sdk-examples/tree/main/axoverlay
+//
+// This example uses axoverlay example to draw a rectangle and a text
+// ! Note: Overlay callbacks only invoked when stream is viewed via web ui or rtsp etc..
 var (
-	err             error
-	max_w           int
-	max_h           int
 	app             *goxis.AcapApplication
 	overlayProvider *goxis.OverlayProvider
+	err             error
 	overlay_id_rect int
 	overlay_id_text int
+	counter         int
 )
 
-func cleanBackground(ctx *acap.CairoContext, width, height float64) {
-	ctx.SetSourceRGBA(goxis.ColorTransparent)
-	ctx.SetOperator(acap.OPERATOR_SOURCE)
-	ctx.Rectangle(0, 0, width, height)
-	ctx.Fill()
+// callback functtion that can be used to select which streams to render overlays to.
+// Note that YCBCR streams are always skipped since these are used for analytics.
+// ! Just for demo demonstration
+func streamSelectCallback(streamSelectEvent *acap.OverlayStreamSelectEvent) bool {
+	return true
 }
 
-func streamSelectCallback(camera, width, height, rotation int, isMirrored bool, streamType acap.AxOverlayStreamType) bool {
-	fmt.Printf("Stream Select | Camera: %d, Width: %d, Height: %d, Rotation: %d, IsMirrored: %t, StreamType: %v\n",
-		camera, width, height, rotation, isMirrored, streamType)
-	return false
+// callback function called when an overlay needs adjustments.
+// This function is called to let developers make adjustments to
+// the size and position of their overlays for each stream. This callback
+// function is called prior to rendering every time when an overlay
+// is rendered on a stream, which is useful if the resolution has been
+// updated or rotation has changed.
+func adjustmentCallback(adjustmentEvent *acap.OverlayAdjustmentEvent) {
+	app.Syslog.Infof("Adjust callback for overlay-%d: %dx%d", adjustmentEvent.OverlayId, adjustmentEvent.OverlayWidth, adjustmentEvent.OverlayHeight)
+	app.Syslog.Infof("Adjust callback for stream: %dx%d", adjustmentEvent.Stream.Width, adjustmentEvent.Stream.Height)
+
+	*adjustmentEvent.OverlayWidth = adjustmentEvent.Stream.Width
+	*adjustmentEvent.OverlayHeight = adjustmentEvent.Stream.Height
 }
 
-func adjustmentCallback(OverlayId int, stream *acap.AxOverlayStreamData, positionType *acap.AxOverlayPositionType, OverlayX, OverlayY *float32, OverlayWidth, OverlayHeight *int, userData any) {
-	fmt.Printf("Adjustment | ID: %d, Stream: %+v, PositionType: %s, OverlayX: %f, OverlayY: %f, OverlayWidth: %d, OverlayHeight: %d\n",
-		OverlayId, stream, positionType.String(), *OverlayX, *OverlayY, *OverlayWidth, *OverlayHeight)
-}
-func renderCallback(cairoCtx *acap.CairoContext, OverlayId int, stream *acap.AxOverlayStreamData, positionType acap.AxOverlayPositionType, OverlayX, OverlayY float32, OverlayWidth, OverlayHeight int, userData any) {
-	fmt.Printf("Render | ID: %d, Stream: %+v, PositionType: %s, OverlayX: %f, OverlayY: %f, OverlayWidth: %d, OverlayHeight: %d\n",
-		OverlayId, stream, positionType.String(), OverlayX, OverlayY, OverlayWidth, OverlayHeight)
+// callback function called when an overlay needs to be drawn.
+// This function is called whenever the system redraws an overlay. This can
+// happen in two cases, Redraw() is called or a new stream is started.
+func renderCallback(renderEvent *acap.OverlayRenderEvent) {
+	app := renderEvent.Userdata.(*goxis.AcapApplication)
+	app.Syslog.Infof("Render callback for camera: %d", renderEvent.Stream.Camera)
+	app.Syslog.Infof("Render callback for overlay-%d: %dx%d", renderEvent.OverlayId, renderEvent.OverlayWidth, renderEvent.OverlayHeight)
+	app.Syslog.Infof("Render callback for stream: %dx%d", renderEvent.Stream.Width, renderEvent.Stream.Height)
 
-	if OverlayId == overlay_id_text {
-		cairoCtx.DrawText("hallo", 10, 10, 32.0, "serif", goxis.ColorMaterialBlack)
+	if renderEvent.OverlayId == overlay_id_text {
+		renderEvent.CairoCtx.DrawText(fmt.Sprintf("Counter: %d", counter), 10, 10, 32.0, "serif", acap.ColorMaterialBlack)
+	} else if renderEvent.OverlayId == overlay_id_rect {
+		renderEvent.CairoCtx.DrawTransparent(renderEvent.Stream.Width, renderEvent.Stream.Height)
+		renderEvent.CairoCtx.DrawRect(0, 0, float64(renderEvent.Stream.Width), float64(renderEvent.Stream.Height/4), acap.ColorMaterialRed, 9.6)
+		renderEvent.CairoCtx.DrawRect(0, float64(renderEvent.Stream.Height*3/4), float64(renderEvent.Stream.Width), float64(renderEvent.Stream.Height), acap.ColorMaterialRed, 9.6)
 	} else {
-		cleanBackground(cairoCtx, float64(stream.Width), float64(stream.Height))
-		cairoCtx.DrawRect(0, 0, float64(stream.Width), float64(stream.Height/4), goxis.ColorMaterialRed, 9.6)
-		cairoCtx.DrawRect(0, float64(stream.Height*3/4), float64(stream.Width), float64(stream.Height), goxis.ColorMaterialRed, 9.6)
+		app.Syslog.Warn("Unknown overlay id!")
 	}
 }
 
-// This example uses axoverlay example to draw a rectangle
 func main() {
 	if app, err = goxis.NewAcapApplication(); err != nil {
 		panic(err)
 	}
 	defer app.Close()
 
-	if overlayProvider, err = goxis.NewOverlayProvider(renderCallback, adjustmentCallback, nil); err != nil {
+	// Overlayprovider is an highlevel wrapper around AxOvleray to make life easier
+	if overlayProvider, err = goxis.NewOverlayProvider(renderCallback, adjustmentCallback, streamSelectCallback); err != nil {
 		panic(err)
 	}
 	defer overlayProvider.Cleanup()
 
-	if overlay_id_rect, err = overlayProvider.AddOverlay(&goxis.Overlay{
-		UseMaxResolution: true,
-		OverlayData: &acap.AxOverlayOverlayData{
-			AnchorPoint:  acap.AxOverlayAnchorCenter,
-			PositionType: acap.AxOverlayCustomNormalized,
-			Colorspace:   acap.AxOverlayColorspaceARGB32,
-		},
-	}); err != nil {
-		panic(err)
+	// we pass app as userdata to access syslog from app in callbacks
+	if overlay_id_rect, err = overlayProvider.AddOverlay(goxis.NewAnchorCenterRrgbaOverlay(acap.AxOverlayCustomNormalized, app)); err != nil {
+		app.Syslog.Crit(err.Error())
 	}
-	fmt.Println("Overlay ID Rectangle", overlay_id_rect)
 
-	if overlay_id_text, err = overlayProvider.AddOverlay(&goxis.Overlay{
-		UseMaxResolution: true,
-		OverlayData: &acap.AxOverlayOverlayData{
-			AnchorPoint:  acap.AxOverlayAnchorCenter,
-			PositionType: acap.AxOverlayTopLeft,
-			Colorspace:   acap.AxOverlayColorspaceARGB32,
-		},
-	}); err != nil {
-		panic(err)
+	// we pass app as userdata to access syslog from app in callbacks
+	if overlay_id_text, err = overlayProvider.AddOverlay(goxis.NewAnchorCenterRrgbaOverlay(acap.AxOverlayTopLeft, app)); err != nil {
+		app.Syslog.Crit(err.Error())
 	}
-	fmt.Println("Overlay ID Text", overlay_id_text)
 
-	// Call redraw fo first render
+	// Draw overlays
 	if err = overlayProvider.Redraw(); err != nil {
-		panic(err)
+		app.Syslog.Crit(err.Error())
 	}
+
+	// Overlay update - increasing counter and call redraw to invoke a new render call
+	go func() {
+		for true {
+			time.Sleep(time.Second * 1)
+			counter++
+			if err = overlayProvider.Redraw(); err != nil {
+				app.Syslog.Crit(err.Error())
+			}
+		}
+	}()
 
 	// Enter main loop
 	app.Run()

@@ -1,4 +1,4 @@
-package goxis
+package acap
 
 import (
 	"image/color"

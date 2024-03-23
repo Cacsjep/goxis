@@ -10,9 +10,9 @@ import (
 var onlyOnce = false
 
 type OverlayProvider struct {
-	renderCallback       acap.AxOverlayRenderFunc
-	adjustmentCallback   acap.AxOverlayAdjustmentFunc
-	streamSelectCallback acap.AxOverlayStreamSelectFunc
+	renderCallback       acap.AxOverlayRenderCallback
+	adjustmentCallback   acap.AxOverlayAdjustmentCallback
+	streamSelectCallback acap.AxOverlayStreamSelectCallback
 	settings             *acap.AxOverlaySettings
 	palleteColors        map[int]acap.AxOverlayPaletteColor
 	overlays             map[int]*Overlay
@@ -33,8 +33,21 @@ type StreamSelectEvent struct {
 	StreamType              acap.AxOverlayStreamType
 }
 
+// Creates a default overlay with anchor center and ARGB32 colorspace
+func NewAnchorCenterRrgbaOverlay(positonType acap.AxOverlayPositionType, userData any) *Overlay {
+	return &Overlay{
+		UseMaxResolution: true,
+		OverlayData: &acap.AxOverlayOverlayData{
+			AnchorPoint:  acap.AxOverlayAnchorCenter,
+			PositionType: positonType,
+			Colorspace:   acap.AxOverlayColorspaceARGB32,
+		},
+		Userdata: userData,
+	}
+}
+
 // Creates a cairo backend overlay Provider, this can only created once !!!
-func NewOverlayProvider(renderCallback acap.AxOverlayRenderFunc, adjustmentCallback acap.AxOverlayAdjustmentFunc, streamSelectCallback acap.AxOverlayStreamSelectFunc) (*OverlayProvider, error) {
+func NewOverlayProvider(renderCallback acap.AxOverlayRenderCallback, adjustmentCallback acap.AxOverlayAdjustmentCallback, streamSelectCallback acap.AxOverlayStreamSelectCallback) (*OverlayProvider, error) {
 	var err error
 
 	if !onlyOnce {
@@ -58,11 +71,6 @@ func NewOverlayProvider(renderCallback acap.AxOverlayRenderFunc, adjustmentCallb
 	if err = acap.AxOverlayInit(op.settings); err != nil {
 		return nil, err
 	}
-	/* for color_index, palleteColor := range op.palleteColors {
-		if err = acap.AxOverlaySetPaletteColor(color_index, palleteColor); err != nil {
-			return nil, err
-		}
-	} */
 	return op, nil
 }
 
