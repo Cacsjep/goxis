@@ -148,7 +148,7 @@ func GoParameterCallback(name *C.gchar, value *C.gchar, user_data unsafe.Pointer
 	data.Callback(C.GoString(name), C.GoString(value), data.Userdata)
 }
 
-// Registers a callback function to be run whenever a parameter value is updated.
+// Registers a callback function to be run whenever the given named parameter is changed, eg value updated.
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axparameter/html/ax__parameter_8h.html#a43ae8096bdcad55ff26bf13eadc3b781
 func (axp *AXParameter) RegisterCallback(name string, callback ParameterCallback, userdata any) error {

@@ -6,7 +6,7 @@ import (
 
 var (
 	ColorTransparent        = color.RGBA{R: 0, G: 0, B: 0, A: 0}
-	ColorMaterialBlack      = color.RGBA{R: 0, G: 0, B: 0, A: 255}
+	ColorBlack              = color.RGBA{R: 0, G: 0, B: 0, A: 255}
 	ColorMaterialRed        = color.RGBA{R: 244, G: 67, B: 54, A: 255}
 	ColorMaterialGreen      = color.RGBA{R: 76, G: 175, B: 80, A: 255}
 	ColorMaterialBlue       = color.RGBA{R: 33, G: 150, B: 243, A: 255}
@@ -21,4 +21,5 @@ var (
 	ColorMaterialDeepOrange = color.RGBA{R: 255, G: 87, B: 34, A: 255}
 	ColorMaterialBrown      = color.RGBA{R: 121, G: 85, B: 72, A: 255}
 	ColorMaterialGrey       = color.RGBA{R: 158, G: 158, B: 158, A: 255}
+	ColorWite               = color.RGBA{R: 255, G: 255, B: 255, A: 255}
 )

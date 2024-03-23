@@ -2,10 +2,9 @@ package acap
 
 /*
 #cgo LDFLAGS: -laxoverlay
-#cgo pkg-config: gio-2.0 glib-2.0 cairo axoverlay cairo-ft
+#cgo pkg-config: gio-2.0 glib-2.0 cairo axoverlay
 #include <axoverlay.h>
 #include <cairo/cairo.h>
-#include <cairo/cairo-ft.h>
 */
 import "C"
 import (
@@ -238,10 +237,6 @@ func (ctx *CairoContext) SetFontSize(size float64) {
 	C.cairo_set_font_size(ctx.ptr, C.double(size))
 }
 
-func (ctx *CairoContext) SetFontFace(fontFace *FontFace) {
-	C.cairo_set_font_face(ctx.ptr, fontFace.face)
-}
-
 func (ctx *CairoContext) ShowText(text string) {
 	cs := C.CString(text)
 	C.cairo_show_text(ctx.ptr, cs)
@@ -270,24 +265,6 @@ func (ctx *CairoContext) TextExtents(text string) *TextExtents {
 	return te
 }
 
-func (ctx *CairoContext) FontExtents() *FontExtents {
-	cfe := C.cairo_font_extents_t{}
-	C.cairo_font_extents(ctx.ptr, &cfe)
-	fe := &FontExtents{
-		Ascent:      float64(cfe.ascent),
-		Descent:     float64(cfe.descent),
-		Height:      float64(cfe.height),
-		MaxXadvance: float64(cfe.max_x_advance),
-		MaxYadvance: float64(cfe.max_y_advance),
-	}
-	return fe
-}
-
-type FontFace struct {
-	face    *C.cairo_font_face_t
-	ft_face *C.FT_Face
-}
-
 const (
 	FONT_WEIGHT_NORMAL = iota
 	FONT_WEIGHT_BOLD
@@ -300,14 +277,6 @@ type TextExtents struct {
 	Height   float64
 	Xadvance float64
 	Yadvance float64
-}
-
-type FontExtents struct {
-	Ascent      float64
-	Descent     float64
-	Height      float64
-	MaxXadvance float64
-	MaxYadvance float64
 }
 
 type Operator int

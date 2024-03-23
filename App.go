@@ -14,11 +14,12 @@ import (
 // to facilitate easy development of ACAP applications. This includes automatic loading of the application's manifest,
 // initialization of syslog for logging, handling of application parameters, event handling, and the GMainLoop for the main event loop.
 type AcapApplication struct {
-	Manifest     *manifest.ApplicationManifestSchema
-	Syslog       *acap.Syslog
-	ParamHandler *acap.AXParameter
-	EventHandler *acap.AXEventHandler
-	Mainloop     *acap.GMainLoop
+	Manifest        *manifest.ApplicationManifestSchema
+	Syslog          *acap.Syslog
+	ParamHandler    *acap.AXParameter
+	EventHandler    *acap.AXEventHandler
+	Mainloop        *acap.GMainLoop
+	OnCloseCleaners []func()
 }
 
 // NewAcapApplication initializes a new AcapApplication instance, loading the application's manifest,
@@ -36,11 +37,12 @@ func NewAcapApplication() (*AcapApplication, error) {
 	}
 
 	app := AcapApplication{
-		Manifest:     m,
-		Syslog:       acap.NewSyslog(m.ACAPPackageConf.Setup.AppName, acap.LOG_PID|acap.LOG_CONS, acap.LOG_USER),
-		ParamHandler: pApp,
-		EventHandler: acap.NewEventHandler(),
-		Mainloop:     acap.NewMainLoop(),
+		Manifest:        m,
+		Syslog:          acap.NewSyslog(m.ACAPPackageConf.Setup.AppName, acap.LOG_PID|acap.LOG_CONS, acap.LOG_USER),
+		ParamHandler:    pApp,
+		EventHandler:    acap.NewEventHandler(),
+		Mainloop:        acap.NewMainLoop(),
+		OnCloseCleaners: []func(){},
 	}
 
 	return &app, nil
@@ -63,12 +65,22 @@ func (a *AcapApplication) IsLicenseValid(major_version int, minor_version int) (
 
 // Start initiates the main event loop of the application, beginning its execution.
 func (a *AcapApplication) Run() {
+	acap.SignalHandler(a.Close)
 	a.Mainloop.Run()
+}
+
+// Add close or clean functions to app so in case of signals these are correct handled
+func (a *AcapApplication) AddCloseCleanFunc(f func()) {
+	a.OnCloseCleaners = append(a.OnCloseCleaners, f)
 }
 
 // Close terminates the application's main event loop and releases resources associated with the syslog, parameter handler,
 // event handler, and main loop. This should be called to cleanly shut down the application.
 func (a *AcapApplication) Close() {
+	a.Syslog.Info("Stop Application")
+	for _, f := range a.OnCloseCleaners {
+		f()
+	}
 	a.Mainloop.Quit()     // Terminate the main loop.
 	a.ParamHandler.Free() // Release the parameter handler.
 	a.EventHandler.Free() // Release the event handler.

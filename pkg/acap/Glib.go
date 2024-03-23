@@ -34,11 +34,8 @@ func NewMainLoop() *GMainLoop {
 // to manage concurrency and ensure that Start is called from the appropriate execution context,
 // as it will lock the calling thread.
 //
-// Run also register a signal Handler for SIGTERM and SIGINT
-
 // https://docs.gtk.org/glib/method.MainLoop.run.html
 func (g *GMainLoop) Run() {
-	SignalHandler(g.Quit)
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 	C.g_main_loop_run(g.Ptr)

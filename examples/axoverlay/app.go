@@ -35,6 +35,7 @@ func streamSelectCallback(streamSelectEvent *acap.OverlayStreamSelectEvent) bool
 // is rendered on a stream, which is useful if the resolution has been
 // updated or rotation has changed.
 func adjustmentCallback(adjustmentEvent *acap.OverlayAdjustmentEvent) {
+	app := adjustmentEvent.Userdata.(*goxis.AcapApplication)
 	app.Syslog.Infof("Adjust callback for overlay-%d: %dx%d", adjustmentEvent.OverlayId, adjustmentEvent.OverlayWidth, adjustmentEvent.OverlayHeight)
 	app.Syslog.Infof("Adjust callback for stream: %dx%d", adjustmentEvent.Stream.Width, adjustmentEvent.Stream.Height)
 
@@ -52,7 +53,7 @@ func renderCallback(renderEvent *acap.OverlayRenderEvent) {
 	app.Syslog.Infof("Render callback for stream: %dx%d", renderEvent.Stream.Width, renderEvent.Stream.Height)
 
 	if renderEvent.OverlayId == overlay_id_text {
-		renderEvent.CairoCtx.DrawText(fmt.Sprintf("Counter: %d", counter), 10, 10, 32.0, "serif", acap.ColorMaterialBlack)
+		renderEvent.CairoCtx.DrawText(fmt.Sprintf("Counter: %d", counter), 10, 10, 32.0, "serif", acap.ColorBlack)
 	} else if renderEvent.OverlayId == overlay_id_rect {
 		renderEvent.CairoCtx.DrawTransparent(renderEvent.Stream.Width, renderEvent.Stream.Height)
 		renderEvent.CairoCtx.DrawRect(0, 0, float64(renderEvent.Stream.Width), float64(renderEvent.Stream.Height/4), acap.ColorMaterialRed, 9.6)

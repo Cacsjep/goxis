@@ -1,0 +1,40 @@
+{
+    "schemaVersion": "1.6.0",
+    "resources": {
+        "dbus": {
+            "requiredMethods": [
+                "com.axis.Graphics2.*",
+                "com.axis.Overlay2.*"
+            ]
+        }
+    },
+    "acapPackageConf": {
+        "setup": {
+            "friendlyName": "Weather Overlay",
+            "appName": "weatheroverlay",
+            "vendor": "Acs Christoph",
+            "embeddedSdkVersion": "3.0",
+            "runMode": "respawn",
+            "version": "1.0.0"
+        },
+        "configuration": {
+            "paramConfig": [
+                {
+                    "name": "Lat",
+                    "default": "48.2082",
+                    "type": "string:maxlen=64"
+                },
+                {
+                    "name": "Long",
+                    "default": "16.3719",
+                    "type": "string:maxlen=64"
+                },
+                {
+                    "name": "Color",
+                    "default": "Black",
+                    "type": "enum:Black|Black,Red|Red,Green|Green,Blue|Blue,Indigo|Indigo,Pink|Pink,Lime|Lime,DeepPurple|Deep Purple,Amber|Amber,Teal|Teal,Cyan|Cyan,LightGreen|Light Green,DeepOrange|Deep Orange,Brown|Brown,Grey|Grey,White|White"
+                }
+            ]
+        }
+    }
+}
