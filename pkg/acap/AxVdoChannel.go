@@ -77,7 +77,6 @@ func VdoChannelGetFilterd(filter *VdoMap) ([]*VdoStream, error) {
 	)
 
 	if err := newGError(gerr); err != nil {
-		defer err.Free()
 		return streams, err
 	}
 
@@ -110,7 +109,6 @@ func (c *VdoChannel) GetInfo() (*VdoMap, error) {
 	var gerr *C.GError
 	infoMap := C.vdo_channel_get_info(c.Ptr, &gerr)
 	if err := newGError(gerr); err != nil {
-		defer err.Free()
 		return nil, err
 	}
 	return NewVdoMapFromC(infoMap), nil
@@ -125,7 +123,6 @@ func GetGlobalVdoChannelInfo() (*VdoMap, error) {
 	var gerr *C.GError
 	infoMap := C.vdo_channel_get_info(nil, &gerr)
 	if err := newGError(gerr); err != nil {
-		defer err.Free()
 		return nil, err
 	}
 	return NewVdoMapFromC(infoMap), nil
@@ -151,7 +148,6 @@ func (c *VdoChannel) GetResolutions(filter *VdoMap) ([]VdoResolution, error) {
 	)
 
 	if err := newGError(gerr); err != nil {
-		defer err.Free()
 		return nil, err
 	}
 
@@ -180,7 +176,6 @@ func (c *VdoChannel) GetSettings() (*VdoMap, error) {
 	var gerr *C.GError
 	settingsMap := C.vdo_channel_get_settings(c.Ptr, &gerr)
 	if err := newGError(gerr); err != nil {
-		defer err.Free()
 		return nil, err
 	}
 	return NewVdoMapFromC(settingsMap), nil

@@ -14,19 +14,15 @@ type GError struct {
 	Expected bool
 }
 
-func newGError(gerr *C.GError) *GError {
+func newGError(gerr *C.GError) error {
 	if gerr == nil {
 		return nil
 	}
 	err := &GError{Message: C.GoString(gerr.message), Code: int(gerr.code), Ptr: gerr}
-	defer err.Free()
+	defer C.g_error_free(gerr)
 	return err
 }
 
 func (e *GError) Error() string {
 	return fmt.Sprintf("%s, ErrorCode: %d", e.Message, e.Code)
-}
-
-func (e *GError) Free() {
-	C.g_error_free(e.Ptr)
 }

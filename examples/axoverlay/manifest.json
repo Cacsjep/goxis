@@ -1,5 +1,13 @@
 {
     "schemaVersion": "1.6.0",
+    "resources": {
+        "dbus": {
+            "requiredMethods": [
+                "com.axis.Graphics2.*",
+                "com.axis.Overlay2.*"
+            ]
+        }
+    },
     "acapPackageConf": {
         "setup": {
             "friendlyName": "Goxis AxOverlay Example",
