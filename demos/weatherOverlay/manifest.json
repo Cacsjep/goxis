@@ -33,6 +33,16 @@
                     "name": "Color",
                     "default": "Black",
                     "type": "enum:Black|Black,Red|Red,Green|Green,Blue|Blue,Indigo|Indigo,Pink|Pink,Lime|Lime,DeepPurple|Deep Purple,Amber|Amber,Teal|Teal,Cyan|Cyan,LightGreen|Light Green,DeepOrange|Deep Orange,Brown|Brown,Grey|Grey,White|White"
+                },
+                {
+                    "name": "Position",
+                    "default": "tl",
+                    "type": "enum:tl|Top Left,tr|Top Right, bl|Bottom Left, br|Bottom Right" 
+                },
+                {
+                    "name": "Size",
+                    "default": "medium",
+                    "type": "enum:small|Small,medium|Medium, large|Large, xlarge|Extra Large" 
                 }
             ]
         }

@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"image/color"
 	"strconv"
 
 	"github.com/Cacsjep/goxis/pkg/acap"
@@ -13,6 +12,8 @@ func (w *WeatherApp) LoadParams() error {
 	var lat_str string
 	var long_str string
 	var color_str string
+	var pos_str string
+	var size_str string
 	if lat_str, err = w.AcapApp.ParamHandler.Get("Lat"); err != nil {
 		return err
 	}
@@ -28,7 +29,15 @@ func (w *WeatherApp) LoadParams() error {
 	if color_str, err = w.AcapApp.ParamHandler.Get("Color"); err != nil {
 		return err
 	}
-	w.Color = w.UpdateColor(color_str)
+	if pos_str, err = w.AcapApp.ParamHandler.Get("Position"); err != nil {
+		return err
+	}
+	if size_str, err = w.AcapApp.ParamHandler.Get("Size"); err != nil {
+		return err
+	}
+	w.UpdateColor(color_str)
+	w.UpdatePosition(pos_str)
+	w.UpdateSize(size_str)
 	return nil
 }
 
@@ -47,79 +56,83 @@ func (w *WeatherApp) UpdateCoords(parameterName string, value string) (err error
 	return nil
 }
 
-func (w *WeatherApp) UpdateColor(value string) color.RGBA {
+func (w *WeatherApp) UpdateColor(value string) {
 	switch value {
 	case "Transparent":
-		return acap.ColorTransparent
+		w.Color = acap.ColorTransparent
 	case "Black":
-		return acap.ColorBlack
+		w.Color = acap.ColorBlack
 	case "White":
-		return acap.ColorWite
+		w.Color = acap.ColorWite
 	case "Red":
-		return acap.ColorMaterialRed
+		w.Color = acap.ColorMaterialRed
 	case "Green":
-		return acap.ColorMaterialGreen
+		w.Color = acap.ColorMaterialGreen
 	case "Blue":
-		return acap.ColorMaterialBlue
+		w.Color = acap.ColorMaterialBlue
 	case "Indigo":
-		return acap.ColorMaterialIndigo
+		w.Color = acap.ColorMaterialIndigo
 	case "Pink":
-		return acap.ColorMaterialPink
+		w.Color = acap.ColorMaterialPink
 	case "Lime":
-		return acap.ColorMaterialLime
+		w.Color = acap.ColorMaterialLime
 	case "DeepPurple":
-		return acap.ColorMaterialDeepPurple
+		w.Color = acap.ColorMaterialDeepPurple
 	case "Amber":
-		return acap.ColorMaterialAmber
+		w.Color = acap.ColorMaterialAmber
 	case "Teal":
-		return acap.ColorMaterialTeal
+		w.Color = acap.ColorMaterialTeal
 	case "Cyan":
-		return acap.ColorMaterialCyan
+		w.Color = acap.ColorMaterialCyan
 	case "LightGreen":
-		return acap.ColorMaterialLightGreen
+		w.Color = acap.ColorMaterialLightGreen
 	case "DeepOrange":
-		return acap.ColorMaterialDeepOrange
+		w.Color = acap.ColorMaterialDeepOrange
 	case "Brown":
-		return acap.ColorMaterialBrown
+		w.Color = acap.ColorMaterialBrown
 	case "Grey":
-		return acap.ColorMaterialGrey
+		w.Color = acap.ColorMaterialGrey
 	default:
-		return acap.ColorBlack
+		w.Color = acap.ColorBlack
 	}
 }
 
 func (w *WeatherApp) RegisterParamsCallbacks() error {
-	if err := w.AcapApp.ParamHandler.RegisterCallback("Lat", func(name, value string, userdata any) {
-		if err := w.UpdateCoords(name, value); err != nil {
-			w.AcapApp.Syslog.Errorf("Failed to update latitude: %s", err.Error())
-		} else {
-			w.AcapApp.Syslog.Infof("Latitude updated to: %f", w.Lat)
-			w.UpdateWeather()
-			w.Redraw()
-		}
-	}, nil); err != nil {
-		return fmt.Errorf("error registering latitude callback: %w", err)
+	callbacks := map[string]func(name, value string) error{
+		"Lat": func(name, value string) error {
+			return w.UpdateCoords(name, value)
+		},
+		"Long": func(name, value string) error {
+			return w.UpdateCoords(name, value)
+		},
+		"Color": func(_, value string) error {
+			w.UpdateColor(value)
+			return nil
+		},
+		"Position": func(name, value string) error {
+			w.UpdatePosition(value)
+			return nil
+		},
+		"Size": func(name, value string) error {
+			w.UpdateSize(value)
+			return nil
+		},
 	}
 
-	if err := w.AcapApp.ParamHandler.RegisterCallback("Long", func(name, value string, userdata any) {
-		if err := w.UpdateCoords(name, value); err != nil {
-			w.AcapApp.Syslog.Errorf("Failed to update longitude: %s", err.Error())
-		} else {
-			w.AcapApp.Syslog.Infof("Longitude updated to: %f", w.Long)
-			w.UpdateWeather()
-			w.Redraw()
+	for paramName, updateFunc := range callbacks {
+		callbackFunc := func(name, value string, userdata any) {
+			if err := updateFunc(name, value); err != nil {
+				w.AcapApp.Syslog.Errorf("Failed to update %s: %s", name, err.Error())
+			} else {
+				w.AcapApp.Syslog.Infof("%s updated to: %s", name, value)
+				w.UpdateWeather()
+				w.Redraw()
+			}
 		}
-	}, nil); err != nil {
-		return fmt.Errorf("error registering longitude callback: %w", err)
-	}
 
-	if err := w.AcapApp.ParamHandler.RegisterCallback("Color", func(name, value string, userdata any) {
-		w.Color = w.UpdateColor(value)
-		w.AcapApp.Syslog.Infof("Color updated to: %s", value)
-		w.UpdateWeather()
-		w.Redraw()
-	}, nil); err != nil {
-		return fmt.Errorf("error registering longitude callback: %w", err)
+		if err := w.AcapApp.ParamHandler.RegisterCallback(paramName, callbackFunc, nil); err != nil {
+			return fmt.Errorf("error registering %s callback: %w", paramName, err)
+		}
 	}
 
 	return nil

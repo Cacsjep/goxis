@@ -15,13 +15,17 @@ type WeatherApp struct {
 	Lat                  float64
 	Long                 float64
 	Color                color.RGBA
+	Position             acap.AxOverlayPositionType
+	Size                 float64
 	LastData             *WeatherData
 	TemperatureOverlayId int
 }
 
 func main() {
 	var err error
-	w := WeatherApp{}
+	w := WeatherApp{
+		Position: acap.AxOverlayBottomLeft,
+	}
 
 	if w.AcapApp, err = goxis.NewAcapApplication(); err != nil {
 		panic(err)
@@ -43,7 +47,7 @@ func main() {
 		w.AcapApp.Syslog.Errorf("Failed to set up parameter callbacks: %s", err.Error())
 	}
 
-	if w.TemperatureOverlayId, err = w.OvProvider.AddOverlay(goxis.NewAnchorCenterRrgbaOverlay(acap.AxOverlayTopLeft, &w)); err != nil {
+	if w.TemperatureOverlayId, err = w.OvProvider.AddOverlay(goxis.NewAnchorCenterRrgbaOverlay(w.Position, &w)); err != nil {
 		w.AcapApp.Syslog.Errorf("Failed to add temperature overlay: %s", err.Error())
 	}
 

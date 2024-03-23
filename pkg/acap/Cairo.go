@@ -26,6 +26,23 @@ func Index2Cairo(colorIndex int) float64 {
 	return (float64((colorIndex << 4) + colorIndex)) / PALETTE_VALUE_RANGE
 }
 
+func (ctx *CairoContext) DrawArrow(x, y, length, angle float64, color color.RGBA) {
+	C.cairo_save(ctx.ptr)
+	ctx.Translate(x, y)
+	ctx.Rotate(angle * (3.141592653589793 / 180.0))
+	ctx.SetSourceRGB(color)
+	ctx.SetLineWidth(6)
+	ctx.MoveTo(0, 0)
+	shaft := float64(length / 4)
+	arrowhead := float64(9)
+	ctx.LineTo(length-shaft, 0)       // Draw the line for the arrow's shaft
+	ctx.RelLineTo(-shaft, -arrowhead) // Left part of the arrowhead
+	ctx.RelMoveTo(shaft, arrowhead)   // Move back to the tip of the arrow
+	ctx.RelLineTo(-shaft, arrowhead)  // Right part of the arrowhead
+	ctx.Stroke()
+	C.cairo_restore(ctx.ptr)
+}
+
 func (ctx *CairoContext) DrawText(text string, x float64, y float64, size float64, font_name string, color color.RGBA) {
 	ctx.SetSourceRGB(color)
 	ctx.SelectFontFace(font_name, FONT_SLANT_NORMAL, FONT_WEIGHT_NORMAL)
