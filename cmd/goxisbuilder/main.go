@@ -32,13 +32,17 @@ type BuildConfiguration struct {
 }
 
 type BuildFlags struct {
-	Ip           string
-	Pwd          string
-	Arch         string
-	DoStart      bool
-	DoInstall    bool
-	AppDirectory string
-	WithLibav    bool
+	Ip            string
+	Pwd           string
+	Arch          string
+	DoStart       bool
+	DoInstall     bool
+	AppDirectory  string
+	Manifest      string
+	Sdk           string
+	UbunutVersion string
+	Version       string
+	WithLibav     bool
 }
 
 var examples []string = []string{
@@ -59,36 +63,45 @@ func boolToStr(b bool) string {
 }
 
 func buildArm64(amf *manifest.ApplicationManifestSchema, bf BuildFlags) *BuildConfiguration {
+	fmt.Println(bf.Sdk, bf.UbunutVersion, bf.Version)
 	buildArgs := map[string]*string{
-		"ARCH":         ptr("aarch64"),
-		"GO_ARCH":      ptr("arm64"),
-		"APP_NAME":     ptr(amf.ACAPPackageConf.Setup.AppName),
-		"IP_ADDR":      ptr(bf.Ip),
-		"PASSWORD":     ptr(bf.Pwd),
-		"START":        ptr(boolToStr(bf.DoStart)),
-		"INSTALL":      ptr(boolToStr(bf.DoInstall)),
-		"GO_APP":       ptr(bf.AppDirectory),
-		"CROSS_FILE":   ptr("cross_aarch64.txt"),
-		"CROSS_PREFIX": ptr("aarch64-linux-gnu-"),
-		"COMP_LIBAV":   ptr(boolToStr(bf.WithLibav)),
+		"ARCH":           ptr("aarch64"),
+		"SDK":            ptr(bf.Sdk),
+		"UBUNTU_VERSION": ptr(bf.UbunutVersion),
+		"VERSION":        ptr(bf.Version),
+		"GO_ARCH":        ptr("arm64"),
+		"APP_NAME":       ptr(amf.ACAPPackageConf.Setup.AppName),
+		"APP_MANIFEST":   ptr(bf.Manifest),
+		"IP_ADDR":        ptr(bf.Ip),
+		"PASSWORD":       ptr(bf.Pwd),
+		"START":          ptr(boolToStr(bf.DoStart)),
+		"INSTALL":        ptr(boolToStr(bf.DoInstall)),
+		"GO_APP":         ptr(bf.AppDirectory),
+		"CROSS_FILE":     ptr("cross_aarch64.txt"),
+		"CROSS_PREFIX":   ptr("aarch64-linux-gnu-"),
+		"COMP_LIBAV":     ptr(boolToStr(bf.WithLibav)),
 	}
 	return &BuildConfiguration{buildArgs: buildArgs, imageName: "acaparm64"}
 }
 
 func buildArmv7hf(amf *manifest.ApplicationManifestSchema, bf BuildFlags) *BuildConfiguration {
 	buildArgs := map[string]*string{
-		"ARCH":         ptr("armv7hf"),
-		"GO_ARCH":      ptr("arm"),
-		"GO_ARM":       ptr("7"),
-		"APP_NAME":     ptr(amf.ACAPPackageConf.Setup.AppName),
-		"IP_ADDR":      ptr(bf.Ip),
-		"PASSWORD":     ptr(bf.Pwd),
-		"START":        ptr(boolToStr(bf.DoStart)),
-		"INSTALL":      ptr(boolToStr(bf.DoInstall)),
-		"GO_APP":       ptr(bf.AppDirectory),
-		"CROSS_FILE":   ptr("cross_armv7hf.txt"),
-		"CROSS_PREFIX": ptr("arm-linux-gnueabihf-"),
-		"COMP_LIBAV":   ptr(boolToStr(bf.WithLibav)),
+		"ARCH":           ptr("armv7hf"),
+		"SDK":            ptr(bf.Sdk),
+		"UBUNTU_VERSION": ptr(bf.UbunutVersion),
+		"VERSION":        ptr(bf.Version),
+		"GO_ARCH":        ptr("arm"),
+		"GO_ARM":         ptr("7"),
+		"APP_NAME":       ptr(amf.ACAPPackageConf.Setup.AppName),
+		"APP_MANIFEST":   ptr(bf.Manifest),
+		"IP_ADDR":        ptr(bf.Ip),
+		"PASSWORD":       ptr(bf.Pwd),
+		"START":          ptr(boolToStr(bf.DoStart)),
+		"INSTALL":        ptr(boolToStr(bf.DoInstall)),
+		"GO_APP":         ptr(bf.AppDirectory),
+		"CROSS_FILE":     ptr("cross_armv7hf.txt"),
+		"CROSS_PREFIX":   ptr("arm-linux-gnueabihf-"),
+		"COMP_LIBAV":     ptr(boolToStr(bf.WithLibav)),
 	}
 	return &BuildConfiguration{buildArgs: buildArgs, imageName: "acaparmv7hf"}
 }
@@ -201,19 +214,42 @@ func dockerBuild(bc *BuildConfiguration) {
 func main() {
 	showHelp := flag.Bool("h", false, "Show usage")
 	ip := flag.String("ip", "", "IP for camera where eap is installed")
+	manifest_path := flag.String("manifest", "", "Specify manifest default is manifest.json")
 	pwd := flag.String("pwd", "", "Root password for camera where eap is installed")
 	arch := flag.String("arch", "aarch64", "ACAP Architecture: aarch64 or armv7hf")
 	doStart := flag.Bool("start", false, "Start after install")
 	doInstall := flag.Bool("install", false, "Install on camera")
 	buildExamples := flag.Bool("build-examples", false, "Build Examples")
+	acap3 := flag.Bool("acap3", false, "Build for acap 3")
 	getPackageLog := flag.Bool("watch", false, "Watch the package log after build")
 	appDirectory := flag.String("appdir", "", "Full path of application directroy to build from")
 	withLibav := flag.Bool("libav", false, "Compile libav for binding it with go-astiav")
 	flag.Parse()
+
 	if *showHelp {
 		flag.Usage()
 		os.Exit(1)
 	}
+
+	if *manifest_path == "" {
+		*manifest_path = "manifest.json"
+	}
+
+	var sdk string
+	var uversion string
+	var version string
+
+	if *acap3 {
+		sdk = "acap-sdk"
+		uversion = "20.04"
+		version = "3.5"
+	} else {
+		sdk = "acap-native-sdk"
+		uversion = "22.04"
+		version = "1.13"
+	}
+
+	fmt.Println(sdk, uversion)
 
 	if *appDirectory == "" {
 		if !*buildExamples {
@@ -222,14 +258,14 @@ func main() {
 		for _, e := range examples {
 			doNot := false
 			example := fmt.Sprintf("examples/%s", e)
-			buildApp(&example, arch, ip, pwd, doInstall, &doNot, &doNot, &doNot)
+			buildApp(&example, arch, ip, pwd, doInstall, &doNot, &doNot, &doNot, manifest_path, sdk, uversion, version)
 		}
 	} else {
-		buildApp(appDirectory, arch, ip, pwd, doInstall, withLibav, doStart, getPackageLog)
+		buildApp(appDirectory, arch, ip, pwd, doInstall, withLibav, doStart, getPackageLog, manifest_path, sdk, uversion, version)
 	}
 }
 
-func buildApp(appDirectory *string, arch *string, ip *string, pwd *string, doInstall *bool, withLibav *bool, doStart *bool, getPackageLog *bool) {
+func buildApp(appDirectory *string, arch *string, ip *string, pwd *string, doInstall *bool, withLibav *bool, doStart *bool, getPackageLog *bool, manifest_path *string, sdk string, uversion string, version string) {
 	fmt.Println("### Starting ACAP Builder ###")
 	amf, err := manifest.LoadManifest(*appDirectory + "/manifest.json")
 	if err != nil {
@@ -251,7 +287,19 @@ func buildApp(appDirectory *string, arch *string, ip *string, pwd *string, doIns
 		panic("When install/starting/watch is used, you need to provide both ip and pwd")
 	}
 
-	bf := BuildFlags{Ip: *ip, Pwd: *pwd, DoStart: *doStart, DoInstall: *doInstall, Arch: *arch, AppDirectory: *appDirectory, WithLibav: *withLibav}
+	bf := BuildFlags{
+		Ip:            *ip,
+		Pwd:           *pwd,
+		DoStart:       *doStart,
+		DoInstall:     *doInstall,
+		Arch:          *arch,
+		AppDirectory:  *appDirectory,
+		WithLibav:     *withLibav,
+		Manifest:      *manifest_path,
+		Sdk:           sdk,
+		UbunutVersion: uversion,
+		Version:       version,
+	}
 
 	if *arch == "aarch64" {
 		dockerBuild(buildArm64(amf, bf))

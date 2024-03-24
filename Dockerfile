@@ -1,9 +1,9 @@
 ARG ARCH=
-ARG VERSION=1.13
-ARG UBUNTU_VERSION=22.04
+ARG VERSION=
+ARG UBUNTU_VERSION=
 # ARG UBUNTU_VERSION=20.04 for acap 3
 ARG REPO=axisecp
-ARG SDK=acap-native-sdk 
+ARG SDK=
 #  ARG SDK=acap-sdk for acap 3
 FROM ${REPO}/${SDK}:${VERSION}-${ARCH}-ubuntu${UBUNTU_VERSION}
 
@@ -77,6 +77,7 @@ RUN mkdir -p ${FF_BUILD_DIR} && \
 # Perpare the ACAP Build
 #-------------------------------------------------------------------------------
 ARG APP_NAME=app
+ARG APP_MANIFEST=
 ARG GO_ARCH=arm64
 ARG GO_ARM=
 ARG IP_ADDR= 
@@ -96,10 +97,12 @@ ENV GOOS=linux
 ENV GOARCH=${GO_ARCH}
 ENV GOARM=${GO_ARM}
 ENV APP_NAME=${APP_NAME}
+ENV MANIFEST=${APP_MANIFEST}
+# TODO: ACAP3 has no --build arg
 RUN . /opt/axis/acapsdk/environment-setup* && \
     export PKG_CONFIG_PATH=${FF_BUILD_DIR}/lib/pkgconfig:$PKG_CONFIG_PATH && \
     go build -ldflags "-s -w  -extldflags '-L./lib -Wl,-rpath,./lib'" -o ${APP_NAME} . && \
-    acap-build --build no-build ./ && \
+    acap-build --manifest ${MANIFEST} --build no-build ./ && \
     if [ "${INSTALL}" = "YES" ]; then eap-install.sh ${IP_ADDR} ${PASSWORD} install; fi && \
     if [ "${START}" = "YES" ]; then eap-install.sh start; fi
 

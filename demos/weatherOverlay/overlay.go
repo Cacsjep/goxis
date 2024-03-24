@@ -57,7 +57,7 @@ func renderCallback(renderEvent *acap.OverlayRenderEvent) {
 				DegreeLines:         wapp.Color,
 				DegreeStep:          wapp.Color,
 			},
-			DirectionLineWidth: 2,
+			DirectionLineWidth: 2.5,
 			BaseLineWidth:      4,
 		}
 
@@ -243,7 +243,7 @@ func DrawText(ctx *acap.CairoContext, compass Compass, wapp *WeatherApp) {
 	startY := compass.CenterY + (textHeight / 2)
 
 	// Move to calculated start position and show text
-	ctx.MoveTo(startX, startY-(compass.Textsize*2))
+	ctx.MoveTo(startX, startY-(compass.Textsize*1.7))
 	ctx.ShowText(text)
 
 	temp_text := fmt.Sprintf(
@@ -259,7 +259,7 @@ func DrawText(ctx *acap.CairoContext, compass Compass, wapp *WeatherApp) {
 	startX = compass.CenterX - (textWidth / 2)
 	startY = compass.CenterY + (textHeight / 2)
 
-	ctx.MoveTo(startX, startY+(compass.Textsize*2))
+	ctx.MoveTo(startX, startY+(compass.Textsize*1.5))
 	ctx.ShowText(temp_text)
 }
 
