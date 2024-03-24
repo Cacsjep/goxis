@@ -13,6 +13,7 @@ import (
 	"errors"
 	"fmt"
 	"runtime/cgo"
+	"strconv"
 	"unsafe"
 )
 
@@ -95,6 +96,20 @@ func (axp *AXParameter) Get(name string) (string, error) {
 		return "", newGError(gerr)
 	}
 	return cValue.ToGolang(), nil
+}
+
+func (axp *AXParameter) GetAsFloat(name string) (float64, error) {
+	var err error
+	var str_val string
+
+	if str_val, err = axp.Get(name); err != nil {
+		return 0, err
+	}
+	val, err := strconv.ParseFloat(str_val, 64)
+	if err != nil {
+		return 0, err
+	}
+	return val, nil
 }
 
 // Lists all parameters for the application.

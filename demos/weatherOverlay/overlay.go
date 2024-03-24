@@ -69,29 +69,3 @@ func (w *WeatherApp) Redraw() {
 		w.AcapApp.Syslog.Errorf("Failed to redraw overlays: %s", err.Error())
 	}
 }
-
-func (w *WeatherApp) UpdatePosition(value string) {
-	switch value {
-	case "tr":
-		w.Position = acap.AxOverlayTopRight
-	case "br":
-		w.Position = acap.AxOverlayBottomRight
-	case "bl":
-		w.Position = acap.AxOverlayBottomLeft
-	case "tl":
-		w.Position = acap.AxOverlayTopLeft
-	}
-}
-
-func (w *WeatherApp) UpdateSize(value string) {
-	switch value {
-	case "small":
-		w.Size = 32.0
-	case "medium":
-		w.Size = 32.0 + 21.33
-	case "large":
-		w.Size = 32.0 + 2*21.33
-	case "xlarge":
-		w.Size = 96.0
-	}
-}

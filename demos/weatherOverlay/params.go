@@ -2,30 +2,24 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/Cacsjep/goxis/pkg/acap"
 )
 
 func (w *WeatherApp) LoadParams() error {
 	var err error
-	var lat_str string
-	var long_str string
 	var color_str string
 	var pos_str string
 	var size_str string
-	if lat_str, err = w.AcapApp.ParamHandler.Get("Lat"); err != nil {
+
+	if w.Lat, err = w.AcapApp.ParamHandler.GetAsFloat("Lat"); err != nil {
 		return err
 	}
-	if err = w.UpdateCoords("root.Weatheroverlay.Lat", lat_str); err != nil {
+
+	if w.Long, err = w.AcapApp.ParamHandler.GetAsFloat("Long"); err != nil {
 		return err
 	}
-	if long_str, err = w.AcapApp.ParamHandler.Get("Long"); err != nil {
-		return err
-	}
-	if err = w.UpdateCoords("root.Weatheroverlay.Long", long_str); err != nil {
-		return err
-	}
+
 	if color_str, err = w.AcapApp.ParamHandler.Get("Color"); err != nil {
 		return err
 	}
@@ -43,14 +37,12 @@ func (w *WeatherApp) LoadParams() error {
 
 func (w *WeatherApp) UpdateCoords(parameterName string, value string) (err error) {
 	if parameterName == "root.Weatheroverlay.Lat" {
-		w.Lat, err = strconv.ParseFloat(value, 64)
-		if err != nil {
-			return
+		if w.Lat, err = w.AcapApp.ParamHandler.GetAsFloat("Lat"); err != nil {
+			return err
 		}
 	} else {
-		w.Long, err = strconv.ParseFloat(value, 64)
-		if err != nil {
-			return
+		if w.Long, err = w.AcapApp.ParamHandler.GetAsFloat("Long"); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -94,6 +86,32 @@ func (w *WeatherApp) UpdateColor(value string) {
 		w.Color = acap.ColorMaterialGrey
 	default:
 		w.Color = acap.ColorBlack
+	}
+}
+
+func (w *WeatherApp) UpdatePosition(value string) {
+	switch value {
+	case "tr":
+		w.Position = acap.AxOverlayTopRight
+	case "br":
+		w.Position = acap.AxOverlayBottomRight
+	case "bl":
+		w.Position = acap.AxOverlayBottomLeft
+	case "tl":
+		w.Position = acap.AxOverlayTopLeft
+	}
+}
+
+func (w *WeatherApp) UpdateSize(value string) {
+	switch value {
+	case "small":
+		w.Size = 32.0
+	case "medium":
+		w.Size = 32.0 + 21.33
+	case "large":
+		w.Size = 32.0 + 2*21.33
+	case "xlarge":
+		w.Size = 96.0
 	}
 }
 
