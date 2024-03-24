@@ -245,6 +245,22 @@ func DrawText(ctx *acap.CairoContext, compass Compass, wapp *WeatherApp) {
 	// Move to calculated start position and show text
 	ctx.MoveTo(startX, startY-(compass.Textsize*2))
 	ctx.ShowText(text)
+
+	temp_text := fmt.Sprintf(
+		"%.1f%s",
+		wapp.LastData.CurrentWeather.Temperature,
+		wapp.LastData.CurrentWeatherUnits.Temperature,
+	)
+
+	extents = ctx.TextExtents(temp_text)
+	textWidth = extents.Width
+	textHeight = extents.Height
+
+	startX = compass.CenterX - (textWidth / 2)
+	startY = compass.CenterY + (textHeight / 2)
+
+	ctx.MoveTo(startX, startY+(compass.Textsize*2))
+	ctx.ShowText(temp_text)
 }
 
 func (w *WeatherApp) Redraw() {

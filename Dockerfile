@@ -1,9 +1,10 @@
 ARG ARCH=
 ARG VERSION=1.13
 ARG UBUNTU_VERSION=22.04
+# ARG UBUNTU_VERSION=20.04 for acap 3
 ARG REPO=axisecp
-ARG SDK=acap-native-sdk
-
+ARG SDK=acap-native-sdk 
+#  ARG SDK=acap-sdk for acap 3
 FROM ${REPO}/${SDK}:${VERSION}-${ARCH}-ubuntu${UBUNTU_VERSION}
 
 ARG ARCH
@@ -23,12 +24,11 @@ RUN apt-get update && \
     build-essential 
 
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
-RUN pip3 install meson>=1.1
 
 #-------------------------------------------------------------------------------
 # Golang build
 #-------------------------------------------------------------------------------
-ARG GOLANG_VERSION=1.22.0
+ARG GOLANG_VERSION=1.22.1
 RUN curl -fsSL "https://golang.org/dl/go${GOLANG_VERSION}.linux-amd64.tar.gz" -o golang.tar.gz \
     && tar -C /usr/local -xzf golang.tar.gz \
     && rm golang.tar.gz

@@ -1,0 +1,56 @@
+{
+    "schemaVersion": "1.3",
+    "acapPackageConf": {
+        "setup": {
+            "friendlyName": "Weather Overlay",
+            "appName": "weatheroverlay",
+            "vendor": "Acs Christoph",
+            "embeddedSdkVersion": "3.0",
+            "runMode": "respawn",
+            "version": "1.0.0",
+            "user": {
+                "group": "sdk",
+                "username": "sdk"
+            }
+        },
+        "configuration": {
+            "paramConfig": [
+                {
+                    "name": "Lat",
+                    "default": "48.2082",
+                    "type": "string:maxlen=64"
+                },
+                {
+                    "name": "Long",
+                    "default": "16.3719",
+                    "type": "string:maxlen=64"
+                },
+                {
+                    "name": "NordDirection",
+                    "default": "0",
+                    "type": "int:min=0;max=360"
+                },
+                {
+                    "name": "Color",
+                    "default": "Black",
+                    "type": "enum:Black|Black,Red|Red,Green|Green,Blue|Blue,Indigo|Indigo,Pink|Pink,Lime|Lime,DeepPurple|Deep Purple,Amber|Amber,Teal|Teal,Cyan|Cyan,LightGreen|Light Green,DeepOrange|Deep Orange,Brown|Brown,Grey|Grey,White|White"
+                },
+                {
+                    "name": "CircleColor",
+                    "default": "Black",
+                    "type": "enum:Black|Black,Red|Red,Green|Green,Blue|Blue,Indigo|Indigo,Pink|Pink,Lime|Lime,DeepPurple|Deep Purple,Amber|Amber,Teal|Teal,Cyan|Cyan,LightGreen|Light Green,DeepOrange|Deep Orange,Brown|Brown,Grey|Grey,White|White"
+                },
+                {
+                    "name": "Position",
+                    "default": "tl",
+                    "type": "enum:tl|Top Left,tr|Top Right, bl|Bottom Left, br|Bottom Right" 
+                },
+                {
+                    "name": "Size",
+                    "default": "medium",
+                    "type": "enum:small|Small,medium|Medium, large|Large, xlarge|Extra Large" 
+                }
+            ]
+        }
+    }
+}
