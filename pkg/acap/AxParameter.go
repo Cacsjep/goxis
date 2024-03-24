@@ -105,11 +105,17 @@ func (axp *AXParameter) GetAsFloat(name string) (float64, error) {
 	if str_val, err = axp.Get(name); err != nil {
 		return 0, err
 	}
-	val, err := strconv.ParseFloat(str_val, 64)
-	if err != nil {
+	return strconv.ParseFloat(str_val, 64)
+}
+
+func (axp *AXParameter) GetAsInt(name string) (int, error) {
+	var err error
+	var str_val string
+
+	if str_val, err = axp.Get(name); err != nil {
 		return 0, err
 	}
-	return val, nil
+	return strconv.Atoi(str_val)
 }
 
 // Lists all parameters for the application.

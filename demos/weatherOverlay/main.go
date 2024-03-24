@@ -15,10 +15,12 @@ type WeatherApp struct {
 	Lat                  float64
 	Long                 float64
 	Color                color.RGBA
+	CircleColor          color.RGBA
 	Position             acap.AxOverlayPositionType
 	Size                 float64
 	LastData             *WeatherData
 	TemperatureOverlayId int
+	NordDirection        float64
 }
 
 func main() {

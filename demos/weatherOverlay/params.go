@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"image/color"
+	"strconv"
 
 	"github.com/Cacsjep/goxis/pkg/acap"
 )
@@ -9,17 +11,18 @@ import (
 func (w *WeatherApp) LoadParams() error {
 	var err error
 	var color_str string
+	var circle_color_str string
 	var pos_str string
 	var size_str string
-
 	if w.Lat, err = w.AcapApp.ParamHandler.GetAsFloat("Lat"); err != nil {
 		return err
 	}
-
 	if w.Long, err = w.AcapApp.ParamHandler.GetAsFloat("Long"); err != nil {
 		return err
 	}
-
+	if w.NordDirection, err = w.AcapApp.ParamHandler.GetAsFloat("NordDirection"); err != nil {
+		return err
+	}
 	if color_str, err = w.AcapApp.ParamHandler.Get("Color"); err != nil {
 		return err
 	}
@@ -29,63 +32,54 @@ func (w *WeatherApp) LoadParams() error {
 	if size_str, err = w.AcapApp.ParamHandler.Get("Size"); err != nil {
 		return err
 	}
-	w.UpdateColor(color_str)
+	if circle_color_str, err = w.AcapApp.ParamHandler.Get("CircleColor"); err != nil {
+		return err
+	}
+	w.Color = w.GetColor(color_str)
+	w.CircleColor = w.GetColor(circle_color_str)
 	w.UpdatePosition(pos_str)
 	w.UpdateSize(size_str)
 	return nil
 }
 
-func (w *WeatherApp) UpdateCoords(parameterName string, value string) (err error) {
-	if parameterName == "root.Weatheroverlay.Lat" {
-		if w.Lat, err = w.AcapApp.ParamHandler.GetAsFloat("Lat"); err != nil {
-			return err
-		}
-	} else {
-		if w.Long, err = w.AcapApp.ParamHandler.GetAsFloat("Long"); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (w *WeatherApp) UpdateColor(value string) {
+func (w *WeatherApp) GetColor(value string) color.RGBA {
 	switch value {
 	case "Transparent":
-		w.Color = acap.ColorTransparent
+		return acap.ColorTransparent
 	case "Black":
-		w.Color = acap.ColorBlack
+		return acap.ColorBlack
 	case "White":
-		w.Color = acap.ColorWite
+		return acap.ColorWite
 	case "Red":
-		w.Color = acap.ColorMaterialRed
+		return acap.ColorMaterialRed
 	case "Green":
-		w.Color = acap.ColorMaterialGreen
+		return acap.ColorMaterialGreen
 	case "Blue":
-		w.Color = acap.ColorMaterialBlue
+		return acap.ColorMaterialBlue
 	case "Indigo":
-		w.Color = acap.ColorMaterialIndigo
+		return acap.ColorMaterialIndigo
 	case "Pink":
-		w.Color = acap.ColorMaterialPink
+		return acap.ColorMaterialPink
 	case "Lime":
-		w.Color = acap.ColorMaterialLime
+		return acap.ColorMaterialLime
 	case "DeepPurple":
-		w.Color = acap.ColorMaterialDeepPurple
+		return acap.ColorMaterialDeepPurple
 	case "Amber":
-		w.Color = acap.ColorMaterialAmber
+		return acap.ColorMaterialAmber
 	case "Teal":
-		w.Color = acap.ColorMaterialTeal
+		return acap.ColorMaterialTeal
 	case "Cyan":
-		w.Color = acap.ColorMaterialCyan
+		return acap.ColorMaterialCyan
 	case "LightGreen":
-		w.Color = acap.ColorMaterialLightGreen
+		return acap.ColorMaterialLightGreen
 	case "DeepOrange":
-		w.Color = acap.ColorMaterialDeepOrange
+		return acap.ColorMaterialDeepOrange
 	case "Brown":
-		w.Color = acap.ColorMaterialBrown
+		return acap.ColorMaterialBrown
 	case "Grey":
-		w.Color = acap.ColorMaterialGrey
+		return acap.ColorMaterialGrey
 	default:
-		w.Color = acap.ColorBlack
+		return acap.ColorBlack
 	}
 }
 
@@ -105,26 +99,38 @@ func (w *WeatherApp) UpdatePosition(value string) {
 func (w *WeatherApp) UpdateSize(value string) {
 	switch value {
 	case "small":
-		w.Size = 32.0
+		w.Size = 130
 	case "medium":
-		w.Size = 32.0 + 21.33
+		w.Size = 150
 	case "large":
-		w.Size = 32.0 + 2*21.33
+		w.Size = 170
 	case "xlarge":
-		w.Size = 96.0
+		w.Size = 180
 	}
 }
 
 func (w *WeatherApp) RegisterParamsCallbacks() error {
 	callbacks := map[string]func(name, value string) error{
 		"Lat": func(name, value string) error {
-			return w.UpdateCoords(name, value)
+			var err error
+			if w.Lat, err = strconv.ParseFloat(value, 64); err != nil {
+				return err
+			}
+			return nil
 		},
 		"Long": func(name, value string) error {
-			return w.UpdateCoords(name, value)
+			var err error
+			if w.Long, err = strconv.ParseFloat(value, 64); err != nil {
+				return err
+			}
+			return nil
 		},
 		"Color": func(_, value string) error {
-			w.UpdateColor(value)
+			w.Color = w.GetColor(value)
+			return nil
+		},
+		"CircleColor": func(_, value string) error {
+			w.CircleColor = w.GetColor(value)
 			return nil
 		},
 		"Position": func(name, value string) error {
@@ -133,6 +139,13 @@ func (w *WeatherApp) RegisterParamsCallbacks() error {
 		},
 		"Size": func(name, value string) error {
 			w.UpdateSize(value)
+			return nil
+		},
+		"NordDirection": func(name, value string) error {
+			var err error
+			if w.NordDirection, err = strconv.ParseFloat(value, 64); err != nil {
+				return err
+			}
 			return nil
 		},
 	}
