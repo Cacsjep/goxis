@@ -3,30 +3,25 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
-	"log"
 	"os"
-	"os/signal"
 	"path"
-	"syscall"
-	"time"
 
 	"github.com/Cacsjep/goxis/pkg/manifest"
 )
 
 func main() {
-	showHelp := flag.Bool("h", false, "Show usage")
-	ip := flag.String("ip", "", "IP for camera where eap is installed")
-	manifest_path := flag.String("manifest", "manifest.json", "Specify manifest default is manifest.json")
-	pwd := flag.String("pwd", "", "Root password for camera where eap is installed")
-	arch := flag.String("arch", "aarch64", "ACAP Architecture: aarch64 or armv7hf")
-	doStart := flag.Bool("start", false, "Start after install")
-	doInstall := flag.Bool("install", false, "Install on camera")
-	buildExamples := flag.Bool("build-examples", false, "Build Examples")
-	lowesSdkVersion := flag.Bool("lowsdk", false, "Build for Firmware > 10.9 With SDK version 1.1 your manifest should use: 1.3")
-	watch := flag.Bool("watch", false, "Watch the package log after build")
-	appDirectory := flag.String("appdir", "", "Full path of application directroy to build from")
-	withLibav := flag.Bool("libav", false, "Compile libav for binding it with go-astiav")
+	showHelp := flag.Bool("h", false, "Displays this help message.")
+	ip := flag.String("ip", "", "The IP address of the camera where the EAP application is installed.")
+	manifest_path := flag.String("manifest", "manifest.json", "The path to the manifest file. Defaults to 'manifest.json'.")
+	pwd := flag.String("pwd", "", "The root password for the camera where the EAP application is installed.")
+	arch := flag.String("arch", "aarch64", "The architecture for the ACAP application: 'aarch64' or 'armv7hf'.")
+	doStart := flag.Bool("start", false, "Set to true to start the application after installation.")
+	doInstall := flag.Bool("install", false, "Set to true to install the application on the camera.")
+	buildExamples := flag.Bool("build-examples", false, "Set to true to build example applications.")
+	lowestSdkVersion := flag.Bool("lowsdk", false, "Set to true to build for firmware versions greater than 10.9 with SDK version 1.1. This adjusts the manifest to use version 1.3.")
+	watch := flag.Bool("watch", false, "Set to true to monitor the package log after building.")
+	appDirectory := flag.String("appdir", "", "The full path to the application directory from which to build.")
+	withLibav := flag.Bool("libav", false, "Set to true to compile libav for binding with go-astiav.")
 	flag.Parse()
 
 	if *showHelp {
@@ -34,12 +29,15 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Load and validate the application manifest file specified by the user.
 	amf, err := manifest.LoadManifest(path.Join(*appDirectory, *manifest_path))
 	if err != nil {
 		panic(err)
 	}
 
+	// Setup the build configuration based on the parsed flags and loaded manifest.
 	buildConfig := BuildConfiguration{
+		AppDirectory:  *appDirectory,
 		Arch:          *arch,
 		Manifest:      amf,
 		ManifestPath:  *manifest_path,
@@ -48,76 +46,21 @@ func main() {
 		DoStart:       *doStart,
 		DoInstall:     *doInstall,
 		BuildExamples: *buildExamples,
-		LowestSdk:     *lowesSdkVersion,
+		LowestSdk:     *lowestSdkVersion,
 		WithLibav:     *withLibav,
 		Watch:         *watch,
 	}
 	ctx := context.Background()
 	cli, err := newDockerClient()
 	if err != nil {
-		log.Fatalf("Error: %s\n", err)
+		handleError("Failed create new docker client", err)
 	}
 
-	if *lowesSdkVersion {
-		buildConfig.Sdk = "acap-sdk"
-		buildConfig.UbunutVersion = "20.04"
-		buildConfig.Version = "3.5"
-	} else {
-		buildConfig.Sdk = "acap-native-sdk"
-		buildConfig.UbunutVersion = "22.04"
-		buildConfig.Version = "1.13"
-	}
-
-	if *arch == "aarch64" {
-		buildConfig.ImageName = "acap:aarch64"
-		buildConfig.GoArch = "arm64"
-		buildConfig.CrossPrefix = "aarch64-linux-gnu-"
-	} else if *arch == "armv7hf" {
-		buildConfig.ImageName = "acap:arm"
-		buildConfig.GoArch = "arm"
-		buildConfig.GoArm = "7"
-		buildConfig.CrossPrefix = "arm-linux-gnueabihf-"
-	} else {
-		panic("Architecture invalid should be either aarch64 or armv7hf")
-	}
-
-	if *appDirectory == "" {
-		if !*buildExamples {
-			panic("appdir must be set")
-		}
-		for _, e := range examples {
-			buildConfig.AppDirectory = fmt.Sprintf("examples/%s", e)
-			if err := buildAndRunContainer(ctx, cli, &buildConfig); err != nil {
-				log.Fatalf("Error: %s\n", err)
-			}
-
-		}
-		return
-	} else {
-		buildConfig.AppDirectory = *appDirectory
-		if err := buildAndRunContainer(ctx, cli, &buildConfig); err != nil {
-			log.Fatalf("Error: %s\n", err)
-		}
-	}
+	configureSdk(*lowestSdkVersion, &buildConfig)
+	configureArchitecture(*arch, &buildConfig)
+	buildApplication(ctx, cli, &buildConfig)
 
 	if buildConfig.Watch {
-		// Setup a channel to listen for interrupt signal (Ctrl+C)
-		sigChan := make(chan os.Signal, 1)
-		signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
-
-		ticker := time.NewTicker(3 * time.Second)
-		defer ticker.Stop()
-
-		url := fmt.Sprintf("http://%s/axis-cgi/admin/systemlog.cgi?appname=%s", *ip, amf.ACAPPackageConf.Setup.AppName)
-	Loop:
-		for {
-			select {
-			case <-ticker.C:
-				getLog(url, *pwd)
-			case <-sigChan:
-				fmt.Println("Interrupt received, stopping...")
-				break Loop
-			}
-		}
+		watchPackageLog(&buildConfig)
 	}
 }
