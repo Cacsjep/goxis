@@ -1,4 +1,4 @@
 
 *.eap
-/demos/*
-./demos
+demos/
+
