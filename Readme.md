@@ -51,10 +51,11 @@ Usage of C:\Users\c.acs\go\bin\goxisbuilder.exe:
 Just digg into examples to see how you can use goxis.
 Currently we had:
   - axevent 	| Demonstrate how to subscribe to an Virutal Input state change
-  - axparameter | Demonstrate how to get an parameter and listen to changes
+  - axoverlay	| Render rects via axolveray api
+  - axparameter   | Demonstrate how to get an parameter and listen to changes
   - license 	| Show how to obtain the license state
   - vdostream 	| High level wrapper demonstration to get video frames (stream)
-  - webserver   | Reverse proxy webserver with fiber
+  - webserver     | Reverse proxy webserver with fiber
 
 
 # ACAP API Docs
@@ -128,5 +129,4 @@ It’s recommended to use the latest manifest version available for the minimum 
 
 
 # Todos:
-  - Adding Overlay API
   - Adding Larod API

@@ -11,15 +11,10 @@ var (
 )
 
 func main() {
-	if app, err = goxis.NewAcapApplication(); err != nil {
-		panic(err)
-	}
-	defer app.Close()
-
+	app = goxis.NewAcapApplication()
 	if isValid, err = app.IsLicenseValid(1, 0); err != nil {
-		panic(err)
+		app.Syslog.Crit(err.Error())
 	}
-
 	if isValid {
 		app.Syslog.Info("License is valid")
 	} else {

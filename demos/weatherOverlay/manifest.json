@@ -13,7 +13,7 @@
             "friendlyName": "Weather Overlay",
             "appName": "weatheroverlay",
             "vendor": "Acs Christoph",
-            "embeddedSdkVersion": "3.0",
+            "embeddedSdkVersion": "3.5",
             "runMode": "respawn",
             "version": "1.0.0"
         },

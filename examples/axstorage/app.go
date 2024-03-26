@@ -14,17 +14,13 @@ func main() {
 	var networkshare *acap.DiskItem
 	var diskFound bool
 
-	if app, err = goxis.NewAcapApplication(); err != nil {
-		panic(err)
-	}
-	defer app.Close()
-
+	app = goxis.NewAcapApplication()
 	sp := app.NewStorageProvider(false)
 
-	if err := sp.Open(); err != nil {
+	if err = sp.Open(); err != nil {
 		app.Syslog.Crit(err.Error())
 	}
-	defer sp.Close()
+	app.AddCloseCleanFunc(sp.Close)
 
 	demoFile := "demo.txt"
 

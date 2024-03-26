@@ -29,16 +29,12 @@ func main() {
 	var app *goxis.AcapApplication
 	var baseUri string
 
-	if app, err = goxis.NewAcapApplication(); err != nil {
-		panic(err)
-	}
-	defer app.Close()
+	app = goxis.NewAcapApplication()
 
 	// Fiber
 	fapp := fiber.New()
 	if baseUri, err = app.AcapWebBaseUri(); err != nil {
-		app.Syslog.Error(err.Error())
-		panic(err)
+		app.Syslog.Crit(err.Error())
 	}
 
 	// Index.html hosting

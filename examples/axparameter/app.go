@@ -13,10 +13,7 @@ var (
 )
 
 func main() {
-	if app, err = goxis.NewAcapApplication(); err != nil {
-		panic(err)
-	}
-	defer app.Close()
+	app = goxis.NewAcapApplication()
 
 	// Parameters outside the application's group requires qualification.
 	// This could also done via vapix and dbus acap.RetrieveVapixCredentials() and acap.VapixGet()

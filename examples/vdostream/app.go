@@ -19,26 +19,21 @@ var (
 )
 
 func main() {
-	if app, err = goxis.NewAcapApplication(); err != nil {
-		panic(err)
-	}
-	defer app.Close()
+	app = goxis.NewAcapApplication()
 
 	// FrameProvider for easy interact with VDO
 	// Easy method to creates VDO streams via go struct acap.VideoSteamConfiguration
 	// It automtically restarts vdo stream on maintance.
 	// Provide also access to stream stats via go structs
 	if fp, err = app.NewFrameProvider(stream_cfg); err != nil {
-		app.Syslog.Error(err.Error())
-		panic(err)
+		app.Syslog.Crit(err.Error())
 	}
 
 	// Start the frameprovider
 	if err = fp.Start(); err != nil {
-		app.Syslog.Error(err.Error())
-		panic(err)
+		app.Syslog.Crit(err.Error())
 	}
-	defer fp.Stop()
+	app.AddCloseCleanFunc(fp.Stop)
 
 	// Enter channel based recv for *VideoFrame from FrameStreamChannel
 	// *VideoFrame holds also Error that are either expected during maintanance

@@ -23,17 +23,19 @@ type AcapApplication struct {
 }
 
 // NewAcapApplication initializes a new AcapApplication instance, loading the application's manifest,
-// setting up the syslog, parameter handler, event handler, and main loop. It returns an initialized AcapApplication
-// instance or an error if any part of the initialization fails.
-func NewAcapApplication() (*AcapApplication, error) {
+// setting up the syslog, parameter handler, event handler, and main loop. It returns an initialized AcapApplication instance.
+//
+// ! Note: Since this is the entry point, it panic in case of an error,
+// this could happen if manifest could not loaded or parameter instance could not be created
+func NewAcapApplication() *AcapApplication {
 	m, err := manifest.LoadManifest("manifest.json")
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
 	pApp, err := acap.AXParameterNew(&m.ACAPPackageConf.Setup.AppName)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
 	app := AcapApplication{
@@ -45,7 +47,7 @@ func NewAcapApplication() (*AcapApplication, error) {
 		OnCloseCleaners: []func(){},
 	}
 
-	return &app, nil
+	return &app
 }
 
 // IsLicenseValid checks the validity of the application's license for a given major and minor version.

@@ -16,10 +16,7 @@ var (
 //
 //	https://www.axis.com/developer-community/axis-metadata-monitor
 func main() {
-	if app, err = goxis.NewAcapApplication(); err != nil {
-		panic(err)
-	}
-	defer app.Close()
+	app = goxis.NewAcapApplication()
 
 	/* Initialize an AXEventKeyValueSet that matches Virtual Input 1.
 	 *
@@ -78,8 +75,7 @@ func main() {
 	}, "my importand user data")
 
 	if err != nil {
-		app.Syslog.Error(err.Error())
-		panic(err)
+		app.Syslog.Crit(err.Error())
 	}
 
 	// Signal handler automatically internally created for SIGTERM, SIGINT

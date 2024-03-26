@@ -12,6 +12,7 @@ require (
 
 require (
 	github.com/Microsoft/go-winio v0.6.1 // indirect
+	github.com/ahmetalpbalkan/dlog v0.0.0-20170105205344-4fb5f8204f26 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/asticode/go-astikit v0.42.0 // indirect
 	github.com/containerd/containerd v1.7.13 // indirect

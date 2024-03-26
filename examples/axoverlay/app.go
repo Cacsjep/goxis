@@ -64,16 +64,13 @@ func renderCallback(renderEvent *acap.OverlayRenderEvent) {
 }
 
 func main() {
-	if app, err = goxis.NewAcapApplication(); err != nil {
-		panic(err)
-	}
-	defer app.Close()
+	app = goxis.NewAcapApplication()
 
 	// Overlayprovider is an highlevel wrapper around AxOvleray to make life easier
 	if overlayProvider, err = goxis.NewOverlayProvider(renderCallback, adjustmentCallback, streamSelectCallback); err != nil {
 		panic(err)
 	}
-	defer overlayProvider.Cleanup()
+	app.AddCloseCleanFunc(overlayProvider.Cleanup)
 
 	// we pass app as userdata to access syslog from app in callbacks
 	if overlay_id_rect, err = overlayProvider.AddOverlay(goxis.NewAnchorCenterRrgbaOverlay(acap.AxOverlayCustomNormalized, app)); err != nil {

@@ -1,13 +1,12 @@
-ARG ARCH=
-ARG VERSION=
-ARG UBUNTU_VERSION=
-# ARG UBUNTU_VERSION=20.04 for acap 3
+ARG ARCH=aarch64
+ARG VERSION=1.13
+ARG UBUNTU_VERSION=22.04
 ARG REPO=axisecp
-ARG SDK=
-#  ARG SDK=acap-sdk for acap 3
+ARG SDK=acap-native-sdk 
 FROM ${REPO}/${SDK}:${VERSION}-${ARCH}-ubuntu${UBUNTU_VERSION}
 
 ARG ARCH
+ARG VERSION
 RUN echo "Architecture is: ${ARCH}"
 ARG SDK_LIB_PATH_BASE=/opt/axis/acapsdk/sysroots/${ARCH}/usr
 RUN echo "SDK library path base is: ${SDK_LIB_PATH_BASE}"
@@ -87,6 +86,8 @@ ARG INSTALL=
 ARG GO_APP=test
 ENV GO_APP=${GO_APP}
 COPY . ${APP_DIR}
+WORKDIR ${APP_DIR}
+RUN python generate_makefile.py ${APP_NAME} ${GO_APP} ${APP_MANIFEST}
 WORKDIR ${APP_DIR}/${GO_APP}
 
 #-------------------------------------------------------------------------------
@@ -98,11 +99,9 @@ ENV GOARCH=${GO_ARCH}
 ENV GOARM=${GO_ARM}
 ENV APP_NAME=${APP_NAME}
 ENV MANIFEST=${APP_MANIFEST}
-# TODO: ACAP3 has no --build arg
 RUN . /opt/axis/acapsdk/environment-setup* && \
     export PKG_CONFIG_PATH=${FF_BUILD_DIR}/lib/pkgconfig:$PKG_CONFIG_PATH && \
-    go build -ldflags "-s -w  -extldflags '-L./lib -Wl,-rpath,./lib'" -o ${APP_NAME} . && \
-    acap-build --manifest ${MANIFEST} --build no-build ./ && \
+    acap-build . && \
     if [ "${INSTALL}" = "YES" ]; then eap-install.sh ${IP_ADDR} ${PASSWORD} install; fi && \
     if [ "${START}" = "YES" ]; then eap-install.sh start; fi
 
@@ -111,5 +110,8 @@ RUN . /opt/axis/acapsdk/environment-setup* && \
 #-------------------------------------------------------------------------------
 RUN mkdir /opt/eap
 RUN mv *.eap /opt/eap
-RUN ls /opt/eap
+RUN cd /opt/eap && \
+    for file in *.eap; do \
+        mv "$file" "${file%.eap}_sdk_${VERSION}.eap"; \
+    done
 

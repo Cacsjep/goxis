@@ -27,10 +27,7 @@ func main() {
 	var err error
 	w := WeatherApp{
 		Position: acap.AxOverlayBottomLeft,
-	}
-
-	if w.AcapApp, err = goxis.NewAcapApplication(); err != nil {
-		panic(err)
+		AcapApp:  goxis.NewAcapApplication(),
 	}
 
 	if err = w.LoadParams(); err != nil {

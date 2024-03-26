@@ -8,6 +8,8 @@ github.com/Microsoft/hcsshim v0.11.4 h1:68vKo2VN8DE9AdN4tnkWnmdhqdbpUFM8OF3Airm7
 github.com/Microsoft/hcsshim v0.11.4/go.mod h1:smjE4dvqPX9Zldna+t5FG3rnoHhaB7QYxPRqGcpAD9w=
 github.com/Snawoot/go-http-digest-auth-client v1.1.3 h1:Xd/SNBuIUJqotzmxRpbXovBJxmlVZOT19IZZdMdrJ0Q=
 github.com/Snawoot/go-http-digest-auth-client v1.1.3/go.mod h1:WiwNiPXTRGyjTGpBtSQJlM2wDPRRPpFGhMkMWpV4uqg=
+github.com/ahmetalpbalkan/dlog v0.0.0-20170105205344-4fb5f8204f26 h1:pzStYMLAXM7CNQjS/Wn+zK9MUxDhSUNfVvnHsyQyjs0=
+github.com/ahmetalpbalkan/dlog v0.0.0-20170105205344-4fb5f8204f26/go.mod h1:ilK+u7u1HoqaDk0mjhh27QJB7PyWMreGffEvOCoEKiY=
 github.com/andybalholm/brotli v1.0.5 h1:8uQZIdzKmjc/iuPu7O2ioW48L81FgatrcpfFmiq/cCs=
 github.com/andybalholm/brotli v1.0.5/go.mod h1:fO7iG3H7G2nSZ7m0zPUDn85XEX2GTukHGRSepvi9Eig=
 github.com/asticode/go-astiav v0.13.1 h1:KrG2/0Sp71OqLd0CyBvrySdZX93IBV4gVYMyGlRlhn0=
