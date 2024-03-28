@@ -95,7 +95,7 @@ func dockerBuild(ctx context.Context, cli *client.Client, bc *BuildConfiguration
 
 	buildResponse, err := cli.ImageBuild(ctx, buildContext, options)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("failed to build image: %w", err)
 	}
 	defer buildResponse.Body.Close()
 	decoder := json.NewDecoder(buildResponse.Body)
@@ -105,7 +105,7 @@ func dockerBuild(ctx context.Context, cli *client.Client, bc *BuildConfiguration
 		if err := decoder.Decode(&m); err == io.EOF {
 			break
 		} else if err != nil {
-			panic(err) // Consider handling this error more gracefully
+			return fmt.Errorf("failed to decode build response: %w", err)
 		}
 
 		if stream, ok := m["stream"]; ok {

@@ -11,6 +11,7 @@ require (
 )
 
 require (
+	github.com/Cacsjep/go-astiav v0.0.0-20240328151207-943de0edd84a // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/ahmetalpbalkan/dlog v0.0.0-20170105205344-4fb5f8204f26 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect

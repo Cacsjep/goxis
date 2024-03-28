@@ -42,15 +42,13 @@ RUN mkdir -p "${GOPATH}/src" "${GOPATH}/bin" "${GOPATH}/pkg" \
 #-------------------------------------------------------------------------------
 ARG FF_BUILD_DIR=/opt/build
 ARG COMP_LIBAV=
-ARG FFMPEG_VERSION=5.1.4
-ARG FFMPEG_URL="https://ffmpeg.org/releases/ffmpeg-$FFMPEG_VERSION.tar.bz2"
+ARG FFMPEG_VERSION=n5.1.2
 ARG CROSS_PREFIX=
-RUN mkdir ${FF_BUILD_DIR}
 RUN mkdir -p ${FF_BUILD_DIR} && \
     if [ "${COMP_LIBAV}" = "YES" ]; then \
-      wget -O ffmpeg.tar.bz2 "${FFMPEG_URL}" && \
-      tar -xjf ffmpeg.tar.bz2 -C ${FF_BUILD_DIR} && \
-      cd ${FF_BUILD_DIR}/ffmpeg-${FFMPEG_VERSION} && \
+      git clone https://github.com/FFmpeg/FFmpeg.git ${FF_BUILD_DIR}/ffmpeg && \
+      cd ${FF_BUILD_DIR}/ffmpeg && \
+      git checkout ${FFMPEG_VERSION} && \
       ./configure \
         --arch=${ARCH} \
         --target-os=linux \
@@ -58,19 +56,26 @@ RUN mkdir -p ${FF_BUILD_DIR} && \
         --enable-cross-compile \
         --prefix=${FF_BUILD_DIR} \
         --disable-everything \
-        --enable-parser=h264,mjpeg,hevc \
-        --enable-bsf=h264_metadata,h264_mp4toannexb \
-        --enable-protocol=file,rtmp,data \
+        --disable-programs \
+        --enable-avfilter \
+        --enable-avformat \
+        --enable-avcodec \
+        --enable-avutil \
+        --enable-parser=h264,mjpeg,hevc,aac,mp3 \
+        --enable-bsf=h264_metadata,h264_mp4toannexb,hevc_metadata,hevc_mp4toannexb,aac_adtstoasc \
+        --enable-protocol=file,rtmp,rtmpt,rtp,data,tcp,pipe,hls \
         --enable-encoder=h264,mjpeg,hevc \
         --enable-decoder=h264,mjpeg,hevc \
-        --enable-muxer=flv \
+        --enable-muxer=flv,h264,mjpeg,hevc,mov,mpegts \
+        --enable-gpl \
+        --enable-small \
+        --disable-doc \
         --enable-shared && \
       make && make install && \
-      export CGO_LDFLAGS="-L${FF_BUILD_DIR}/lib/" && \
-      export CGO_CFLAGS="-I${FF_BUILD_DIR}/include/" && \
       mkdir -p ${APP_DIR}/lib && \
       cp -a ${FF_BUILD_DIR}/lib/. ${APP_DIR}/lib; \
     fi
+
 
 #-------------------------------------------------------------------------------
 # Perpare the ACAP Build
@@ -99,8 +104,15 @@ ENV GOARCH=${GO_ARCH}
 ENV GOARM=${GO_ARM}
 ENV APP_NAME=${APP_NAME}
 ENV MANIFEST=${APP_MANIFEST}
+RUN printenv
 RUN . /opt/axis/acapsdk/environment-setup* && \
-    export PKG_CONFIG_PATH=${FF_BUILD_DIR}/lib/pkgconfig:$PKG_CONFIG_PATH && \
+    if [ "${COMP_LIBAV}" = "YES" ]; then \
+        export CGO_LDFLAGS="-L${FF_BUILD_DIR}/lib/" && \
+        export CGO_CFLAGS="-I${FF_BUILD_DIR}/include/" && \
+        export PKG_CONFIG_PATH="${FF_BUILD_DIR}/lib/pkgconfig:$PKG_CONFIG_PATH" && \
+        mkdir lib && \
+        cp -a ${APP_DIR}/lib .; \
+    fi && \
     acap-build . && \
     if [ "${INSTALL}" = "YES" ]; then eap-install.sh ${IP_ADDR} ${PASSWORD} install; fi && \
     if [ "${START}" = "YES" ]; then eap-install.sh start; fi

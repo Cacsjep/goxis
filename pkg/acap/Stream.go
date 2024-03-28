@@ -164,6 +164,7 @@ type VideoFrame struct {
 	Type          VdoFrameType // Type describes the frame type (e.g., I-frame, P-frame, B-frame).
 	Error         error        // Error contains any error that occurred while processing the frame.
 	ErrorExpected bool         // ErrorExpected indicates whether the error was expected on vdo maintance
+	HeaderSize    int          // HeaderSize is the size of the frame header
 }
 
 // String returns a string representation of the VideoFrame, including sequence number, timestamp, size, and frame type.
@@ -174,13 +175,14 @@ func (f *VideoFrame) String() string {
 
 // NewVideoFrame creates a new VideoFrame instance from a VdoFrame and its data.
 // This function extracts relevant information from the VdoFrame, including the sequence number, timestamp, size, and frame type, and packages it into a VideoFrame structure.
-func NewVideoFrame(frame *VdoFrame, data []byte) *VideoFrame {
+func NewVideoFrame(frame *VdoFrame, data []byte, header_size int) *VideoFrame {
 	return &VideoFrame{
 		SequenceNbr: frame.GetSequenceNbr(),
 		Timestamp:   time.Unix(frame.GetCustomTimestamp()/1000000, (frame.GetCustomTimestamp()%1000000)*1000),
 		Size:        frame.GetSize(),
 		Type:        frame.GetFrameType(),
 		Data:        data,
+		HeaderSize:  header_size,
 	}
 }
 
@@ -215,8 +217,9 @@ func GetVideoFrame(vdo_stream *VdoStream) *VideoFrame {
 		return &VideoFrame{Error: err, ErrorExpected: false}
 	}
 
+	header_size := vdo_frame.GetHeaderSize()
 	defer vdo_stream.BufferUnref(vdo_buf)
-	return NewVideoFrame(vdo_frame, buff_data)
+	return NewVideoFrame(vdo_frame, buff_data, header_size)
 }
 
 // VideoStreamConfigToVdoMap converts a VideoSteamConfiguration object into a VdoMap.
