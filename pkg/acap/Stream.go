@@ -173,6 +173,10 @@ func (f *VideoFrame) String() string {
 		f.SequenceNbr, f.Timestamp.Format("2006-01-02 15:04:05"), f.Size, f.Type.String())
 }
 
+func (f *VideoFrame) HeaderData() []byte {
+	return f.Data[:f.HeaderSize]
+}
+
 // NewVideoFrame creates a new VideoFrame instance from a VdoFrame and its data.
 // This function extracts relevant information from the VdoFrame, including the sequence number, timestamp, size, and frame type, and packages it into a VideoFrame structure.
 func NewVideoFrame(frame *VdoFrame, data []byte, header_size int) *VideoFrame {
