@@ -135,6 +135,17 @@ Loop:
 	}
 }
 
+func listEapDirectory() {
+	entries, err := os.ReadDir("./eap")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, e := range entries {
+		fmt.Println("EAP:", e.Name())
+	}
+}
+
 func printCompatibility(buildConfig *BuildConfiguration) {
 	fmt.Println("Acap Compatibility:")
 	// Maps for SDK to Firmware compatibility

@@ -97,6 +97,7 @@ func main() {
 		}
 
 		printCompatibility(&buildConfig)
+		listEapDirectory()
 
 		if buildConfig.Watch {
 			watchPackageLog(&buildConfig)
