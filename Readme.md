@@ -1,12 +1,11 @@
+# About
 
-# Goxis - The Golang AXIS Camera Framework
-Goxis provides golang bindings for AXIS ACAP,
-and some other helpers for interact with AXIS Cameras.
+Goxis provides golang bindings for AXIS ACAP API's.
+The acap package contains low level wrappers around ACAP API's.
+Main package contains more high level interface to create ACAP Applications.
 
-This is a hobby project and is still in progress !
-
-The acap package of goxis is the low level wrappers around ACAP.
-Goxis main package contains more high level interface to create ACAP Applications.
+> [!NOTE]  
+> This is a hobby project and is still in progress !
 
 ## Install
 Goxis provides also its own docker build command to easy build apps for aarch64 and armv7hf.
