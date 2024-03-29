@@ -1,6 +1,6 @@
 // Package syslog provides a wrapper for system log functionality, allowing for logging
 // messages with various priorities and optional console output.
-package syslog
+package axsyslog
 
 /*
 #include <stdlib.h>

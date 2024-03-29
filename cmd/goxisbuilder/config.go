@@ -1,13 +1,13 @@
 package main
 
-import "github.com/Cacsjep/goxis/pkg/manifest"
+import "github.com/Cacsjep/goxis/pkg/axmanifest"
 
 // BuildConfiguration defines the configuration parameters for building
 // the EAP application, including details such as architecture, manifest details,
 // and flags indicating whether to install the application, start it,
 // build examples, or watch logs.
 type BuildConfiguration struct {
-	Manifest      *manifest.ApplicationManifestSchema
+	Manifest      *axmanifest.ApplicationManifestSchema
 	ManifestPath  string
 	ImageName     string
 	Ip            string

@@ -104,7 +104,7 @@ func dockerBuild(ctx context.Context, cli *client.Client, bc *BuildConfiguration
 	decoder := json.NewDecoder(buildResponse.Body)
 
 	stepRegexp := regexp.MustCompile(`Step (\d+)/(\d+)`)
-	errorRegexp := regexp.MustCompile(`(?i)(error|failed|cannot|can't|\bfail\b|panic:|undefined|missing|expected|unexpected|cannot find package|no package found)`)
+	errorRegexp := regexp.MustCompile(`(?i)(error|failed|cannot|could not|can't|\bfail\b|panic:|undefined|missing|expected|unexpected|cannot find package|no package found)`)
 	p := mpb.New(mpb.WithWidth(60))
 	var bar *mpb.Bar
 	currentStep, totalSteps := 0, 0

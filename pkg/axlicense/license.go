@@ -1,13 +1,15 @@
-package acap
+package axlicense
 
 /*
 #cgo LDFLAGS: -Wl,-Bstatic -llicensekey_stat -Wl,-Bdynamic -llicensekey -ldl
 #include <licensekey.h>
+#include <stdlib.h>
 */
 import "C"
 import (
 	"errors"
 	"time"
+	"unsafe"
 )
 
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/licensekey/html/licensekey_8h.html
@@ -19,9 +21,10 @@ import (
 //
 // Portal Link: https://www.axis.com/partner_pages/compatible_applications/
 func LicensekeyVerify(app_name string, app_id int, major_version int, minor_version int) (valid bool) {
-	cAppName := newString(&app_name)
-	defer cAppName.Free()
-	state := C.licensekey_verify(cAppName.Ptr, C.int(app_id), C.int(major_version), C.int(minor_version))
+	cAppName := C.CString(app_name)
+	defer C.free(unsafe.Pointer(cAppName))
+
+	state := C.licensekey_verify(cAppName, C.int(app_id), C.int(major_version), C.int(minor_version))
 	if int(state) == 1 {
 		return true
 	}
@@ -30,9 +33,10 @@ func LicensekeyVerify(app_name string, app_id int, major_version int, minor_vers
 
 // TODO: Bring this to work
 func LicensekeyGetExpDate(app_name string) (time.Time, error) {
-	cAppName := newString(&app_name)
-	defer cAppName.Free()
-	str_date := C.licensekey_get_exp_date(cAppName.Ptr, nil)
+	cAppName := C.CString(app_name)
+	defer C.free(unsafe.Pointer(cAppName))
+
+	str_date := C.licensekey_get_exp_date(cAppName, nil)
 	if str_date == nil {
 		return time.Now(), errors.New("the expiration date couldn't be read")
 	}

@@ -7,7 +7,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/Cacsjep/goxis/pkg/manifest"
+	"github.com/Cacsjep/goxis/pkg/axmanifest"
 )
 
 func main() {
@@ -41,7 +41,7 @@ func main() {
 			examplePath := fmt.Sprintf("examples/%s", e)
 			// Load the manifest for each example
 			manifestPathFull := path.Join(examplePath, *manifestPath)
-			amf, err := manifest.LoadManifest(manifestPathFull)
+			amf, err := axmanifest.LoadManifest(manifestPathFull)
 			if err != nil {
 				handleError(fmt.Sprintf("Failed to load manifest from %s", manifestPathFull), err)
 			}
@@ -70,7 +70,7 @@ func main() {
 	} else {
 		// For a specific app directory, load the manifest and proceed with the build.
 		manifestPathFull := path.Join(*appDirectory, *manifestPath)
-		amf, err := manifest.LoadManifest(manifestPathFull)
+		amf, err := axmanifest.LoadManifest(manifestPathFull)
 		if err != nil {
 			handleError(fmt.Sprintf("Failed to load manifest from %s", manifestPathFull), err)
 		}

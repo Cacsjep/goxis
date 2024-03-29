@@ -8,8 +8,9 @@ import (
 	"strconv"
 
 	"github.com/Cacsjep/goxis/pkg/acap"
-	"github.com/Cacsjep/goxis/pkg/manifest"
-	"github.com/Cacsjep/goxis/pkg/syslog"
+	"github.com/Cacsjep/goxis/pkg/axlicense"
+	"github.com/Cacsjep/goxis/pkg/axmanifest"
+	"github.com/Cacsjep/goxis/pkg/axsyslog"
 )
 
 // AcapApplication provides a high-level abstraction for an Axis Communications Application Platform (ACAP) application.
@@ -17,8 +18,8 @@ import (
 // to facilitate easy development of ACAP applications. This includes automatic loading of the application's manifest,
 // initialization of syslog for logging, handling of application parameters, event handling, and the GMainLoop for the main event loop.
 type AcapApplication struct {
-	Manifest        *manifest.ApplicationManifestSchema
-	Syslog          *syslog.Syslog
+	Manifest        *axmanifest.ApplicationManifestSchema
+	Syslog          *axsyslog.Syslog
 	ParamHandler    *acap.AXParameter
 	EventHandler    *acap.AXEventHandler
 	Mainloop        *acap.GMainLoop
@@ -31,7 +32,7 @@ type AcapApplication struct {
 // ! Note: Since this is the entry point, it panic in case of an error,
 // this could happen if manifest could not loaded or parameter instance could not be created
 func NewAcapApplication() *AcapApplication {
-	m, err := manifest.LoadManifest("manifest.json")
+	m, err := axmanifest.LoadManifest("manifest.json")
 	if err != nil {
 		panic(err)
 	}
@@ -43,7 +44,7 @@ func NewAcapApplication() *AcapApplication {
 
 	app := AcapApplication{
 		Manifest:        m,
-		Syslog:          syslog.NewSyslog(m.ACAPPackageConf.Setup.AppName, syslog.LOG_PID|syslog.LOG_CONS, syslog.LOG_USER),
+		Syslog:          axsyslog.NewSyslog(m.ACAPPackageConf.Setup.AppName, axsyslog.LOG_PID|axsyslog.LOG_CONS, axsyslog.LOG_USER),
 		ParamHandler:    pApp,
 		EventHandler:    acap.NewEventHandler(),
 		Mainloop:        acap.NewMainLoop(),
@@ -59,9 +60,8 @@ func NewAcapApplication() *AcapApplication {
 		os.Exit(1)
 	}
 
-	syslog := syslog.NewSyslog(m.ACAPPackageConf.Setup.AppName, syslog.LOG_PID|syslog.LOG_CONS, syslog.LOG_USER)
 	if *consoleLog {
-		syslog.EnableConsole()
+		app.Syslog.EnableConsole()
 	}
 
 	return &app
@@ -74,7 +74,7 @@ func (a *AcapApplication) IsLicenseValid(major_version int, minor_version int) (
 	if err != nil {
 		return false, err
 	}
-	return acap.LicensekeyVerify(
+	return axlicense.LicensekeyVerify(
 		a.Manifest.ACAPPackageConf.Setup.AppName,
 		appId,
 		major_version,
