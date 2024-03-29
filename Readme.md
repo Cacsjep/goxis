@@ -7,44 +7,95 @@ Main package contains more high level interface to create ACAP Applications.
 > [!NOTE]  
 > This is a hobby project and is still in progress !
 
+# Prerequisites
+
+- Docker for building the ACAP applications
+
 ## Install
-Goxis provides also its own docker build command to easy build apps for aarch64 and armv7hf.
 ```
 go get github.com/Cacsjep/goxis
 ```
 
+## Goxis AcapApplication
+AcapApplication is a high level based abstraction for an ACAP application,
+it loads at runtime the ***manifest.json***. 
+
+### Whats the purpose of AcapApplication ?
+The `AcapApplication` acts as a foundational abstraction layer designed to streamline the handling of common tasks such as syslog logging, managing the GObject main loop, and the manipulation of parameters and events.
+
+Upon instantiation, `AcapApplication` undertakes several crucial steps::
+- **Manifest Parsing:** It reads the manifest file to extract the application's name.
+- **Parameter Management:** Initializes an `axparameter` instance, enabling the application to get, set, and remove parameters efficiently.
+- **Event Handling:** Sets up an `axevent` handler to facilitate event processing.
+- **GMain Loop Preparation:** Configures a GMain loop complete with signal handlers, ensuring robust event management.
+
+`AcapApplication` offers access to a variety of powerful functionalities, such as::
+- **FrameProvider:** Facilitates easy interaction with `axvdo`, streamlining video-related operations.
+- **StorageProvider:** Offers straightforward access to the camera's storage, enhancing data management capabilities.
+- `app.IsLicenseValid(major_version int, minor_version int)`: Verifies the validity of the application's license for the specified version.
+- `app.Run()`: Activates the GMain loop within the application, allowing for continuous operation.
+- `app.GetSnapshot(video_channel int)`: Captures and retrieves a JPEG snapshot from a given video channel.
+
+Also FrameProvider can use from app to easy access the axvdo,
+or using StorageProvider to easy access camera storage.
+
+### Create a new AcapApplication
+- Create a new directory like *myawesomeacap*
+- Create a .go file
+
+```go
+package main
+
+import (
+	"github.com/Cacsjep/goxis"
+)
+
+func main() {
+	app := goxis.NewAcapApplication()
+	app.Syslog.Info("Hello from My awesome acap")
+}
+```
+
+Build it with [Goxisbuilder](#goxisbuilder): 
+```
+.\goxisbuilder.exe -appdir="myawesomeacap"
+```
+
 
 ## Goxisbuilder
-Goxis provides also its own docker build command to easy build apps for aarch64 and armv7hf.
+Goxisbuilder is a command line tool that can build docker acap applications.
 ```
 go install github.com/Cacsjep/goxis/cmd/goxisbuilder@latest
 ```
 
+### Application Structure
+You can look into any example, a application needs:
+ - .go file with a main function
+ - LICENSE 
+ - manifest.json
+
 ### Usage
 ```
-goxisbuilder -h                            
-
-Usage of C:\Users\c.acs\go\bin\goxisbuilder.exe:
-  -appdir string
-        ***Full path*** of application directroy to build from
-  -arch string
-        ACAP Architecture: aarch64 or armv7hf (default "aarch64")
-  -build-examples
-        Build Examples
-  -install
-        Install on camera
-
-  -libav
-        Compile libav for binding it with go-astiav
-  -pwd string
-        Root password for camera where eap is installed
-  -ip string
-        IP for camera where eap is installed
-  -start
-        Start after install
-  -watch
-        Watch the package log after build
+.\goxisbuilder.exe -appdir="example/license"
 ```
+
+> [!NOTE]  
+> appdir is a directory with a main.go and needs to have a ***LICENSE*** and a ***manifest.json***
+
+| Flag            | Description                                                                                           | Default          |
+|-----------------|-------------------------------------------------------------------------------------------------------|------------------|
+| `-h`            | Displays this help message.                                                                           |                  |
+| `-appdir`       | The full path to the application directory from which to build.                                       |  `""`            |
+| `-arch`         | The architecture for the ACAP application: 'aarch64' or 'armv7hf'.                                    |  `"aarch64"`     |
+| `-build-examples`| Set to true to build example applications.                                                           |  `false`         |
+| `-install`      | Set to true to install the application on the camera.                                                 |  `false`         |
+| `-libav`        | Set to true to compile libav for binding with go-astiav.                                              |  `false`         |
+| `-lowsdk`       | Set to true to build for firmware versions greater than 10.9 with SDK version 1.1. This adjusts the manifest to use version 1.3.|                  |
+| `-manifest`     | The path to the manifest file. Defaults to 'manifest.json'.                                           |  `"manifest.json"`|
+| `-ip`           | The IP address of the camera where the EAP application is installed.                                  |  `""`            |
+| `-pwd`          | The root password for the camera where the EAP application is installed.                              |  `""`            |
+| `-start`        | Set to true to start the application after installation.                                              |  `false`         |
+| `-watch`        | Set to true to monitor the package log after building.                                                |  `false`         |
 
 ## Examples
 Just digg into examples to see how you can use goxis.

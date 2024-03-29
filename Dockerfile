@@ -104,7 +104,6 @@ ENV GOARCH=${GO_ARCH}
 ENV GOARM=${GO_ARM}
 ENV APP_NAME=${APP_NAME}
 ENV MANIFEST=${APP_MANIFEST}
-RUN printenv
 RUN . /opt/axis/acapsdk/environment-setup* && \
     if [ "${COMP_LIBAV}" = "YES" ]; then \
         export CGO_LDFLAGS="-L${FF_BUILD_DIR}/lib/" && \
