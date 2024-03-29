@@ -8,10 +8,20 @@ import (
 
 func main() {
 	app := goxis.NewAcapApplication()
-	server_url := "rtmp://10.0.0.54:1935/live/app"
+	server_url := "rtmp://fr.castr.io/static/live_2259a220ed2011ee831901652c9e69d2"
 	vdo_format := acap.VdoFormatH264
+	hprofile := acap.VdoH264ProfileBaseline
+	zip_off := acap.VdoZipStreamProfileNone
+	doff := false
+	bitrate := uint32(5000000)
+	brmode := acap.VdoRateControlModeCBR
 	stream_cfg := acap.VideoSteamConfiguration{
-		Format: &vdo_format,
+		Format:          &vdo_format,
+		H264Profile:     &hprofile,
+		ZipProfile:      &zip_off,
+		DynamicGOP:      &doff,
+		Bitrate:         &bitrate,
+		RateControlMode: &brmode,
 	}
 
 	fp, err := app.NewFrameProvider(stream_cfg)
@@ -29,6 +39,8 @@ func main() {
 	if err != nil {
 		app.Syslog.Crit(err.Error())
 	}
+
+	stats.StreamStats.PrintStreamStats()
 
 	r, err := NewRtmpStreamer(app, server_url, &RtmpStreamConfig{
 		Width:       int(stats.StreamStats.Width),

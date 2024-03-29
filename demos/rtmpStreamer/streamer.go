@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/Cacsjep/go-astiav"
 	"github.com/Cacsjep/goxis"
@@ -19,6 +20,7 @@ type RtmpStreamer struct {
 	ptsIncrement        int64
 	StreamConfig        *RtmpStreamConfig
 	ioContext           *astiav.IOContext
+	startTime           time.Time
 }
 
 type RtmpStreamConfig struct {
@@ -39,13 +41,14 @@ func NewRtmpStreamer(acap_app *goxis.AcapApplication, server_uri string, stream_
 	}
 
 	astiav.SetLogLevel(astiav.LogLevel(56))
-	astiav.SetLogCallback(func(c astiav.Classer, l astiav.LogLevel, fmt, msg string) {
+	astiav.SetLogCallback(func(c astiav.Classer, l astiav.LogLevel, fmts, msg string) {
 		var cs string
 		if c != nil {
 			if cl := c.Class(); cl != nil {
 				cs = " - class: " + cl.String()
 			}
 		}
+		fmt.Println("ffmpeg: ", strings.TrimSpace(msg), cs, " - level: ", l)
 		r.AcapApp.Syslog.Infof("ffmpeg: %s%s - level: %d\n", strings.TrimSpace(msg), cs, l)
 	})
 
@@ -58,7 +61,7 @@ func NewRtmpStreamer(acap_app *goxis.AcapApplication, server_uri string, stream_
 	if r.OutputFormatContext == nil {
 		return nil, errors.New("output format context is nil")
 	}
-	//r.OutputFormatContext.Flags().Add(astiav.FormatContextFlag(astiav.CodecContextFlagGlobalHeader))
+	r.OutputFormatContext.Flags().Add(astiav.FormatContextFlag(astiav.CodecContextFlagGlobalHeader))
 	r.OutputStream = r.OutputFormatContext.NewStream(nil)
 	if r.OutputStream == nil {
 		return nil, errors.New("output stream is nil")
@@ -68,12 +71,17 @@ func NewRtmpStreamer(acap_app *goxis.AcapApplication, server_uri string, stream_
 		return nil, errors.New("main: codec context is nil")
 	}
 
-	codecContext.Flags().Add(astiav.CodecContextFlagGlobalHeader)
-	codecContext.SetTimeBase(astiav.NewRational(1, 90000))
+	//codecContext.Flags().Add(astiav.CodecContextFlagGlobalHeader)
+	fmt.Println("Timebase: ", codecContext.TimeBase().Num(), codecContext.TimeBase().Den())
 	codecContext.SetHeight(stream_cfg.Height)
 	codecContext.SetWidth(stream_cfg.Width)
 	codecContext.SetPixelFormat(stream_cfg.Pixelformat)
 	codecContext.SetChannels(0)
+
+	timeBase := astiav.NewRational(1, 1000)
+	codecContext.SetTimeBase(timeBase)
+	r.OutputStream.SetTimeBase(timeBase)
+	r.ptsIncrement = 1000 / int64(stream_cfg.Fps)
 
 	if err = r.OutputStream.CodecParameters().FromCodecContext(codecContext); err != nil {
 		return nil, fmt.Errorf("setting codec parameters failed: %w", err)
@@ -109,22 +117,45 @@ func (r *RtmpStreamer) Start(extraData []byte) error {
 	if err = r.OutputFormatContext.WriteHeader(nil); err != nil {
 		return fmt.Errorf("writing header failed: %w", err)
 	}
-	r.ptsIncrement = 90000 / int64(r.StreamConfig.Fps)
-	r.FrameCounter = 0
+	r.startTime = time.Now()
 	return nil
 }
 
 func (r *RtmpStreamer) Write(video_data []byte) error {
 	var err error
 	r.CurrentPkt.FromData(video_data)
-	r.CurrentPkt.SetPts(r.FrameCounter * r.ptsIncrement)
-	r.CurrentPkt.SetDts(r.CurrentPkt.Pts())
-	r.CurrentPkt.SetDuration(r.ptsIncrement)
+
+	// Calculate the expected PTS in milliseconds.
+	currentTime := time.Since(r.startTime)
+	expectedPTS := int64(currentTime.Seconds() * 1000) // Convert to milliseconds
+
+	// Now, set the PTS and DTS of the packet.
+	r.CurrentPkt.SetPts(expectedPTS)
+	r.CurrentPkt.SetDts(expectedPTS) // DTS can be set to PTS in most cases
+
+	// Optionally introduce a delay to match real-time streaming requirements.
+	//r.delayForRealTimeSync(expectedPTS)
+
+	fmt.Println("Writing frame", expectedPTS)
 	if err = r.OutputFormatContext.WriteInterleavedFrame(r.CurrentPkt); err != nil {
 		return fmt.Errorf("writing frame failed: %w", err)
 	}
 	r.FrameCounter++
 	return nil
+}
+
+// delayForRealTimeSync introduces a delay if necessary to ensure synchronization with real-time.
+func (r *RtmpStreamer) delayForRealTimeSync(pts int64) {
+	// Calculate the expected duration since the start in real-world time.
+	expectedDuration := time.Duration(r.FrameCounter*r.ptsIncrement) * time.Second / time.Duration(r.StreamConfig.Fps)
+
+	// Calculate the actual duration since the start.
+	actualDuration := time.Since(r.startTime)
+
+	// If the actual duration is less than the expected, we delay the next frame.
+	if actualDuration < expectedDuration {
+		time.Sleep(expectedDuration - actualDuration)
+	}
 }
 
 func (r *RtmpStreamer) Stop() error {

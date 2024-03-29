@@ -2,6 +2,7 @@ package acap
 
 import (
 	"fmt"
+	"reflect"
 	"time"
 )
 
@@ -152,6 +153,20 @@ type StreamStats struct {
 	Width uint32
 	// ZipProfile indicates the compression profile used for the video stream.
 	ZipProfile uint32
+}
+
+// PrintStreamStats prints the fields of the StreamStats.
+func (s *StreamStats) PrintStreamStats() {
+	val := reflect.Indirect(reflect.ValueOf(s))
+	typeOfStats := val.Type()
+
+	fmt.Println("StreamStats:")
+	for i := 0; i < val.NumField(); i++ {
+		field := val.Field(i)
+		fieldName := typeOfStats.Field(i).Name
+		fieldValue := field.Interface()
+		fmt.Printf("  %s: %v\n", fieldName, fieldValue)
+	}
 }
 
 // VideoFrame represents a single frame of video data, including metadata such as the sequence number, timestamp, and size.
