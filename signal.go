@@ -1,4 +1,4 @@
-package acap
+package goxis
 
 import (
 	"os"

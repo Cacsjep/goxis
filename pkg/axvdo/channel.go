@@ -1,4 +1,4 @@
-package acap
+package axvdo
 
 /*
 #cgo pkg-config: vdostream
@@ -9,6 +9,8 @@ import "C"
 import (
 	"errors"
 	"unsafe"
+
+	"github.com/Cacsjep/goxis/pkg/glib"
 )
 
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/vdostream/html/vdo-channel_8h.html
@@ -44,11 +46,11 @@ func VdoChannelGetAll() ([]*VdoStream, error) {
 		),
 	)
 
-	if err := newGError(gerr); err != nil {
+	if err := newVdoError(gerr); err != nil {
 		return streams, err
 	}
 
-	vdoStreamsList := WrapList(vdoStreamsPtr)
+	vdoStreamsList := glib.WrapList(vdoStreamsPtr)
 	vdoStreamsList.DataWrapper(wrapVdoStream)
 	vdoStreamsList.Foreach(func(item interface{}) {
 		vdoStream, ok := item.(*VdoStream)
@@ -76,11 +78,11 @@ func VdoChannelGetFilterd(filter *VdoMap) ([]*VdoStream, error) {
 		),
 	)
 
-	if err := newGError(gerr); err != nil {
+	if err := newVdoError(gerr); err != nil {
 		return streams, err
 	}
 
-	vdoStreamsList := WrapList(vdoStreamsPtr)
+	vdoStreamsList := glib.WrapList(vdoStreamsPtr)
 	vdoStreamsList.DataWrapper(wrapVdoStream)
 	vdoStreamsList.Foreach(func(item interface{}) {
 		vdoStream, ok := item.(*VdoStream)
@@ -108,7 +110,7 @@ func (c *VdoChannel) GetId() (channel_id uint) {
 func (c *VdoChannel) GetInfo() (*VdoMap, error) {
 	var gerr *C.GError
 	infoMap := C.vdo_channel_get_info(c.Ptr, &gerr)
-	if err := newGError(gerr); err != nil {
+	if err := newVdoError(gerr); err != nil {
 		return nil, err
 	}
 	return NewVdoMapFromC(infoMap), nil
@@ -122,7 +124,7 @@ func (c *VdoChannel) GetInfo() (*VdoMap, error) {
 func GetGlobalVdoChannelInfo() (*VdoMap, error) {
 	var gerr *C.GError
 	infoMap := C.vdo_channel_get_info(nil, &gerr)
-	if err := newGError(gerr); err != nil {
+	if err := newVdoError(gerr); err != nil {
 		return nil, err
 	}
 	return NewVdoMapFromC(infoMap), nil
@@ -147,7 +149,7 @@ func (c *VdoChannel) GetResolutions(filter *VdoMap) ([]VdoResolution, error) {
 		&gerr,
 	)
 
-	if err := newGError(gerr); err != nil {
+	if err := newVdoError(gerr); err != nil {
 		return nil, err
 	}
 
@@ -175,7 +177,7 @@ func (c *VdoChannel) GetResolutions(filter *VdoMap) ([]VdoResolution, error) {
 func (c *VdoChannel) GetSettings() (*VdoMap, error) {
 	var gerr *C.GError
 	settingsMap := C.vdo_channel_get_settings(c.Ptr, &gerr)
-	if err := newGError(gerr); err != nil {
+	if err := newVdoError(gerr); err != nil {
 		return nil, err
 	}
 	return NewVdoMapFromC(settingsMap), nil

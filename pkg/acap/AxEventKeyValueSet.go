@@ -44,7 +44,7 @@ func (axEventKeyValueSet *AXEventKeyValueSet) AddKeyValue(key string, namespace 
 	)
 
 	if int(success) == 0 {
-		return newVdoError(gerr)
+		return newGError(gerr)
 	}
 	return nil
 }
@@ -67,7 +67,7 @@ func (axEventKeyValueSet *AXEventKeyValueSet) GetValueType(key string, namespace
 	)
 
 	if int(success) == 0 {
-		return 0, newVdoError(gerr)
+		return 0, newGError(gerr)
 	}
 	return AXEventValueType(cValueType), nil
 }
@@ -88,7 +88,7 @@ func (axEventKeyValueSet *AXEventKeyValueSet) GetString(key string, namespace *s
 	)
 
 	if int(success) == 0 {
-		return "", newVdoError(gerr)
+		return "", newGError(gerr)
 	}
 	defer cValue.Free()
 	return cValue.ToGolang(), nil
@@ -111,7 +111,7 @@ func (axEventKeyValueSet *AXEventKeyValueSet) GetInteger(key string, namespace *
 	)
 
 	if int(success) == 0 {
-		return 0, newVdoError(gerr)
+		return 0, newGError(gerr)
 	}
 
 	return cValue.ToGolang(), nil
@@ -134,7 +134,7 @@ func (axEventKeyValueSet *AXEventKeyValueSet) GetBoolean(key string, namespace *
 	)
 
 	if int(success) == 0 {
-		return false, newVdoError(gerr)
+		return false, newGError(gerr)
 	}
 
 	return cValue.ToGolang(), nil
@@ -157,7 +157,7 @@ func (axEventKeyValueSet *AXEventKeyValueSet) GetDouble(key string, namespace *s
 	)
 
 	if int(success) == 0 {
-		return 0, newVdoError(gerr)
+		return 0, newGError(gerr)
 	}
 
 	return cValue.ToGolang(), nil
@@ -183,7 +183,7 @@ func (axEventKeyValueSet *AXEventKeyValueSet) MarkAsSource(key string, namespace
 	)
 
 	if int(success) == 0 {
-		return newVdoError(gerr)
+		return newGError(gerr)
 	}
 
 	return nil
@@ -207,7 +207,7 @@ func (axEventKeyValueSet *AXEventKeyValueSet) MarkAsData(key string, namespace *
 	)
 
 	if int(success) == 0 {
-		return newVdoError(gerr)
+		return newGError(gerr)
 	}
 
 	return nil
@@ -230,7 +230,7 @@ func (axEventKeyValueSet *AXEventKeyValueSet) MarkAsUserDefined(key string, name
 	)
 
 	if int(success) == 0 {
-		return newVdoError(gerr)
+		return newGError(gerr)
 	}
 
 	return nil
@@ -251,7 +251,7 @@ func (axEventKeyValueSet *AXEventKeyValueSet) RemoveKey(key string, namespace *s
 	)
 
 	if int(success) == 0 {
-		return newVdoError(gerr)
+		return newGError(gerr)
 	}
 
 	return nil

@@ -1,4 +1,4 @@
-package acap
+package axvdo
 
 /*
 #cgo pkg-config: vdostream

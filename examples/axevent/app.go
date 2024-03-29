@@ -16,7 +16,7 @@ var (
 //
 //	https://www.axis.com/developer-community/axis-metadata-monitor
 func main() {
-	app = app.NewAcapApplication()
+	app = goxis.NewAcapApplication()
 
 	/* Initialize an AXEventKeyValueSet that matches Virtual Input 1.
 	 *

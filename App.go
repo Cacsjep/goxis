@@ -11,6 +11,7 @@ import (
 	"github.com/Cacsjep/goxis/pkg/axlicense"
 	"github.com/Cacsjep/goxis/pkg/axmanifest"
 	"github.com/Cacsjep/goxis/pkg/axsyslog"
+	"github.com/Cacsjep/goxis/pkg/axvdo"
 )
 
 // AcapApplication provides a high-level abstraction for an Axis Communications Application Platform (ACAP) application.
@@ -84,7 +85,7 @@ func (a *AcapApplication) IsLicenseValid(major_version int, minor_version int) (
 
 // Start initiates the main event loop of the application, beginning its execution.
 func (a *AcapApplication) Run() {
-	acap.SignalHandler(a.Close)
+	SignalHandler(a.Close)
 	a.Mainloop.Run()
 }
 
@@ -109,12 +110,12 @@ func (a *AcapApplication) Close() {
 // GetSnapshot captures a JPEG snapshot from the specified video channel and returns it as a byte slice.
 // It sets up the required settings for capturing the snapshot, captures it, and then returns the snapshot data or an error if the capture fails.
 func (a *AcapApplication) GetSnapshot(video_channel int) ([]byte, error) {
-	settings := acap.NewVdoMap()                             // Create a new settings map for the snapshot.
-	settings.SetUint32("channel", uint32(video_channel))     // Set the video channel.
-	settings.SetUint32("format", uint32(acap.VdoFormatJPEG)) // Set the snapshot format to JPEG.
-	defer settings.Unref()                                   // Ensure settings are unreferenced after use.
+	settings := axvdo.NewVdoMap()                             // Create a new settings map for the snapshot.
+	settings.SetUint32("channel", uint32(video_channel))      // Set the video channel.
+	settings.SetUint32("format", uint32(axvdo.VdoFormatJPEG)) // Set the snapshot format to JPEG.
+	defer settings.Unref()                                    // Ensure settings are unreferenced after use.
 
-	snapshotBuffer, err := acap.Snapshot(settings) // Capture the snapshot.
+	snapshotBuffer, err := axvdo.Snapshot(settings) // Capture the snapshot.
 	if err != nil {
 		return nil, err
 	}

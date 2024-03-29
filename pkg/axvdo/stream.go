@@ -1,4 +1,4 @@
-package acap
+package axvdo
 
 /*
 #cgo pkg-config: vdostream
@@ -7,6 +7,8 @@ package acap
 import "C"
 import (
 	"unsafe"
+
+	"github.com/Cacsjep/goxis/pkg/glib"
 )
 
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/vdostream/html/vdo-stream_8h.html
@@ -49,7 +51,7 @@ func StreamGetAll() ([]*VdoStream, error) {
 		return nil, newVdoError(gerr)
 	}
 	vdoStreamsPtr := uintptr(unsafe.Pointer(list_ptr))
-	vdoStreamsList := WrapList(vdoStreamsPtr)
+	vdoStreamsList := glib.WrapList(vdoStreamsPtr)
 	vdoStreamsList.DataWrapper(wrapVdoStream)
 	vdoStreamsList.Foreach(func(item interface{}) {
 		vdoStream, ok := item.(*VdoStream)

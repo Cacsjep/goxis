@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/Cacsjep/goxis"
-	"github.com/Cacsjep/goxis/pkg/acap"
+	"github.com/Cacsjep/goxis/pkg/axvdo"
 )
 
 var (
@@ -11,9 +11,9 @@ var (
 	// FrameProvider for easy go channeld based frame recv
 	fp *goxis.FrameProvider
 	// The format for the vdo example
-	vdo_format = acap.VdoFormatH265
+	vdo_format = axvdo.VdoFormatH265
 	// Stream configuration
-	stream_cfg = acap.VideoSteamConfiguration{
+	stream_cfg = axvdo.VideoSteamConfiguration{
 		Format: &vdo_format,
 	}
 )
@@ -22,7 +22,7 @@ func main() {
 	app = goxis.NewAcapApplication()
 
 	// FrameProvider for easy interact with VDO
-	// Easy method to creates VDO streams via go struct acap.VideoSteamConfiguration
+	// Easy method to creates VDO streams via go struct axvdo.VideoSteamConfiguration
 	// It automtically restarts vdo stream on maintance.
 	// Provide also access to stream stats via go structs
 	if fp, err = app.NewFrameProvider(stream_cfg); err != nil {

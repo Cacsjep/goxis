@@ -1,4 +1,4 @@
-package acap
+package axvdo
 
 /*
 #cgo pkg-config: vdostream
@@ -98,7 +98,7 @@ func (f *VdoFrame) SetCustomTimestamp(timestamp int64) {
 
 // SetIsLastBuffer marks this frame as the last buffer.
 func (f *VdoFrame) SetIsLastBuffer(isLastBuffer bool) {
-	C.vdo_frame_set_is_last_buffer(f.Ptr, goBooleanToC(isLastBuffer))
+	C.vdo_frame_set_is_last_buffer(f.Ptr, C.gboolean(map[bool]int{true: 1, false: 0}[isLastBuffer]))
 }
 
 // SetExtraInfo sets the extra info of this frame.

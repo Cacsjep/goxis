@@ -171,7 +171,7 @@ func (eh *AXEventHandler) DeclareFromTemplate(keyValueSet *AXEventKeyValueSet, t
 		(C.gpointer)(unsafe.Pointer(handle)),
 		&gerr,
 	)) == 0 {
-		return 0, newVdoError(gerr)
+		return 0, newGError(gerr)
 	}
 
 	eh.declarationCompleteHandles[int(declaration)] = handle
@@ -188,7 +188,7 @@ func (eh *AXEventHandler) Unsubscribe(subscription int) error {
 		delete(eh.subscriptionHandles, subscription)
 	}
 	if int(C.ax_event_handler_unsubscribe(eh.Ptr, C.guint(subscription), &gerr)) == 0 {
-		return newVdoError(gerr)
+		return newGError(gerr)
 	}
 	return nil
 }
