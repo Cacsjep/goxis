@@ -1,4 +1,4 @@
-package acap
+package axevent
 
 /*
 #cgo pkg-config: axevent
@@ -7,12 +7,12 @@ package acap
 import "C"
 import (
 	"fmt"
+	"unsafe"
 )
 
 // https://axiscommunications.github.io/acap-documentation/3.5/api/axevent/html/ax__event__key__value__set_8h.html
 type AXEventKeyValueSet struct {
-	Ptr      *C.AXEventKeyValueSet
-	cStrings []*cString
+	Ptr *C.AXEventKeyValueSet
 }
 
 // Creates a new AXEventKeyValueSet
@@ -24,10 +24,12 @@ func NewAXEventKeyValueSet() *AXEventKeyValueSet {
 
 // Adds an key value to the event set
 func (axEventKeyValueSet *AXEventKeyValueSet) AddKeyValue(key string, namespace *string, value interface{}, value_type AXEventValueType) error {
-	cKey := newString(&key)
-	cNamespace := newString(namespace)
+	cKey := C.CString(key)
+	defer C.free(unsafe.Pointer(cKey))
+
+	cNamespace := C.CString(*namespace)
+	defer C.free(unsafe.Pointer(cNamespace))
 	var gerr *C.GError
-	axEventKeyValueSet.cStrings = append(axEventKeyValueSet.cStrings, cKey, cNamespace)
 	cValue, err := valueConverter(value, value_type)
 
 	if err != nil {
@@ -36,131 +38,147 @@ func (axEventKeyValueSet *AXEventKeyValueSet) AddKeyValue(key string, namespace 
 
 	success := C.ax_event_key_value_set_add_key_value(
 		axEventKeyValueSet.Ptr,
-		cKey.Ptr,
-		cNamespace.Ptr,
+		cKey,
+		cNamespace,
 		cValue,
 		C.AXEventValueType(value_type),
 		&gerr,
 	)
 
 	if int(success) == 0 {
-		return newGError(gerr)
+		return newEventError(gerr)
 	}
 	return nil
 }
 
 // Retrieve the value type of the value associated with a key.
 func (axEventKeyValueSet *AXEventKeyValueSet) GetValueType(key string, namespace *string) (AXEventValueType, error) {
-	cKey := newString(&key)
-	cNamespace := newString(namespace)
+	cKey := C.CString(key)
+	defer C.free(unsafe.Pointer(cKey))
+
+	cNamespace := C.CString(*namespace)
+	defer C.free(unsafe.Pointer(cNamespace))
 	var gerr *C.GError
 	var cValueType C.AXEventValueType
 
-	axEventKeyValueSet.cStrings = append(axEventKeyValueSet.cStrings, cKey, cNamespace)
-
 	success := C.ax_event_key_value_set_get_value_type(
 		axEventKeyValueSet.Ptr,
-		cKey.Ptr,
-		cNamespace.Ptr,
+		cKey,
+		cNamespace,
 		&cValueType,
 		&gerr,
 	)
 
 	if int(success) == 0 {
-		return 0, newGError(gerr)
+		return 0, newEventError(gerr)
 	}
 	return AXEventValueType(cValueType), nil
 }
 
 // Retrieve the value type of the value associated with a key.
 func (axEventKeyValueSet *AXEventKeyValueSet) GetString(key string, namespace *string) (string, error) {
-	cKey := newString(&key)
-	cNamespace := newString(namespace)
 	var gerr *C.GError
-	cValue := newAllocatableCString()
-	axEventKeyValueSet.cStrings = append(axEventKeyValueSet.cStrings, cKey, cNamespace)
+
+	cKey := C.CString(key)
+	defer C.free(unsafe.Pointer(cKey))
+
+	cNamespace := C.CString(*namespace)
+	defer C.free(unsafe.Pointer(cNamespace))
+
+	var cValue *C.char
+	defer func() {
+		if cValue != nil {
+			C.free(unsafe.Pointer(cValue))
+		}
+	}()
+
 	success := C.ax_event_key_value_set_get_string(
 		axEventKeyValueSet.Ptr,
-		cKey.Ptr,
-		cNamespace.Ptr,
-		cValue.Ptr,
+		cKey,
+		cNamespace,
+		&cValue,
 		&gerr,
 	)
 
 	if int(success) == 0 {
-		return "", newGError(gerr)
+		return "", newEventError(gerr)
 	}
-	defer cValue.Free()
-	return cValue.ToGolang(), nil
+	return C.GoString(cValue), nil
 }
 
 // Retrieve the integer value associated with a key.
 func (axEventKeyValueSet *AXEventKeyValueSet) GetInteger(key string, namespace *string) (int, error) {
-	cKey := newString(&key)
-	cNamespace := newString(namespace)
-	axEventKeyValueSet.cStrings = append(axEventKeyValueSet.cStrings, cKey, cNamespace)
+	cKey := C.CString(key)
+	defer C.free(unsafe.Pointer(cKey))
+
+	cNamespace := C.CString(*namespace)
+	defer C.free(unsafe.Pointer(cNamespace))
 
 	var gerr *C.GError
-	cValue := newInt()
+	var cValue C.gint
 	success := C.ax_event_key_value_set_get_integer(
 		axEventKeyValueSet.Ptr,
-		cKey.Ptr,
-		cNamespace.Ptr,
-		&cValue.Ptr,
+		cKey,
+		cNamespace,
+		&cValue,
 		&gerr,
 	)
 
 	if int(success) == 0 {
-		return 0, newGError(gerr)
+		return 0, newEventError(gerr)
 	}
 
-	return cValue.ToGolang(), nil
+	return int(cValue), nil
 }
 
 // Retrieve the boolean value associated with a key.
 func (axEventKeyValueSet *AXEventKeyValueSet) GetBoolean(key string, namespace *string) (bool, error) {
-	cKey := newString(&key)
-	cNamespace := newString(namespace)
-	axEventKeyValueSet.cStrings = append(axEventKeyValueSet.cStrings, cKey, cNamespace)
+	cKey := C.CString(key)
+	defer C.free(unsafe.Pointer(cKey))
+
+	cNamespace := C.CString(*namespace)
+	defer C.free(unsafe.Pointer(cNamespace))
 
 	var gerr *C.GError
-	cValue := newBool()
+	var cValue C.gboolean
 	success := C.ax_event_key_value_set_get_boolean(
 		axEventKeyValueSet.Ptr,
-		cKey.Ptr,
-		cNamespace.Ptr,
-		&cValue.Ptr,
+		cKey,
+		cNamespace,
+		&cValue,
 		&gerr,
 	)
 
 	if int(success) == 0 {
-		return false, newGError(gerr)
+		return false, newEventError(gerr)
 	}
 
-	return cValue.ToGolang(), nil
+	return cValue != C.FALSE, nil
 }
 
 // Retrieve the double value associated with a key.
 func (axEventKeyValueSet *AXEventKeyValueSet) GetDouble(key string, namespace *string) (float64, error) {
-	cKey := newString(&key)
-	cNamespace := newString(namespace)
-	axEventKeyValueSet.cStrings = append(axEventKeyValueSet.cStrings, cKey, cNamespace)
+	cKey := C.CString(key)
+	defer C.free(unsafe.Pointer(cKey))
+
+	cNamespace := C.CString(*namespace)
+	defer C.free(unsafe.Pointer(cNamespace))
 
 	var gerr *C.GError
-	cValue := newDouble()
+	var cValue C.gdouble
 	success := C.ax_event_key_value_set_get_double(
 		axEventKeyValueSet.Ptr,
-		cKey.Ptr,
-		cNamespace.Ptr,
-		&cValue.Ptr,
+		cKey,
+		cNamespace,
+		&cValue,
 		&gerr,
 	)
 
 	if int(success) == 0 {
-		return 0, newGError(gerr)
+		return 0, newEventError(gerr)
 	}
 
-	return cValue.ToGolang(), nil
+	return float64(cValue), nil
 }
 
 // Mark a key in the AXEventKeyValueSet as a source. A source key is an identifier used to distinguish between
@@ -170,20 +188,22 @@ func (axEventKeyValueSet *AXEventKeyValueSet) GetDouble(key string, namespace *s
 // as data. Please note that although it is possible to mark more than one key as a source,
 // only events with zero or one source keys can be used to trigger actions.
 func (axEventKeyValueSet *AXEventKeyValueSet) MarkAsSource(key string, namespace *string) error {
-	cKey := newString(&key)
-	cNamespace := newString(namespace)
-	axEventKeyValueSet.cStrings = append(axEventKeyValueSet.cStrings, cKey, cNamespace)
+	cKey := C.CString(key)
+	defer C.free(unsafe.Pointer(cKey))
+
+	cNamespace := C.CString(*namespace)
+	defer C.free(unsafe.Pointer(cNamespace))
 	var gerr *C.GError
 
 	success := C.ax_event_key_value_set_mark_as_source(
 		axEventKeyValueSet.Ptr,
-		cKey.Ptr,
-		cNamespace.Ptr,
+		cKey,
+		cNamespace,
 		&gerr,
 	)
 
 	if int(success) == 0 {
-		return newGError(gerr)
+		return newEventError(gerr)
 	}
 
 	return nil
@@ -194,20 +214,22 @@ func (axEventKeyValueSet *AXEventKeyValueSet) MarkAsSource(key string, namespace
 // high or low, of the port. Please note that although it is possible to mark more than one key as data,
 // only events with one and only one data key can be used to trigger actions.
 func (axEventKeyValueSet *AXEventKeyValueSet) MarkAsData(key string, namespace *string) error {
-	cKey := newString(&key)
-	cNamespace := newString(namespace)
-	axEventKeyValueSet.cStrings = append(axEventKeyValueSet.cStrings, cKey, cNamespace)
+	cKey := C.CString(key)
+	defer C.free(unsafe.Pointer(cKey))
+
+	cNamespace := C.CString(*namespace)
+	defer C.free(unsafe.Pointer(cNamespace))
 	var gerr *C.GError
 
 	success := C.ax_event_key_value_set_mark_as_data(
 		axEventKeyValueSet.Ptr,
-		cKey.Ptr,
-		cNamespace.Ptr,
+		cKey,
+		cNamespace,
 		&gerr,
 	)
 
 	if int(success) == 0 {
-		return newGError(gerr)
+		return newEventError(gerr)
 	}
 
 	return nil
@@ -215,22 +237,26 @@ func (axEventKeyValueSet *AXEventKeyValueSet) MarkAsData(key string, namespace *
 
 // Mark a key in AXEventKeyValueSet with an user defined tag.
 func (axEventKeyValueSet *AXEventKeyValueSet) MarkAsUserDefined(key string, namespace *string, userTag string) error {
-	cKey := newString(&key)
-	cNamespace := newString(namespace)
-	cUserTag := newString(&userTag)
-	axEventKeyValueSet.cStrings = append(axEventKeyValueSet.cStrings, cKey, cNamespace, cUserTag)
+	cKey := C.CString(key)
+	defer C.free(unsafe.Pointer(cKey))
+
+	cNamespace := C.CString(*namespace)
+	defer C.free(unsafe.Pointer(cNamespace))
+
+	cUserTag := C.CString(userTag)
+	defer C.free(unsafe.Pointer(cUserTag))
 
 	var gerr *C.GError
 	success := C.ax_event_key_value_set_mark_as_user_defined(
 		axEventKeyValueSet.Ptr,
-		cKey.Ptr,
-		cNamespace.Ptr,
-		cUserTag.Ptr,
+		cKey,
+		cNamespace,
+		cUserTag,
 		&gerr,
 	)
 
 	if int(success) == 0 {
-		return newGError(gerr)
+		return newEventError(gerr)
 	}
 
 	return nil
@@ -238,20 +264,22 @@ func (axEventKeyValueSet *AXEventKeyValueSet) MarkAsUserDefined(key string, name
 
 // Removes a key and its associated value from an AXEventKeyValueSet.
 func (axEventKeyValueSet *AXEventKeyValueSet) RemoveKey(key string, namespace *string) error {
-	cKey := newString(&key)
-	cNamespace := newString(namespace)
-	axEventKeyValueSet.cStrings = append(axEventKeyValueSet.cStrings, cKey, cNamespace)
+	cKey := C.CString(key)
+	defer C.free(unsafe.Pointer(cKey))
+
+	cNamespace := C.CString(*namespace)
+	defer C.free(unsafe.Pointer(cNamespace))
 
 	var gerr *C.GError
 	success := C.ax_event_key_value_set_remove_key(
 		axEventKeyValueSet.Ptr,
-		cKey.Ptr,
-		cNamespace.Ptr,
+		cKey,
+		cNamespace,
 		&gerr,
 	)
 
 	if int(success) == 0 {
-		return newGError(gerr)
+		return newEventError(gerr)
 	}
 
 	return nil
@@ -291,8 +319,5 @@ func valueConverter(value interface{}, value_type AXEventValueType) (C.gconstpoi
 
 // Frees an AXEventKeyValueSet.
 func (axEventKeyValueSet *AXEventKeyValueSet) Free() {
-	for _, cs := range axEventKeyValueSet.cStrings {
-		cs.Free()
-	}
 	C.ax_event_key_value_set_free(axEventKeyValueSet.Ptr)
 }

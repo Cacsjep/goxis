@@ -1,4 +1,4 @@
-package acap
+package axevent
 
 /*
 #cgo pkg-config: glib-2.0 axevent
@@ -41,7 +41,7 @@ func NewEventHandler() *AXEventHandler {
 func (ev *AXEventHandler) SendEvent(declaration int, evt *AXEvent) error {
 	var gerr *C.GError
 	if int(C.ax_event_handler_send_event(ev.Ptr, C.guint(declaration), evt.Ptr, &gerr)) == 0 {
-		return newGError(gerr)
+		return newEventError(gerr)
 	}
 	return nil
 }
@@ -56,7 +56,7 @@ func (evt *AXEventHandler) Undeclare(declaration int) error {
 		delete(evt.declarationCompleteHandles, declaration)
 	}
 	if int(C.ax_event_handler_undeclare(evt.Ptr, C.guint(declaration), &gerr)) == 0 {
-		return newGError(gerr)
+		return newEventError(gerr)
 	}
 	return nil
 }
@@ -99,7 +99,7 @@ func (eh *AXEventHandler) Subscribe(kvs *AXEventKeyValueSet, callback Subscripti
 		(C.gpointer)(unsafe.Pointer(handle)),
 		&gerr,
 	)) == 0 {
-		return 0, newGError(gerr)
+		return 0, newEventError(gerr)
 	}
 
 	eh.subscriptionHandles[int(csubscription)] = handle
@@ -138,13 +138,13 @@ func (eh *AXEventHandler) Declare(keyValueSet *AXEventKeyValueSet, stateless boo
 	if int(C.ax_event_handler_declare(
 		eh.Ptr,
 		keyValueSet.Ptr,
-		goBooleanToC(stateless),
+		C.gboolean(map[bool]int{true: 1, false: 0}[stateless]),
 		&cdeclaration,
 		(C.AXDeclarationCompleteCallback)(C.GoDeclarationCompleteCallback),
 		(C.gpointer)(unsafe.Pointer(handle)),
 		&gerr,
 	)) == 0 {
-		return 0, newGError(gerr)
+		return 0, newEventError(gerr)
 	}
 
 	eh.declarationCompleteHandles[int(cdeclaration)] = handle
@@ -159,19 +159,20 @@ func (eh *AXEventHandler) DeclareFromTemplate(keyValueSet *AXEventKeyValueSet, t
 	var gerr *C.GError
 	data := &declarationComplete{Callback: callback, Userdata: userdata}
 	handle := cgo.NewHandle(data)
-	cTemplate := newString(&template)
-	defer cTemplate.Free()
+
+	cTemplate := C.CString(template)
+	defer C.free(unsafe.Pointer(cTemplate))
 
 	if int(C.ax_event_handler_declare_from_template(
 		eh.Ptr,
-		cTemplate.Ptr,
+		cTemplate,
 		keyValueSet.Ptr,
 		&declaration,
 		(C.AXDeclarationCompleteCallback)(C.GoDeclarationCompleteCallback),
 		(C.gpointer)(unsafe.Pointer(handle)),
 		&gerr,
 	)) == 0 {
-		return 0, newGError(gerr)
+		return 0, newEventError(gerr)
 	}
 
 	eh.declarationCompleteHandles[int(declaration)] = handle
@@ -188,7 +189,7 @@ func (eh *AXEventHandler) Unsubscribe(subscription int) error {
 		delete(eh.subscriptionHandles, subscription)
 	}
 	if int(C.ax_event_handler_unsubscribe(eh.Ptr, C.guint(subscription), &gerr)) == 0 {
-		return newGError(gerr)
+		return newEventError(gerr)
 	}
 	return nil
 }

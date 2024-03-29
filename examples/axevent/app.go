@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/Cacsjep/goxis"
-	"github.com/Cacsjep/goxis/pkg/acap"
+	"github.com/Cacsjep/goxis/pkg/axevent"
 )
 
 var (
@@ -27,12 +27,12 @@ func main() {
 	 *           active=NULL     <-- Subscribe to all states
 	 */
 
-	set := acap.NewAXEventKeyValueSet()
-	err = set.AddKeyValue("topic0", &acap.OnfivNameSpaceTns1, "Device", acap.AXValueTypeString)
-	err = set.AddKeyValue("topic1", &acap.OnfivNameSpaceTnsAxis, "IO", acap.AXValueTypeString)
-	err = set.AddKeyValue("topic2", &acap.OnfivNameSpaceTnsAxis, "VirtualInput", acap.AXValueTypeString)
-	err = set.AddKeyValue("port", nil, 1, acap.AXValueTypeInt)
-	err = set.AddKeyValue("active", nil, nil, acap.AXValueTypeBool)
+	set := axevent.NewAXEventKeyValueSet()
+	err = set.AddKeyValue("topic0", &axevent.OnfivNameSpaceTns1, "Device", axevent.AXValueTypeString)
+	err = set.AddKeyValue("topic1", &axevent.OnfivNameSpaceTnsAxis, "IO", axevent.AXValueTypeString)
+	err = set.AddKeyValue("topic2", &axevent.OnfivNameSpaceTnsAxis, "VirtualInput", axevent.AXValueTypeString)
+	err = set.AddKeyValue("port", nil, 1, axevent.AXValueTypeInt)
+	err = set.AddKeyValue("active", nil, nil, axevent.AXValueTypeBool)
 
 	// Subscribe to the event.
 	// You can test the callback via changing the state of the virtual input via:
@@ -45,7 +45,7 @@ func main() {
 	//		nor should any lengthy processing be made in the callback functions.
 	//		Failure to comply with this convention will prevent the event system from,
 	//		or delay it in, sending or delivering any more events to the calling application.
-	subscription, err = app.EventHandler.Subscribe(set, func(subscription int, event *acap.AXEvent, userdata any) {
+	subscription, err = app.EventHandler.Subscribe(set, func(subscription int, event *axevent.AXEvent, userdata any) {
 
 		// Get the key value set from event
 		kvs := event.GetKeyValueSet()

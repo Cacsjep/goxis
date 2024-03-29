@@ -1,4 +1,4 @@
-package acap
+package axevent
 
 /*
 #cgo pkg-config: glib-2.0 axevent

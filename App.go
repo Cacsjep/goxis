@@ -7,12 +7,13 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/Cacsjep/goxis/pkg/acap"
+	"github.com/Cacsjep/goxis/pkg/axevent"
 	"github.com/Cacsjep/goxis/pkg/axlicense"
 	"github.com/Cacsjep/goxis/pkg/axmanifest"
 	"github.com/Cacsjep/goxis/pkg/axparameter"
 	"github.com/Cacsjep/goxis/pkg/axsyslog"
 	"github.com/Cacsjep/goxis/pkg/axvdo"
+	"github.com/Cacsjep/goxis/pkg/glib"
 )
 
 // AcapApplication provides a high-level abstraction for an Axis Communications Application Platform (ACAP) application.
@@ -23,8 +24,8 @@ type AcapApplication struct {
 	Manifest        *axmanifest.ApplicationManifestSchema
 	Syslog          *axsyslog.Syslog
 	ParamHandler    *axparameter.AXParameter
-	EventHandler    *acap.AXEventHandler
-	Mainloop        *acap.GMainLoop
+	EventHandler    *axevent.AXEventHandler
+	Mainloop        *glib.GMainLoop
 	OnCloseCleaners []func()
 }
 
@@ -48,8 +49,8 @@ func NewAcapApplication() *AcapApplication {
 		Manifest:        m,
 		Syslog:          axsyslog.NewSyslog(m.ACAPPackageConf.Setup.AppName, axsyslog.LOG_PID|axsyslog.LOG_CONS, axsyslog.LOG_USER),
 		ParamHandler:    pApp,
-		EventHandler:    acap.NewEventHandler(),
-		Mainloop:        acap.NewMainLoop(),
+		EventHandler:    axevent.NewEventHandler(),
+		Mainloop:        glib.NewMainLoop(),
 		OnCloseCleaners: []func(){},
 	}
 
