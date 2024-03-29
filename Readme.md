@@ -4,8 +4,8 @@ Goxis provides golang bindings for AXIS ACAP API's.
 The acap package contains low level wrappers around ACAP API's.
 Main package contains more high level interface to create ACAP Applications.
 
-> [!NOTE]  
-> This is a hobby project and is still in progress !
+> [!WARNING]  
+> This is a hobby project ;) be aware !
 
 # Prerequisites
 
@@ -79,7 +79,7 @@ You can look into any example, a application needs:
 .\goxisbuilder.exe -appdir="example/license"
 ```
 
-> [!NOTE]  
+> [!IMPORTANT]  
 > appdir is a directory with a main.go and needs to have a ***LICENSE*** and a ***manifest.json***
 
 | Flag            | Description                                                                                           | Default          |
