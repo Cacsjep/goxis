@@ -1,4 +1,4 @@
-package acap
+package axparameter
 
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axparameter/html/index.html
 
@@ -20,20 +20,20 @@ import (
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axparameter/html/ax__parameter_8h.html#a454ef604d7741f45804e708a56f7bf24
 type AXParameter struct {
 	Ptr              *C.AXParameter
-	cStrings         []*cString
 	parameterHandles map[string]cgo.Handle
 }
 
 // Creates a new AXParameter.
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axparameter/html/ax__parameter_8h.html#adf2eefe79f53d60faede33ba71d5928c
-func AXParameterNew(appName *string) (*AXParameter, error) {
+func AXParameterNew(appName string) (*AXParameter, error) {
 	var axParam *C.AXParameter
 	var gerr *C.GError
-	cAppName := newString(appName)
-	defer cAppName.Free()
 
-	if axParam = C.ax_parameter_new(cAppName.Ptr, &gerr); axParam == nil {
+	cName := C.CString(appName)
+	defer C.free(unsafe.Pointer(cName))
+
+	if axParam = C.ax_parameter_new(cName, &gerr); axParam == nil {
 		return nil, newGError(gerr)
 	}
 
@@ -45,11 +45,17 @@ func AXParameterNew(appName *string) (*AXParameter, error) {
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axparameter/html/ax__parameter_8h.html#a9069e0a2a3c64cacd7d50f1408a9f5fa
 func (axp *AXParameter) Add(name string, initialValue string, ptype string) error {
 	var gerr *C.GError
-	cName := newString(&name)
-	cInitialValue := newString(&initialValue)
-	cptype := newString(&ptype)
-	axp.cStrings = append(axp.cStrings, cName, cInitialValue, cptype)
-	if int(C.ax_parameter_add(axp.Ptr, cName.Ptr, cInitialValue.Ptr, cptype.Ptr, &gerr)) == 0 {
+
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+
+	cInitialValue := C.CString(initialValue)
+	defer C.free(unsafe.Pointer(cInitialValue))
+
+	cPtype := C.CString(ptype)
+	defer C.free(unsafe.Pointer(cPtype))
+
+	if int(C.ax_parameter_add(axp.Ptr, cName, cInitialValue, cPtype, &gerr)) == 0 {
 		return newGError(gerr)
 	}
 	return nil
@@ -59,10 +65,10 @@ func (axp *AXParameter) Add(name string, initialValue string, ptype string) erro
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axparameter/html/ax__parameter_8h.html#aa6f49de80979e1f25ea9d98c449ac8c4
 func (axp *AXParameter) Remove(name string) error {
-	cName := newString(&name)
-	defer cName.Free()
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
 	var gerr *C.GError
-	if int(C.ax_parameter_remove(axp.Ptr, cName.Ptr, &gerr)) == 0 {
+	if int(C.ax_parameter_remove(axp.Ptr, cName, &gerr)) == 0 {
 		return newGError(gerr)
 	}
 	return nil
@@ -72,11 +78,14 @@ func (axp *AXParameter) Remove(name string) error {
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axparameter/html/ax__parameter_8h.html#a3b767bcb3c99edf38b9fab3f38b7f2d7
 func (axp *AXParameter) Set(name string, value string, doSync bool) error {
-	cName := newString(&name)
-	cValue := newString(&value)
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+
+	cValue := C.CString(value)
+	defer C.free(unsafe.Pointer(cValue))
+
 	var gerr *C.GError
-	axp.cStrings = append(axp.cStrings, cName, cValue)
-	if int(C.ax_parameter_set(axp.Ptr, cName.Ptr, cValue.Ptr, goBooleanToC(doSync), &gerr)) == 0 {
+	if int(C.ax_parameter_set(axp.Ptr, cName, cValue, C.gboolean(map[bool]int{true: 1, false: 0}[doSync]), &gerr)) == 0 {
 		return newGError(gerr)
 	}
 	return nil
@@ -87,15 +96,21 @@ func (axp *AXParameter) Set(name string, value string, doSync bool) error {
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axparameter/html/ax__parameter_8h.html#aa7979d96d425189cfbf5fac6539bbc68
 func (axp *AXParameter) Get(name string) (string, error) {
-	cName := newString(&name)
-	defer cName.Free()
-	cValue := newAllocatableCString()
-	defer cValue.Free()
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+
+	var cValue *C.char
+	defer func() {
+		if cValue != nil {
+			C.free(unsafe.Pointer(cValue))
+		}
+	}()
+
 	var gerr *C.GError
-	if int(C.ax_parameter_get(axp.Ptr, cName.Ptr, cValue.Ptr, &gerr)) == 0 {
+	if int(C.ax_parameter_get(axp.Ptr, cName, &cValue, &gerr)) == 0 {
 		return "", newGError(gerr)
 	}
-	return cValue.ToGolang(), nil
+	return C.GoString(cValue), nil
 }
 
 func (axp *AXParameter) GetAsFloat(name string) (float64, error) {
@@ -176,12 +191,13 @@ func (axp *AXParameter) RegisterCallback(name string, callback ParameterCallback
 	var gerr *C.GError
 	data := &parameterCallbackData{Callback: callback, Userdata: userdata}
 	handle := cgo.NewHandle(data)
-	cName := newString(&name)
-	defer cName.Free()
+
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
 
 	success := C.ax_parameter_register_callback(
 		axp.Ptr,
-		cName.Ptr,
+		cName,
 		(*C.AXParameterCallback)(unsafe.Pointer(C.GoParameterCallback)),
 		(C.gpointer)(unsafe.Pointer(handle)),
 		&gerr,
@@ -198,15 +214,15 @@ func (axp *AXParameter) RegisterCallback(name string, callback ParameterCallback
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axparameter/html/ax__parameter_8h.html#a4e3b5330dfbe45fad22753c83a1ee065
 func (axp *AXParameter) UnregisterCallback(name string) error {
-	cName := newString(&name)
-	defer cName.Free()
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
 	if handle, exists := axp.parameterHandles[name]; exists {
 		handle.Delete()
 		delete(axp.parameterHandles, name)
 	}
 	C.ax_parameter_unregister_callback(
 		axp.Ptr,
-		cName.Ptr,
+		cName,
 	)
 	return nil
 }
@@ -215,8 +231,5 @@ func (axp *AXParameter) UnregisterCallback(name string) error {
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axparameter/html/ax__parameter_8h.html#a78ff4b5a312a1d9aab120436c116a5a2
 func (axp *AXParameter) Free() {
-	for _, cs := range axp.cStrings {
-		cs.Free()
-	}
 	C.ax_parameter_free(axp.Ptr)
 }

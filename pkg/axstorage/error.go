@@ -3,6 +3,7 @@ package axstorage
 /*
 #cgo LDFLAGS: -laxstorage
 #cgo pkg-config: glib-2.0
+#include <glib.h>
 #include <axsdk/axstorage.h>
 */
 import "C"

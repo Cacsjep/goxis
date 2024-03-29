@@ -10,6 +10,7 @@ import (
 	"github.com/Cacsjep/goxis/pkg/acap"
 	"github.com/Cacsjep/goxis/pkg/axlicense"
 	"github.com/Cacsjep/goxis/pkg/axmanifest"
+	"github.com/Cacsjep/goxis/pkg/axparameter"
 	"github.com/Cacsjep/goxis/pkg/axsyslog"
 	"github.com/Cacsjep/goxis/pkg/axvdo"
 )
@@ -21,7 +22,7 @@ import (
 type AcapApplication struct {
 	Manifest        *axmanifest.ApplicationManifestSchema
 	Syslog          *axsyslog.Syslog
-	ParamHandler    *acap.AXParameter
+	ParamHandler    *axparameter.AXParameter
 	EventHandler    *acap.AXEventHandler
 	Mainloop        *acap.GMainLoop
 	OnCloseCleaners []func()
@@ -38,7 +39,7 @@ func NewAcapApplication() *AcapApplication {
 		panic(err)
 	}
 
-	pApp, err := acap.AXParameterNew(&m.ACAPPackageConf.Setup.AppName)
+	pApp, err := axparameter.AXParameterNew(m.ACAPPackageConf.Setup.AppName)
 	if err != nil {
 		panic(err)
 	}
