@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"log"
@@ -15,7 +14,12 @@ import (
 	"time"
 
 	dac "github.com/Snawoot/go-http-digest-auth-client"
-	"github.com/docker/docker/client"
+)
+
+const (
+	Blue  = "\033[34m"
+	Reset = "\033[0m"
+	Green = "\033[32m"
 )
 
 func boolToStr(b bool) string {
@@ -110,27 +114,6 @@ func configureSdk(lowestSdkVersion bool, buildConfig *BuildConfiguration) {
 	}
 }
 
-// buildApplication handles the building of the application or examples based on the provided configuration.
-func buildApplication(ctx context.Context, cli *client.Client, buildConfig *BuildConfiguration) {
-	if buildConfig.AppDirectory == "" {
-		if !buildConfig.BuildExamples {
-			handleError("Application directory must be set or build examples flag enabled", nil)
-		}
-		for _, e := range examples {
-			buildConfig.AppDirectory = fmt.Sprintf("examples/%s", e)
-			if err := buildAndRunContainer(ctx, cli, buildConfig); err != nil {
-				handleError("Build fails", err)
-			}
-		}
-		return
-	} else {
-		// Application build logic here...
-		if err := buildAndRunContainer(ctx, cli, buildConfig); err != nil {
-			handleError("Failed to build and run container", err)
-		}
-	}
-}
-
 func watchPackageLog(buildConfig *BuildConfiguration) {
 	// Setup a channel to listen for interrupt signal (Ctrl+C)
 	sigChan := make(chan os.Signal, 1)
@@ -149,5 +132,85 @@ Loop:
 			fmt.Println("Interrupt received, stopping...")
 			break Loop
 		}
+	}
+}
+
+func printCompatibility(buildConfig *BuildConfiguration) {
+	fmt.Println("Acap Compatibility:")
+	// Maps for SDK to Firmware compatibility
+	sdkToFirmware := map[string]string{
+		"3.0": "9.70 and later",
+		"3.1": "9.80 (LTS) and later",
+		"3.2": "10.2 and later",
+		"3.3": "10.5 and later",
+		"3.4": "10.6 and later",
+		"3.5": "10.9 and later",
+	}
+
+	// Maps for Native SDK version to Firmware compatibility
+	nativeSdkToFirmware := map[string]string{
+		"1.0":  "10.7 and later until LTS",
+		"1.1":  "10.9 and later until LTS",
+		"1.2":  "10.10 and later until LTS",
+		"1.3":  "10.12 (LTS)",
+		"1.4":  "11.0 and later until LTS",
+		"1.5":  "11.1 and later until LTS",
+		"1.6":  "11.2 and later until LTS",
+		"1.7":  "11.3 and later until LTS",
+		"1.8":  "11.4 and later until LTS",
+		"1.9":  "11.5 and later until LTS",
+		"1.10": "11.6 and later until LTS",
+		"1.11": "11.7 and later until LTS",
+		"1.12": "11.8 and later until LTS",
+		"1.13": "11.9 and later until LTS",
+	}
+
+	// Check if it's using the native SDK or standard SDK
+	if buildConfig.Sdk == "acap-native-sdk" {
+		if firmware, ok := nativeSdkToFirmware[buildConfig.Version]; ok {
+			fmt.Printf("     ACAP Native SDK %s%s%s, compatible with AXIS OS version: %s%s%s\n", Blue, buildConfig.Version, Reset, Green, firmware, Reset)
+		} else {
+			log.Printf("     Unknown ACAP Native SDK version: %s\n", buildConfig.Version)
+		}
+	} else if buildConfig.Sdk == "acap-sdk" {
+		if firmware, ok := sdkToFirmware[buildConfig.Version]; ok {
+			fmt.Printf("     ACAP3 SDK %s%s%s, compatible with firmware version: %s%s%s\n", Blue, buildConfig.Version, Reset, Green, firmware, Reset)
+		} else {
+			log.Printf("     Unknown ACAP3 SDK version: %s\n", buildConfig.Version)
+		}
+	} else {
+		log.Printf("     Unknown SDK configuration: %s\n", buildConfig.Sdk)
+	}
+
+	schemaToFirmware := map[string]string{
+		"1.0":   "10.7",
+		"1.1":   "10.7",
+		"1.2":   "10.7",
+		"1.3":   "10.9",
+		"1.3.1": "11.0",
+		"1.4.0": "11.7",
+		"1.5.0": "11.8",
+		"1.6.0": "11.9",
+	}
+
+	if firmware, ok := schemaToFirmware[buildConfig.Manifest.SchemaVersion]; ok {
+		fmt.Printf("     Schema %s%s%s is compatible with firmware version: %s%s%s\n", Blue, buildConfig.Manifest.SchemaVersion, Reset, Green, firmware, Reset)
+	} else {
+		log.Printf("     Unknown Schema version: %s\n", buildConfig.Manifest.SchemaVersion)
+	}
+
+	archToChips := map[string][]string{
+		"armv7hf": {"ARTPEC-6", "ARTPEC-7", "i.MX 6SoloX", "i.MX 6ULL"},
+		"aarch64": {"ARTPEC-8", "CV25", "S5", "S5L"},
+	}
+
+	if chips, ok := archToChips[buildConfig.Arch]; ok {
+		chipsStr := strings.Join(chips, ", ")
+
+		fmt.Printf("     Supported architecture: %s%s%s with chips: %s%s%s\n",
+			Blue, buildConfig.Arch, Reset,
+			Green, chipsStr, Reset)
+	} else {
+		fmt.Println("     Unsupported architecture.")
 	}
 }

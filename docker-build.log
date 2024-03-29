@@ -1,0 +1,237 @@
+2024/03/29 14:00:00 Step 1/49 : ARG ARCH=aarch64
+2024/03/29 14:00:00 
+2024/03/29 14:00:00 Step 2/49 : ARG VERSION=1.13
+2024/03/29 14:00:00 
+2024/03/29 14:00:00 Step 3/49 : ARG UBUNTU_VERSION=22.04
+2024/03/29 14:00:00 
+2024/03/29 14:00:00 Step 4/49 : ARG REPO=axisecp
+2024/03/29 14:00:00 
+2024/03/29 14:00:00 Step 5/49 : ARG SDK=acap-native-sdk
+2024/03/29 14:00:00 
+2024/03/29 14:00:00 Step 6/49 : FROM ${REPO}/${SDK}:${VERSION}-${ARCH}-ubuntu${UBUNTU_VERSION}
+2024/03/29 14:00:00 
+2024/03/29 14:00:00  ---> 5335d5f43047
+2024/03/29 14:00:00 Step 7/49 : ARG ARCH
+2024/03/29 14:00:00 
+2024/03/29 14:00:00  ---> Using cache
+2024/03/29 14:00:00  ---> 4cd1514c7e2c
+2024/03/29 14:00:00 Step 8/49 : ARG VERSION
+2024/03/29 14:00:00 
+2024/03/29 14:00:00  ---> Using cache
+2024/03/29 14:00:00  ---> a5d343ffc1ca
+2024/03/29 14:00:00 Step 9/49 : RUN echo "Architecture is: ${ARCH}"
+2024/03/29 14:00:00 
+2024/03/29 14:00:00  ---> Using cache
+2024/03/29 14:00:00  ---> ac705c411a9b
+2024/03/29 14:00:00 Step 10/49 : ARG SDK_LIB_PATH_BASE=/opt/axis/acapsdk/sysroots/${ARCH}/usr
+2024/03/29 14:00:00 
+2024/03/29 14:00:00  ---> Using cache
+2024/03/29 14:00:00  ---> 95bd8ac26711
+2024/03/29 14:00:00 Step 11/49 : RUN echo "SDK library path base is: ${SDK_LIB_PATH_BASE}"
+2024/03/29 14:00:00 
+2024/03/29 14:00:00  ---> Using cache
+2024/03/29 14:00:00  ---> caedebf1c3f4
+2024/03/29 14:00:00 Step 12/49 : ARG APP_DIR=/opt/goaxis/
+2024/03/29 14:00:00 
+2024/03/29 14:00:00  ---> Using cache
+2024/03/29 14:00:00  ---> c1df62fa2adc
+2024/03/29 14:00:00 Step 13/49 : RUN mkdir ${APP_DIR}
+2024/03/29 14:00:00 
+2024/03/29 14:00:00  ---> Using cache
+2024/03/29 14:00:00  ---> 976c634e4567
+2024/03/29 14:00:00 Step 14/49 : RUN apt-get update &&     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends     wget     yasm     nasm     git     build-essential
+2024/03/29 14:00:00 
+2024/03/29 14:00:00  ---> Using cache
+2024/03/29 14:00:00  ---> 40f1d8df5208
+2024/03/29 14:00:00 Step 15/49 : RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+2024/03/29 14:00:00 
+2024/03/29 14:00:00  ---> Using cache
+2024/03/29 14:00:00  ---> 5211113b3378
+2024/03/29 14:00:00 Step 16/49 : ARG GOLANG_VERSION=1.22.1
+2024/03/29 14:00:00 
+2024/03/29 14:00:00  ---> Using cache
+2024/03/29 14:00:00  ---> f9ad06f3d110
+2024/03/29 14:00:00 Step 17/49 : RUN curl -fsSL "https://golang.org/dl/go${GOLANG_VERSION}.linux-amd64.tar.gz" -o golang.tar.gz     && tar -C /usr/local -xzf golang.tar.gz     && rm golang.tar.gz
+2024/03/29 14:00:00 
+2024/03/29 14:00:00  ---> Using cache
+2024/03/29 14:00:00  ---> 62758401b4d4
+2024/03/29 14:00:00 Step 18/49 : ENV GOPATH="/go"
+2024/03/29 14:00:00 
+2024/03/29 14:00:00  ---> Using cache
+2024/03/29 14:00:00  ---> 8f642afe5a78
+2024/03/29 14:00:00 Step 19/49 : ENV PATH="${GOPATH}/bin:/usr/local/go/bin:${PATH}"
+2024/03/29 14:00:00 
+2024/03/29 14:00:00  ---> Using cache
+2024/03/29 14:00:00  ---> e708d7b37404
+2024/03/29 14:00:00 Step 20/49 : RUN mkdir -p "${GOPATH}/src" "${GOPATH}/bin" "${GOPATH}/pkg"     && chmod -R 777 "${GOPATH}"
+2024/03/29 14:00:00 
+2024/03/29 14:00:00  ---> Using cache
+2024/03/29 14:00:00  ---> 67bb677d605d
+2024/03/29 14:00:00 Step 21/49 : ARG FF_BUILD_DIR=/opt/build
+2024/03/29 14:00:00 
+2024/03/29 14:00:00  ---> Using cache
+2024/03/29 14:00:00  ---> dd5c2ea3ec93
+2024/03/29 14:00:00 Step 22/49 : ARG COMP_LIBAV=
+2024/03/29 14:00:00 
+2024/03/29 14:00:00  ---> Using cache
+2024/03/29 14:00:00  ---> b3828131a990
+2024/03/29 14:00:00 Step 23/49 : ARG FFMPEG_VERSION=n5.1.2
+2024/03/29 14:00:00 
+2024/03/29 14:00:00  ---> Using cache
+2024/03/29 14:00:00  ---> e40ea7c115c7
+2024/03/29 14:00:00 Step 24/49 : ARG CROSS_PREFIX=
+2024/03/29 14:00:00 
+2024/03/29 14:00:00  ---> Using cache
+2024/03/29 14:00:00  ---> 8f14712f0659
+2024/03/29 14:00:00 Step 25/49 : RUN mkdir -p ${FF_BUILD_DIR} &&     if [ "${COMP_LIBAV}" = "YES" ]; then       git clone https://github.com/FFmpeg/FFmpeg.git ${FF_BUILD_DIR}/ffmpeg &&       cd ${FF_BUILD_DIR}/ffmpeg &&       git checkout ${FFMPEG_VERSION} &&       ./configure         --arch=${ARCH}         --target-os=linux         --cross-prefix=${CROSS_PREFIX}         --enable-cross-compile         --prefix=${FF_BUILD_DIR}         --disable-everything         --disable-programs         --enable-avfilter         --enable-avformat         --enable-avcodec         --enable-avutil         --enable-parser=h264,mjpeg,hevc,aac,mp3         --enable-bsf=h264_metadata,h264_mp4toannexb,hevc_metadata,hevc_mp4toannexb,aac_adtstoasc         --enable-protocol=file,rtmp,rtmpt,rtp,data,tcp,pipe,hls         --enable-encoder=h264,mjpeg,hevc         --enable-decoder=h264,mjpeg,hevc         --enable-muxer=flv,h264,mjpeg,hevc,mov,mpegts         --enable-gpl         --enable-small         --disable-doc         --enable-shared &&       make && make install &&       mkdir -p ${APP_DIR}/lib &&       cp -a ${FF_BUILD_DIR}/lib/. ${APP_DIR}/lib;     fi
+2024/03/29 14:00:00 
+2024/03/29 14:00:00  ---> Using cache
+2024/03/29 14:00:00  ---> cc1f1cd2c232
+2024/03/29 14:00:00 Step 26/49 : ARG APP_NAME=app
+2024/03/29 14:00:00 
+2024/03/29 14:00:00  ---> Using cache
+2024/03/29 14:00:00  ---> f1819b6bed89
+2024/03/29 14:00:00 Step 27/49 : ARG APP_MANIFEST=
+2024/03/29 14:00:00 
+2024/03/29 14:00:00  ---> Using cache
+2024/03/29 14:00:00  ---> cc763dd3369c
+2024/03/29 14:00:00 Step 28/49 : ARG GO_ARCH=arm64
+2024/03/29 14:00:00 
+2024/03/29 14:00:00  ---> Using cache
+2024/03/29 14:00:00  ---> 4f856aa97c1c
+2024/03/29 14:00:00 Step 29/49 : ARG GO_ARM=
+2024/03/29 14:00:00 
+2024/03/29 14:00:00  ---> Using cache
+2024/03/29 14:00:00  ---> 050c4d69762f
+2024/03/29 14:00:00 Step 30/49 : ARG IP_ADDR=
+2024/03/29 14:00:00 
+2024/03/29 14:00:00  ---> Using cache
+2024/03/29 14:00:00  ---> b2ee09f6d41d
+2024/03/29 14:00:00 Step 31/49 : ARG PASSWORD=
+2024/03/29 14:00:00 
+2024/03/29 14:00:00  ---> Using cache
+2024/03/29 14:00:00  ---> edeb42dc2137
+2024/03/29 14:00:00 Step 32/49 : ARG START=
+2024/03/29 14:00:00 
+2024/03/29 14:00:00  ---> Using cache
+2024/03/29 14:00:00  ---> e7fa53e8ed78
+2024/03/29 14:00:00 Step 33/49 : ARG INSTALL=
+2024/03/29 14:00:00 
+2024/03/29 14:00:00  ---> Using cache
+2024/03/29 14:00:00  ---> bad6749352c8
+2024/03/29 14:00:00 Step 34/49 : ARG GO_APP=test
+2024/03/29 14:00:00 
+2024/03/29 14:00:00  ---> Using cache
+2024/03/29 14:00:00  ---> 0e800a87b34d
+2024/03/29 14:00:00 Step 35/49 : ENV GO_APP=${GO_APP}
+2024/03/29 14:00:00 
+2024/03/29 14:00:00  ---> Using cache
+2024/03/29 14:00:00  ---> 393087513eef
+2024/03/29 14:00:00 Step 36/49 : COPY . ${APP_DIR}
+2024/03/29 14:00:00 
+2024/03/29 14:00:00  ---> 486acd6b672f
+2024/03/29 14:00:00 Step 37/49 : WORKDIR ${APP_DIR}
+2024/03/29 14:00:00 
+2024/03/29 14:00:00  ---> Running in bcf4299db339
+2024/03/29 14:00:01  ---> Removed intermediate container bcf4299db339
+2024/03/29 14:00:01  ---> 05923dc29fc5
+2024/03/29 14:00:01 Step 38/49 : RUN python generate_makefile.py ${APP_NAME} ${GO_APP} ${APP_MANIFEST}
+2024/03/29 14:00:01 
+2024/03/29 14:00:01  ---> Running in a3667dee906a
+2024/03/29 14:00:01 Makefile created successfully. examples/axevent/Makefile
+2024/03/29 14:00:02  ---> Removed intermediate container a3667dee906a
+2024/03/29 14:00:02  ---> 7dc550fdbb0e
+2024/03/29 14:00:02 Step 39/49 : WORKDIR ${APP_DIR}/${GO_APP}
+2024/03/29 14:00:02 
+2024/03/29 14:00:02  ---> Running in 2821612b5e46
+2024/03/29 14:00:02  ---> Removed intermediate container 2821612b5e46
+2024/03/29 14:00:02  ---> 4c75207b5bf0
+2024/03/29 14:00:02 Step 40/49 : ENV CGO_ENABLED=1
+2024/03/29 14:00:02 
+2024/03/29 14:00:02  ---> Running in 7959359620c3
+2024/03/29 14:00:03  ---> Removed intermediate container 7959359620c3
+2024/03/29 14:00:03  ---> 7ad191894f92
+2024/03/29 14:00:03 Step 41/49 : ENV GOOS=linux
+2024/03/29 14:00:03 
+2024/03/29 14:00:03  ---> Running in 2587e19443cf
+2024/03/29 14:00:05  ---> Removed intermediate container 2587e19443cf
+2024/03/29 14:00:05  ---> 256983350a88
+2024/03/29 14:00:05 Step 42/49 : ENV GOARCH=${GO_ARCH}
+2024/03/29 14:00:05 
+2024/03/29 14:00:05  ---> Running in 4cd32c527104
+2024/03/29 14:00:06  ---> Removed intermediate container 4cd32c527104
+2024/03/29 14:00:06  ---> 5f428b0a6d01
+2024/03/29 14:00:06 Step 43/49 : ENV GOARM=${GO_ARM}
+2024/03/29 14:00:06 
+2024/03/29 14:00:06  ---> Running in f531581cd0a2
+2024/03/29 14:00:07  ---> Removed intermediate container f531581cd0a2
+2024/03/29 14:00:07  ---> 2c02e1766fd6
+2024/03/29 14:00:07 Step 44/49 : ENV APP_NAME=${APP_NAME}
+2024/03/29 14:00:07 
+2024/03/29 14:00:07  ---> Running in 3d419267a4f8
+2024/03/29 14:00:08  ---> Removed intermediate container 3d419267a4f8
+2024/03/29 14:00:08  ---> 8ec1b1024cb4
+2024/03/29 14:00:08 Step 45/49 : ENV MANIFEST=${APP_MANIFEST}
+2024/03/29 14:00:08 
+2024/03/29 14:00:08  ---> Running in b8850df5f74c
+2024/03/29 14:00:08  ---> Removed intermediate container b8850df5f74c
+2024/03/29 14:00:08  ---> 4cf5aafb0010
+2024/03/29 14:00:08 Step 46/49 : RUN . /opt/axis/acapsdk/environment-setup* &&     if [ "${COMP_LIBAV}" = "YES" ]; then         export CGO_LDFLAGS="-L${FF_BUILD_DIR}/lib/" &&         export CGO_CFLAGS="-I${FF_BUILD_DIR}/include/" &&         export PKG_CONFIG_PATH="${FF_BUILD_DIR}/lib/pkgconfig:$PKG_CONFIG_PATH" &&         mkdir lib &&         cp -a ${APP_DIR}/lib .;     fi &&     acap-build . &&     if [ "${INSTALL}" = "YES" ]; then eap-install.sh ${IP_ADDR} ${PASSWORD} install; fi &&     if [ "${START}" = "YES" ]; then eap-install.sh start; fi
+2024/03/29 14:00:08 
+2024/03/29 14:00:08  ---> Running in 53fd5b8599ea
+2024/03/29 14:00:08 ===== ACAP application build tool =====
+
+### Validation and file preparation
+2024/03/29 14:00:08 * Generate package.conf from manifest file
+2024/03/29 14:00:08 * Check architecture in manifest file
+* Added architecture 'aarch64' to manifest that will enter the .eap file
+2024/03/29 14:00:08 * Validate manifest file to schema
+2024/03/29 14:00:08 
+### Build application
+2024/03/29 14:00:08 * Call make
+2024/03/29 14:00:08 go build -ldflags "-s -w  -extldflags '-L./lib -Wl,-rpath,./lib'" -o axevent .
+2024/03/29 14:00:08 [91mgo: downloading github.com/godbus/dbus/v5 v5.1.0
+[0m
+2024/03/29 14:00:30 
+### Create package
+* Call eap-create.sh to package application
+2024/03/29 14:00:30 
+Reading local package.conf... 
+2024/03/29 14:00:30 ok
+Package architecture: aarch64
+2024/03/29 14:00:30 
+2024/03/29 14:00:30 Info: Created an empty param.conf
+Saving Package config: 'package.conf'...
+2024/03/29 14:00:30 ok
+2024/03/29 14:00:30 Creating Package: 'Goxis_AxEvent_Example_1_0_0_aarch64.eap'... 
+2024/03/29 14:00:31 ok
+Copying LICENSE file... 
+2024/03/29 14:00:31 ok
+
+To install and run the package, you can use a browser and surf to the following page,
+(replace axis_device_ip with the IP number of your Axis video product)
+
+http://axis_device_ip/#settings/apps
+
+Or simply use the script and type
+eap-install.sh install
+
+2024/03/29 14:00:32  ---> Removed intermediate container 53fd5b8599ea
+2024/03/29 14:00:32  ---> 89112ca05e94
+2024/03/29 14:00:32 Step 47/49 : RUN mkdir /opt/eap
+2024/03/29 14:00:32 
+2024/03/29 14:00:32  ---> Running in e16e798bd996
+2024/03/29 14:00:33  ---> Removed intermediate container e16e798bd996
+2024/03/29 14:00:33  ---> d4f96cabd649
+2024/03/29 14:00:33 Step 48/49 : RUN mv *.eap /opt/eap
+2024/03/29 14:00:33 
+2024/03/29 14:00:33  ---> Running in 63bc7c6d69dc
+2024/03/29 14:00:34  ---> Removed intermediate container 63bc7c6d69dc
+2024/03/29 14:00:34  ---> 48388844e2b4
+2024/03/29 14:00:34 Step 49/49 : RUN cd /opt/eap &&     for file in *.eap; do         mv "$file" "${file%.eap}_sdk_${VERSION}.eap";     done
+2024/03/29 14:00:34 
+2024/03/29 14:00:34  ---> Running in d7ab43257b94
+2024/03/29 14:00:36  ---> Removed intermediate container d7ab43257b94
+2024/03/29 14:00:36  ---> 254068f73e78
+2024/03/29 14:00:36 Successfully built 254068f73e78
+2024/03/29 14:00:36 Successfully tagged acap:aarch64

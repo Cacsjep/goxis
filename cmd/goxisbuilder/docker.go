@@ -7,12 +7,17 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os"
+	"regexp"
+	"strconv"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
+	"github.com/vbauerster/mpb"
+	"github.com/vbauerster/mpb/decor"
 )
 
 // newDockerClient initializes a new Docker client
@@ -26,8 +31,6 @@ func newDockerClient() (*client.Client, error) {
 
 // buildAndRunContainer builds a Docker image and runs a container from it
 func buildAndRunContainer(ctx context.Context, cli *client.Client, bc *BuildConfiguration) error {
-	fmt.Printf("Building image '%s'...\n", bc.ImageName)
-
 	// Build Docker image
 	if err := dockerBuild(ctx, cli, bc); err != nil {
 		return fmt.Errorf("docker build failed: %w", err)
@@ -39,13 +42,13 @@ func buildAndRunContainer(ctx context.Context, cli *client.Client, bc *BuildConf
 		return fmt.Errorf("create container failed: %w", err)
 	}
 
-	fmt.Printf("Container '%s' created and started successfully.\n", bc.ImageName)
+	fmt.Printf("Container '%s' created and started \033[32msuccessfully\033[0m.\n", bc.ImageName)
 
 	if err := copyFromContainer(ctx, cli, containerID); err != nil {
 		return fmt.Errorf("copy eap failed: %w", err)
 	}
 
-	fmt.Printf("Container data (eap)'%s' copied successfully.\n", bc.ImageName)
+	fmt.Printf("Eap folder from '%s' copied \033[32msuccessfully\033[0m.\n", bc.ImageName)
 
 	if err := cli.ContainerStop(ctx, containerID, container.StopOptions{}); err != nil {
 		panic(err)
@@ -99,28 +102,81 @@ func dockerBuild(ctx context.Context, cli *client.Client, bc *BuildConfiguration
 	}
 	defer buildResponse.Body.Close()
 	decoder := json.NewDecoder(buildResponse.Body)
-	fmt.Println("--- Start Docker Image Build ---")
+
+	stepRegexp := regexp.MustCompile(`Step (\d+)/(\d+)`)
+	errorRegexp := regexp.MustCompile(`(?i)(error|failed|cannot|can't|\bfail\b|panic:|undefined|missing|expected|unexpected|cannot find package|no package found)`)
+	p := mpb.New(mpb.WithWidth(60))
+	var bar *mpb.Bar
+	currentStep, totalSteps := 0, 0
+	errorsDetected := false
+	var errorMessages []string
+
+	f, err := os.OpenFile("docker-build.log", os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
+	if err != nil {
+		return fmt.Errorf("failed to open build log: %s", err.Error())
+	}
+	defer f.Close()
+	log.SetOutput(f)
+
 	for {
 		var m map[string]interface{}
 		if err := decoder.Decode(&m); err == io.EOF {
 			break
 		} else if err != nil {
-			return fmt.Errorf("failed to decode build response: %w", err)
+			return fmt.Errorf("failed to decode build response: %s", err.Error())
 		}
 
-		if stream, ok := m["stream"]; ok {
-			fmt.Print(stream.(string))
-		} else if errMsg, ok := m["error"]; ok {
-			return fmt.Errorf("build error: %s", errMsg)
-		} else if status, ok := m["status"]; ok {
-			fmt.Println("Status:", status)
-		} else if progress, ok := m["progress"]; ok {
-			fmt.Println("Progress:", progress)
-		} else if aux, ok := m["aux"]; ok {
-			fmt.Println("Aux:", aux)
-		} else {
-			fmt.Println("UNHANDLED MESSAGE", m)
+		if stream, ok := m["stream"].(string); ok {
+
+			log.Print(stream)
+
+			if errorsDetected {
+				// Accumulate error messages after an error has been detected
+				errorMessages = append(errorMessages, stream)
+				continue // Skip further processing in the error state
+			}
+
+			// Check for error patterns in the stream message
+			if errorRegexp.MatchString(stream) {
+				errorsDetected = true
+				errorMessages = append(errorMessages, stream) // Capture the first error message
+				if bar != nil {
+					bar.SetTotal(int64(totalSteps), true) // Complete the progress bar
+				}
+				continue
+			}
+
+			matches := stepRegexp.FindStringSubmatch(stream)
+			if len(matches) == 3 {
+				newTotal, _ := strconv.Atoi(matches[2])
+				if newTotal > totalSteps {
+					totalSteps = newTotal
+					if bar == nil {
+						bar = p.AddBar(int64(totalSteps),
+							mpb.PrependDecorators(decor.Name("Build progress: "), decor.Percentage()),
+							mpb.AppendDecorators(decor.OnComplete(decor.EwmaETA(decor.ET_STYLE_MMSS, 60), "Done!")),
+						)
+					} else {
+						bar.SetTotal(int64(totalSteps), false)
+					}
+				}
+
+				if currentStep < totalSteps {
+					bar.Increment()
+					currentStep++
+				}
+			}
 		}
+	}
+
+	p.Wait() // Wait for all bars to complete
+
+	if errorsDetected {
+		fmt.Println("\nBuild errors detected:")
+		for _, errMsg := range errorMessages {
+			fmt.Println(errMsg)
+		}
+		return errors.New("error detected during build process")
 	}
 
 	return nil
