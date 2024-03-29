@@ -4,14 +4,14 @@ import (
 	"time"
 
 	"github.com/Cacsjep/goxis"
-	"github.com/Cacsjep/goxis/pkg/acap"
+	"github.com/Cacsjep/goxis/pkg/axstorage"
 )
 
 // https://github.com/AxisCommunications/acap-native-sdk-examples/blob/main/axstorage/app/axstorage.c#L200
 func main() {
 	var err error
 	var app *goxis.AcapApplication
-	var networkshare *acap.DiskItem
+	var networkshare *axstorage.DiskItem
 	var diskFound bool
 
 	app = goxis.NewAcapApplication()

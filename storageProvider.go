@@ -6,27 +6,27 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Cacsjep/goxis/pkg/acap"
+	"github.com/Cacsjep/goxis/pkg/axstorage"
 )
 
 // StorageProvider represents a handler for managing storage devices, enabling operations
 // such as file writing, removal, and subscriptions to storage events.
 type StorageProvider struct {
-	app              *AcapApplication // Reference to the main application.
-	DiskItems        []*acap.DiskItem // List of disk items representing storage devices.
-	subscribtions    []int            // Subscription list for unsubscribe
-	DiskItemsEvents  chan *acap.DiskItem
+	app              *AcapApplication      // Reference to the main application.
+	DiskItems        []*axstorage.DiskItem // List of disk items representing storage devices.
+	subscribtions    []int                 // Subscription list for unsubscribe
+	DiskItemsEvents  chan *axstorage.DiskItem
 	UseChannelEvents bool
 }
 
 // NewStorageProvider initializes and returns a new StorageProvider associated with a given AcapApplication.
 // Whem useChannelEvents is true the DiskItemsEvents channel got events from subscriptions callbacks
-// in form of *acap.DiskItem.
+// in form of *axstorage.DiskItem.
 // Its an unbufferd channel with cap 10
 func (a *AcapApplication) NewStorageProvider(useChannelEvents bool) *StorageProvider {
 	return &StorageProvider{
 		app:              a,
-		DiskItemsEvents:  make(chan *acap.DiskItem, 10),
+		DiskItemsEvents:  make(chan *axstorage.DiskItem, 10),
 		UseChannelEvents: useChannelEvents,
 	}
 }
@@ -53,10 +53,10 @@ type RwResult struct {
 
 // checkRwPossibility evaluates if read/write operations can be performed on the provided DiskItem.
 // It returns an RwResult indicating any potential issues that would prevent operations.
-func checkRwPossibility(di *acap.DiskItem) *RwResult {
+func checkRwPossibility(di *axstorage.DiskItem) *RwResult {
 
 	// Force update to get sure we are have correct states
-	if err := acap.UpdateDiskItemEvents(di); err != nil {
+	if err := axstorage.UpdateDiskItemEvents(di); err != nil {
 		return &RwResult{RwError: RWErrorNotUpdateable, Error: err}
 	}
 
@@ -80,7 +80,7 @@ func checkRwPossibility(di *acap.DiskItem) *RwResult {
 
 // WriteFile writes the given content to a file at the specified path on the disk item.
 // It returns an RwResult indicating the outcome of the write operation.
-func (sp *StorageProvider) WriteFile(di *acap.DiskItem, filePath string, content []byte) *RwResult {
+func (sp *StorageProvider) WriteFile(di *axstorage.DiskItem, filePath string, content []byte) *RwResult {
 	var rwPossible *RwResult
 	if rwPossible = checkRwPossibility(di); rwPossible.RwError == RWErrorNone {
 		if err := os.WriteFile(filepath.Join(di.StoragePath, filePath), content, 0644); err != nil {
@@ -93,7 +93,7 @@ func (sp *StorageProvider) WriteFile(di *acap.DiskItem, filePath string, content
 
 // RemoveFile deletes the specified file from the disk item.
 // It returns an RwResult indicating the outcome of the remove operation.
-func (sp *StorageProvider) RemoveFile(di *acap.DiskItem, filePath string) *RwResult {
+func (sp *StorageProvider) RemoveFile(di *axstorage.DiskItem, filePath string) *RwResult {
 	var rwPossible *RwResult
 	if rwPossible = checkRwPossibility(di); rwPossible.RwError == RWErrorNone {
 		if err := os.Remove(filepath.Join(di.StoragePath, filePath)); err != nil {
@@ -106,7 +106,7 @@ func (sp *StorageProvider) RemoveFile(di *acap.DiskItem, filePath string) *RwRes
 
 // ReadFile reads the content of a specified file from the disk item.
 // It returns an RwResult containing the read data and any errors that occurred.
-func (sp *StorageProvider) ReadFile(di *acap.DiskItem, filePath string) *RwResult {
+func (sp *StorageProvider) ReadFile(di *axstorage.DiskItem, filePath string) *RwResult {
 	var rwPossible *RwResult
 	var err error
 	var dat []byte
@@ -125,9 +125,9 @@ func (sp *StorageProvider) ReadFile(di *acap.DiskItem, filePath string) *RwResul
 // changes in their state or attributes.
 func (sp *StorageProvider) Open() error {
 	var err error
-	var storageIds []acap.StorageId
+	var storageIds []axstorage.StorageId
 
-	if storageIds, err = acap.AxStorageList(); err != nil {
+	if storageIds, err = axstorage.AxStorageList(); err != nil {
 		return fmt.Errorf("Unable get storages list: %s", err.Error())
 	}
 
@@ -136,12 +136,12 @@ func (sp *StorageProvider) Open() error {
 	}
 
 	for _, storageId := range storageIds {
-		subscriptionId, err := acap.AxStorageSubscribe(storageId, storageSubscribeCallback, sp)
+		subscriptionId, err := axstorage.AxStorageSubscribe(storageId, storageSubscribeCallback, sp)
 		if err != nil {
 			sp.app.Syslog.Warnf("Unable to create storage subscription callback: %s for storage: %s", err.Error(), storageId)
 		} else {
 			sp.app.Syslog.Infof("Successfully create storage subscription for storage: %s, subsciption-id: %d", storageId, subscriptionId)
-			sp.DiskItems = append(sp.DiskItems, acap.NewDiskItem(storageId, subscriptionId))
+			sp.DiskItems = append(sp.DiskItems, axstorage.NewDiskItem(storageId, subscriptionId))
 			sp.subscribtions = append(sp.subscribtions, subscriptionId)
 		}
 	}
@@ -149,7 +149,7 @@ func (sp *StorageProvider) Open() error {
 }
 
 // Get DiskItem with storage id SD_DISK
-func (sp *StorageProvider) GetDiskItemById(storageId string) (sdCardDiskItem *acap.DiskItem, found bool) {
+func (sp *StorageProvider) GetDiskItemById(storageId string) (sdCardDiskItem *axstorage.DiskItem, found bool) {
 	for _, d := range sp.DiskItems {
 		if string(d.StorageId) == storageId {
 			return d, true
@@ -159,8 +159,8 @@ func (sp *StorageProvider) GetDiskItemById(storageId string) (sdCardDiskItem *ac
 }
 
 // Unsubscribe Stop subscribing to storage events.
-func (sp *StorageProvider) Unsubscribe(d *acap.DiskItem) error {
-	return acap.AxStorageUnsubscribe(d.SubscriptionId)
+func (sp *StorageProvider) Unsubscribe(d *axstorage.DiskItem) error {
+	return axstorage.AxStorageUnsubscribe(d.SubscriptionId)
 }
 
 // UnsubscribeAll Stop subscribing to all storages events.
@@ -173,7 +173,7 @@ func (sp *StorageProvider) UnsubscribeAll() {
 }
 
 // Release async release a disk/storage
-func (sp *StorageProvider) Release(diskItem *acap.DiskItem) error {
+func (sp *StorageProvider) Release(diskItem *axstorage.DiskItem) error {
 	if diskItem.Setup {
 		return diskItem.Storage.AxStorageReleaseAsync(releaseCallback, &storageUserData{storageProvider: sp, diskItem: diskItem})
 	}
@@ -197,7 +197,7 @@ func (sp *StorageProvider) Close() {
 
 // GetDiskItem searches for a DiskItem by its storageId among the managed storage devices.
 // It returns the found DiskItem and a boolean indicating whether the search was successful.
-func (sp *StorageProvider) GetDiskItem(storageId acap.StorageId) (*acap.DiskItem, bool) {
+func (sp *StorageProvider) GetDiskItem(storageId axstorage.StorageId) (*axstorage.DiskItem, bool) {
 	for _, d := range sp.DiskItems {
 		if d.StorageId == storageId {
 			return d, true
@@ -210,10 +210,10 @@ func (sp *StorageProvider) GetDiskItem(storageId acap.StorageId) (*acap.DiskItem
 // setting up its directory structure and ensuring it's ready for read/write operations.
 // This method performs asynchronous setup and is intended to be called when the disk is
 // determined to be in a state suitable for setup (e.g., writable and not full).
-func (sp *StorageProvider) Setup(diskItem *acap.DiskItem) error {
+func (sp *StorageProvider) Setup(diskItem *axstorage.DiskItem) error {
 	// Writable implies that the disk is available
 	if diskItem.Writable && !diskItem.Full && !diskItem.Exiting && !diskItem.Setup {
-		return acap.AxStorageSetupAsync(diskItem.StorageId, setupCallback, &storageUserData{storageProvider: sp, diskItem: diskItem})
+		return axstorage.AxStorageSetupAsync(diskItem.StorageId, setupCallback, &storageUserData{storageProvider: sp, diskItem: diskItem})
 	}
 
 	if !diskItem.Writable {
@@ -232,7 +232,7 @@ func (sp *StorageProvider) Setup(diskItem *acap.DiskItem) error {
 
 // setupCallback is a callback function for handling setup completion.
 // It updates the disk item's status and logs any errors encountered during setup.
-func setupCallback(storage *acap.AXStorage, userdata any, setupErr error) {
+func setupCallback(storage *axstorage.AXStorage, userdata any, setupErr error) {
 	var err error
 	sup := userdata.(*storageUserData)
 
@@ -270,14 +270,14 @@ func setupCallback(storage *acap.AXStorage, userdata any, setupErr error) {
 // storageUserData is a helper struct used to pass additional data to callbacks.
 type storageUserData struct {
 	storageProvider *StorageProvider
-	diskItem        *acap.DiskItem
+	diskItem        *axstorage.DiskItem
 }
 
 // ReleaseOnExiting releases a DiskItem if it is exiting and has been previously set up.
 // This is a critical operation to ensure resources are properly released before the disk
 // becomes unavailable. It should be invoked as part of the storage management lifecycle,
 // especially when handling storage removal or disconnection events.
-func (sp *StorageProvider) ReleaseOnExiting(diskItem *acap.DiskItem) {
+func (sp *StorageProvider) ReleaseOnExiting(diskItem *axstorage.DiskItem) {
 	if diskItem.Exiting && diskItem.Setup {
 		if err := diskItem.Storage.AxStorageReleaseAsync(releaseCallback, &storageUserData{storageProvider: sp, diskItem: diskItem}); err != nil {
 			sp.app.Syslog.Warn(err.Error())
@@ -301,8 +301,8 @@ func releaseCallback(userdata any, err error) {
 // storageSubscribeCallback is a callback function for handling storage event subscriptions.
 // It updates the disk item's status based on the events and manages the lifecycle of the disk item,
 // including setup and release as necessary.
-func storageSubscribeCallback(storageID acap.StorageId, userdata any, subscribe_err error) {
-	var diskItem *acap.DiskItem
+func storageSubscribeCallback(storageID axstorage.StorageId, userdata any, subscribe_err error) {
+	var diskItem *axstorage.DiskItem
 	var diskExists bool
 	var err error
 
@@ -317,7 +317,7 @@ func storageSubscribeCallback(storageID acap.StorageId, userdata any, subscribe_
 	// when it exists we update the event fields with UpdateDiskItemEvents.
 	diskItem, diskExists = sp.GetDiskItem(storageID)
 	if diskExists {
-		if err = acap.UpdateDiskItemEvents(diskItem); err != nil {
+		if err = axstorage.UpdateDiskItemEvents(diskItem); err != nil {
 			sp.app.Syslog.Warnf("Unable to update disk-item: %s", storageID)
 		}
 	} else {

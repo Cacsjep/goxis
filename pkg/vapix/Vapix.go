@@ -1,4 +1,4 @@
-package acap
+package vapix
 
 import (
 	"bytes"
@@ -62,18 +62,13 @@ func CheckForVapixError(vap VapixApiCall) error {
 }
 
 // on success the ResponseReader must be closed by user
-func VapixGet(creds *VapixCreds, url string) RequestResult {
-
-	if creds == nil {
-		return RequestResult{IsOk: false, Error: errors.New("Credentials not set eg nil")}
-	}
-
+func VapixGet(username, password, url string) RequestResult {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return RequestResult{IsOk: false, Error: fmt.Errorf("Error creating request: %s", err.Error())}
 	}
 
-	req.SetBasicAuth(creds.Username, creds.Password)
+	req.SetBasicAuth(username, password)
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -88,11 +83,7 @@ func VapixGet(creds *VapixCreds, url string) RequestResult {
 }
 
 // on success the ResponseReader must be closed by user
-func VapixPost(creds *VapixCreds, url string, data interface{}) RequestResult {
-	if creds == nil {
-		return RequestResult{IsOk: false, Error: errors.New("credentials not set e.g., nil")}
-	}
-
+func VapixPost(username, password, url string, data interface{}) RequestResult {
 	// Marshal the data to JSON
 	jsonData, err := json.Marshal(data)
 	if err != nil {
@@ -105,7 +96,7 @@ func VapixPost(creds *VapixCreds, url string, data interface{}) RequestResult {
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.SetBasicAuth(creds.Username, creds.Password)
+	req.SetBasicAuth(username, password)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -118,9 +109,9 @@ func VapixPost(creds *VapixCreds, url string, data interface{}) RequestResult {
 	return RequestResult{IsOk: true, ResponseReader: resp.Body, StatusCode: resp.StatusCode}
 }
 
-func VapixBasicDeviceInfo(creds *VapixCreds) (map[string]interface{}, error) {
+func VapixBasicDeviceInfo(username, password string) (map[string]interface{}, error) {
 	basicDeviceInfoMethod := NewVapixBaseMethodCall("getAllProperties")
-	r := VapixPost(creds, InternalUrlConstruct("/axis-cgi/basicdeviceinfo.cgi"), basicDeviceInfoMethod)
+	r := VapixPost(username, password, InternalUrlConstruct("/axis-cgi/basicdeviceinfo.cgi"), basicDeviceInfoMethod)
 	if r.IsOk {
 		defer r.ResponseReader.Close()
 		if response, err := JsonResponseParser(r.ResponseReader); err != nil {
@@ -140,7 +131,7 @@ func VapixBasicDeviceInfo(creds *VapixCreds) (map[string]interface{}, error) {
 // requires dbus configuration in manifest.
 // When not useInternalVapix is used a
 // host_location need to be set like http://192.168.0.90
-func VapixParamCgiGetAll(creds *VapixCreds, useInternalVapix bool, host_location *string) (map[string]string, error) {
+func VapixParamCgiGetAll(username, password string, useInternalVapix bool, host_location *string) (map[string]string, error) {
 	cgi_path := "/axis-cgi/param.cgi?action=list"
 	var url string
 	if useInternalVapix {
@@ -152,7 +143,7 @@ func VapixParamCgiGetAll(creds *VapixCreds, useInternalVapix bool, host_location
 		hl := *host_location
 		url = hl + cgi_path
 	}
-	paramsResult := VapixGet(creds, url)
+	paramsResult := VapixGet(username, password, url)
 	if paramsResult.IsOk {
 		defer paramsResult.ResponseReader.Close()
 		return ParseKeyValueRequestBody(paramsResult.ResponseReader)

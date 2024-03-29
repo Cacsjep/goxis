@@ -1,4 +1,4 @@
-package acap
+package vapix
 
 import (
 	"encoding/json"

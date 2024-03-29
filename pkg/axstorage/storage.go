@@ -1,4 +1,4 @@
-package acap
+package axstorage
 
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axstorage/html/index.html
 
@@ -16,24 +16,14 @@ import (
 	"fmt"
 	"runtime/cgo"
 	"unsafe"
+
+	"github.com/Cacsjep/goxis/pkg/glib"
 )
 
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axstorage/html/ax__storage_8h.html#aa14f17bf10b2dcc57d1ca16759da9b8f
 type AXStorage struct {
-	Ptr      *C.AXStorage
-	cStrings []*cString
+	Ptr *C.AXStorage
 }
-
-// AXStorageStatusEventId represents the list of events for AXStorage.
-type AXStorageStatusEventId int
-
-const (
-	AXStorageAvailableEvent   AXStorageStatusEventId = C.AX_STORAGE_AVAILABLE_EVENT
-	AXStorageExitingEvent     AXStorageStatusEventId = C.AX_STORAGE_EXITING_EVENT
-	AXStorageWritableEvent    AXStorageStatusEventId = C.AX_STORAGE_WRITABLE_EVENT
-	AXStorageFullEvent        AXStorageStatusEventId = C.AX_STORAGE_FULL_EVENT
-	AXStorageStatusEventIDEnd AXStorageStatusEventId = C.AX_STORAGE_STATUS_EVENT_ID_END
-)
 
 // Just a int for the Storage type
 type AXStorageType int
@@ -62,12 +52,12 @@ func AxStorageList() ([]StorageId, error) {
 		return nil, errors.New("Unable to get storage list, ax_storage_list retuns NULL")
 	}
 
-	if err := newGError(gerr); err != nil {
+	if err := newStorageError(gerr); err != nil {
 		return nil, err
 	}
 
 	storagesIdsPrt := uintptr(unsafe.Pointer(disks_list_ptr))
-	storagesIdsList := WrapList(storagesIdsPrt)
+	storagesIdsList := glib.WrapList(storagesIdsPrt)
 	storagesIdsList.DataWrapper(wrapString)
 	storagesIdsList.Foreach(func(item interface{}) {
 		storage_id, ok := item.(string)
@@ -88,7 +78,7 @@ func (s *AXStorage) GetPath() (string, error) {
 	var gerr *C.GError
 	cPath := C.ax_storage_get_path(s.Ptr, &gerr)
 	if cPath == nil {
-		return "", newGError(gerr)
+		return "", newStorageError(gerr)
 	}
 	defer C.g_free(C.gpointer(cPath))
 	return C.GoString(cPath), nil
@@ -102,10 +92,10 @@ func AXStorageGetStatus(storage_id StorageId, event AXStorageStatusEventId) (boo
 
 	status := C.ax_storage_get_status(cStorageId, C.AXStorageStatusEventId(event), &gerr)
 	if gerr != nil {
-		return false, newGError(gerr)
+		return false, newStorageError(gerr)
 	}
 
-	return ctoGoBoolean(status), nil
+	return status != C.FALSE, nil
 }
 
 // GetStorageId gets the storage_id from the provided AXStorage.
@@ -113,7 +103,7 @@ func (s *AXStorage) GetStorageId() (StorageId, error) {
 	var gerr *C.GError
 	cID := C.ax_storage_get_storage_id(s.Ptr, &gerr)
 	if cID == nil {
-		return "", newGError(gerr)
+		return "", newStorageError(gerr)
 	}
 	defer C.g_free(C.gpointer(cID))
 	return (StorageId)(C.GoString(cID)), nil
@@ -124,7 +114,7 @@ func (s *AXStorage) GetType() (AXStorageType, error) {
 	var gerr *C.GError
 	cType := C.ax_storage_get_type(s.Ptr, &gerr)
 	if gerr != nil {
-		return AXStorageTypeUnkown, newGError(gerr)
+		return AXStorageTypeUnkown, newStorageError(gerr)
 	}
 	return AXStorageType(cType), nil
 }
@@ -206,7 +196,7 @@ func GoStorageSubscriptionCallback(storageID *C.char, user_data unsafe.Pointer, 
 	handle := cgo.Handle(user_data)
 	callbackData := handle.Value().(*StorageSubscriptionCallbackData)
 	if gError != nil {
-		err = newGError(gError)
+		err = newStorageError(gError)
 	}
 	callbackData.Callback((StorageId)(C.GoString(storageID)), callbackData.Userdata, err)
 }
@@ -217,7 +207,7 @@ func GoStorageSetupCallback(storage *C.AXStorage, user_data unsafe.Pointer, gErr
 	handle := cgo.Handle(user_data)
 	callbackData := handle.Value().(*StorageSetupCallbackData)
 	if gError != nil {
-		err = newGError(gError)
+		err = newStorageError(gError)
 	}
 	callbackData.Callback(&AXStorage{Ptr: storage}, callbackData.Userdata, err)
 	handle.Delete()
@@ -229,7 +219,7 @@ func GoStorageReleaseCallback(user_data unsafe.Pointer, gError *C.GError) {
 	handle := cgo.Handle(user_data)
 	callbackData := handle.Value().(*StorageReleaseCallbackData)
 	if gError != nil {
-		err = newGError(gError)
+		err = newStorageError(gError)
 	}
 	callbackData.Callback(callbackData.Userdata, err)
 	handle.Delete()
@@ -251,7 +241,7 @@ func AxStorageSubscribe(storageID StorageId, callback StorageSubscriptionCallbac
 
 	subscriptionID := C.ax_storage_subscribe(cStorageID, (C.AXStorageSubscriptionCallback)(C.GoStorageSubscriptionCallback), C.gpointer(handle), &gerr)
 	if subscriptionID == 0 {
-		return 0, newGError(gerr) // Assume newGError converts a GError to a Go error.
+		return 0, newStorageError(gerr) // Assume newStorageError converts a GError to a Go error.
 	}
 
 	subscriptionHandles[int(subscriptionID)] = handle
@@ -269,7 +259,7 @@ func AxStorageUnsubscribe(subscriptionID int) error {
 	}
 	success := C.ax_storage_unsubscribe(C.guint(subscriptionID), &gerr)
 	if success == C.FALSE {
-		return newGError(gerr)
+		return newStorageError(gerr)
 	}
 	return nil
 }
@@ -291,7 +281,7 @@ func AxStorageSetupAsync(storageID StorageId, callback StorageSetupCallback, use
 	handle := cgo.NewHandle(data)
 	success := C.ax_storage_setup_async(cStorageID, (C.AXStorageSetupCallback)(C.GoStorageSetupCallback), C.gpointer(handle), &gerr)
 	if success == C.FALSE {
-		return newGError(gerr)
+		return newStorageError(gerr)
 	}
 	return nil
 }
@@ -308,7 +298,7 @@ func (s *AXStorage) AxStorageReleaseAsync(callback StorageReleaseCallback, userd
 	handle := cgo.NewHandle(data)
 	success := C.ax_storage_release_async(s.Ptr, (C.AXStorageReleaseCallback)(C.GoStorageReleaseCallback), C.gpointer(handle), &gerr)
 	if success == C.FALSE {
-		return newGError(gerr)
+		return newStorageError(gerr)
 	}
 	return nil
 }
