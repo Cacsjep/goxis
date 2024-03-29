@@ -20,25 +20,6 @@ go get github.com/Cacsjep/goxis
 AcapApplication is a high level based abstraction for an ACAP application,
 it loads at runtime the ***manifest.json***. 
 
-### Whats the purpose of AcapApplication ?
-The `AcapApplication` acts as a foundational abstraction layer designed to streamline the handling of common tasks such as syslog logging, managing the GObject main loop, and the manipulation of parameters and events.
-
-Upon instantiation, `AcapApplication` undertakes several crucial steps::
-- **Manifest Parsing:** It reads the manifest file to extract the application's name.
-- **Parameter Management:** Initializes an `axparameter` instance, enabling the application to get, set, and remove parameters efficiently.
-- **Event Handling:** Sets up an `axevent` handler to facilitate event processing.
-- **GMain Loop Preparation:** Configures a GMain loop complete with signal handlers, ensuring robust event management.
-
-`AcapApplication` offers access to a variety of powerful functionalities, such as::
-- **FrameProvider:** Facilitates easy interaction with `axvdo`, streamlining video-related operations.
-- **StorageProvider:** Offers straightforward access to the camera's storage, enhancing data management capabilities.
-- `app.IsLicenseValid(major_version int, minor_version int)`: Verifies the validity of the application's license for the specified version.
-- `app.Run()`: Activates the GMain loop within the application, allowing for continuous operation.
-- `app.GetSnapshot(video_channel int)`: Captures and retrieves a JPEG snapshot from a given video channel.
-
-Also FrameProvider can use from app to easy access the axvdo,
-or using StorageProvider to easy access camera storage.
-
 ### Create a new AcapApplication
 - Create a new directory like *myawesomeacap*
 - Create a .go file
@@ -61,6 +42,26 @@ Build it with [Goxisbuilder](#goxisbuilder):
 .\goxisbuilder.exe -appdir="myawesomeacap"
 ```
 
+Checkout the examples to see more about *AcapApplication*
+
+### Whats the purpose of AcapApplication ?
+The `AcapApplication` acts as a foundational abstraction layer designed to streamline the handling of common tasks such as syslog logging, managing the GObject main loop, and the manipulation of parameters and events.
+
+Upon instantiation, `AcapApplication` undertakes several crucial steps::
+- **Manifest Parsing:** It reads the manifest file to extract the application's name.
+- **Parameter Management:** Initializes an `axparameter` instance, enabling the application to get, set, and remove parameters efficiently.
+- **Event Handling:** Sets up an `axevent` handler to facilitate event processing.
+- **GMain Loop Preparation:** Configures a GMain loop complete with signal handlers, ensuring robust event management.
+
+`AcapApplication` offers access to a variety of powerful functionalities, such as::
+- **FrameProvider:** Facilitates easy interaction with `axvdo`, streamlining video-related operations.
+- **StorageProvider:** Offers straightforward access to the camera's storage, enhancing data management capabilities.
+- `app.IsLicenseValid(major_version int, minor_version int)`: Verifies the validity of the application's license for the specified version.
+- `app.Run()`: Activates the GMain loop within the application, allowing for continuous operation.
+- `app.GetSnapshot(video_channel int)`: Captures and retrieves a JPEG snapshot from a given video channel.
+
+Also FrameProvider can use from app to easy access the axvdo,
+or using StorageProvider to easy access camera storage.
 
 ## Goxisbuilder
 Goxisbuilder is a command line tool that can build docker acap applications.
@@ -98,14 +99,12 @@ You can look into any example, a application needs:
 | `-watch`        | Set to true to monitor the package log after building.                                                |  `false`         |
 
 ## Examples
-Just digg into examples to see how you can use goxis.
-Currently we had:
-  - axevent 	| Demonstrate how to subscribe to an Virutal Input state change
-  - axoverlay	| Render rects via axolveray api
-  - axparameter   | Demonstrate how to get an parameter and listen to changes
-  - license 	| Show how to obtain the license state
-  - vdostream 	| High level wrapper demonstration to get video frames (stream)
-  - webserver     | Reverse proxy webserver with fiber
+  - `axevent`	| Demonstrate how to subscribe to an Virutal Input state change
+  - `axoverlay`	| Render rects via axolveray api
+  - `axparameter`  | Demonstrate how to get an parameter and listen to changes
+  - `license` 	| Show how to obtain the license state
+  - `vdostream` 	| High level wrapper demonstration to get video frames (stream)
+  - `webserver`     | Reverse proxy webserver with fiber
 
 
 # ACAP API Docs
