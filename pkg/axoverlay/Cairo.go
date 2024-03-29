@@ -1,4 +1,4 @@
-package acap
+package axoverlay
 
 /*
 #cgo LDFLAGS: -laxoverlay

@@ -1,4 +1,4 @@
-package acap
+package axoverlay
 
 /*
 #cgo LDFLAGS: -laxoverlay
@@ -12,29 +12,16 @@ extern void GoAxOverlayRenderCallback(gpointer rendering_context, gint id, struc
 */
 import "C"
 import (
+	"errors"
 	"runtime/cgo"
 	"unsafe"
 )
 
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axoverlay/html/axoverlaypage.html
-
 var streamSelectCallback AxOverlayStreamSelectCallback
 var adjustmentCallback AxOverlayAdjustmentCallback
 var renderCallback AxOverlayRenderCallback
 var overlayUserDataHandle cgo.Handle
-
-// axoverlay_error_code mirrors the error codes from the C API.
-type AxOverlayErrorCode int
-
-const (
-	AxOverlayErrorInvalidValue       AxOverlayErrorCode = 1000
-	AxOverlayErrorInternal           AxOverlayErrorCode = 2000
-	AxOverlayErrorUnexpected         AxOverlayErrorCode = 3000
-	AxOverlayErrorGeneric            AxOverlayErrorCode = 4000
-	AxOverlayErrorInvalidArgument    AxOverlayErrorCode = 5000
-	AxOverlayErrorServiceUnavailable AxOverlayErrorCode = 6000
-	AxOverlayErrorBackend            AxOverlayErrorCode = 7000
-)
 
 // axoverlay_colorspace defines color space types similar to the C enumeration.
 type AxOverlayColorspace int
@@ -138,10 +125,10 @@ type AxOverlayOverlayData struct {
 	ptr           *C.struct_axoverlay_overlay_data
 }
 
-func AxOverlayDataInitalze(overlay_data *AxOverlayOverlayData) {
+func AxOverlayDataInitalze(overlay_data *AxOverlayOverlayData) error {
 	overlay_data.ptr = (*C.struct_axoverlay_overlay_data)(C.malloc(C.size_t(unsafe.Sizeof(*overlay_data.ptr))))
 	if overlay_data.ptr == nil {
-		panic("Failed to allocate memory for axoverlay_overlay_data")
+		return errors.New("Failed to allocate memory for axoverlay_overlay_data")
 	}
 	AxOverlayInitOverlayData(overlay_data)
 	overlay_data.ptr.postype = C.enum_axoverlay_anchor_point(overlay_data.PositionType)
@@ -151,7 +138,8 @@ func AxOverlayDataInitalze(overlay_data *AxOverlayOverlayData) {
 	overlay_data.ptr.y = C.gfloat(overlay_data.Y)
 	overlay_data.ptr.width = C.gint(overlay_data.Width)
 	overlay_data.ptr.height = C.gint(overlay_data.Height)
-	overlay_data.ptr.scale_to_stream = goBooleanToC(overlay_data.ScaleToStream)
+	overlay_data.ptr.scale_to_stream = C.gboolean(map[bool]int{true: 1, false: 0}[overlay_data.ScaleToStream])
+	return nil
 }
 
 func (s *AxOverlayOverlayData) Free() {
@@ -223,10 +211,10 @@ func GoAxOverlayStreamSelectCallback(camera C.gint, width C.gint, height C.gint,
 			Width:      int(width),
 			Height:     int(height),
 			Rotation:   int(rotation),
-			IsMirrored: ctoGoBoolean(isMirrored),
+			IsMirrored: isMirrored != C.FALSE,
 			StreamType: AxOverlayStreamType(streamType),
 		}
-		return goBooleanToC(streamSelectCallback(&streamSelectEvent))
+		return C.gboolean(map[bool]int{true: 1, false: 0}[streamSelectCallback(&streamSelectEvent)])
 	}
 	return C.FALSE
 }
@@ -287,7 +275,7 @@ func GoAxOverlayRenderCallback(renderingContext C.gpointer, id C.gint, stream *C
 func AxOverlayInit(settings *AxOverlaySettings) error {
 	var gerr *C.GError
 	C.axoverlay_init(settings.ptr, &gerr)
-	return newGError(gerr)
+	return newOverlayError(gerr)
 }
 
 // axoverlayCleanup frees up allocated resources.
@@ -299,14 +287,14 @@ func AxOverlayCleanup() {
 func AxOverlayReloadStreams() error {
 	var gerr *C.GError
 	C.axoverlay_reload_streams(&gerr)
-	return newGError(gerr)
+	return newOverlayError(gerr)
 }
 
 // axoverlayRedraw signals the system that a redraw should be done.
 func AxOverlayRedraw() error {
 	var gerr *C.GError
 	C.axoverlay_redraw(&gerr)
-	return newGError(gerr)
+	return newOverlayError(gerr)
 }
 
 // axoverlayCreateOverlay creates an overlay with the specified data.
@@ -314,7 +302,7 @@ func AxOverlayCreateOverlay(data *AxOverlayOverlayData, user_data any) (int, err
 	var gerr *C.GError
 	overlayUserDataHandle = cgo.NewHandle(user_data)
 	id := C.axoverlay_create_overlay(data.ptr, (C.gpointer)(unsafe.Pointer(overlayUserDataHandle)), &gerr)
-	err := newGError(gerr)
+	err := newOverlayError(gerr)
 	if err != nil {
 		overlayUserDataHandle.Delete()
 	}
@@ -331,35 +319,35 @@ func AxOvlerayDeleteHandle() {
 func AxOverlayDestroyOverlay(id int) error {
 	var gerr *C.GError
 	C.axoverlay_destroy_overlay(C.gint(id), &gerr)
-	return newGError(gerr)
+	return newOverlayError(gerr)
 }
 
 // axoverlaySetOverlayPosition updates the position of an existing overlay.
 func AxOverlaySetOverlayPosition(id int, positionType AxOverlayPositionType, x, y float32) error {
 	var gerr *C.GError
 	C.axoverlay_set_overlay_position(C.gint(id), C.enum_axoverlay_position_type(positionType), C.gfloat(x), C.gfloat(y), &gerr)
-	return newGError(gerr)
+	return newOverlayError(gerr)
 }
 
 // axoverlaySetOverlaySize updates the size of an existing overlay.
 func AxOverlaySetOverlaySize(id, width, height int) error {
 	var gerr *C.GError
 	C.axoverlay_set_overlay_size(C.gint(id), C.gint(width), C.gint(height), &gerr)
-	return newGError(gerr)
+	return newOverlayError(gerr)
 }
 
 // axoverlayGetMaxResolutionWidth reads the maximum resolution width for a camera.
 func AxOverlayGetMaxResolutionWidth(camera int) (int, error) {
 	var gerr *C.GError
 	width := C.axoverlay_get_max_resolution_width(C.gint(camera), &gerr)
-	return int(width), newGError(gerr)
+	return int(width), newOverlayError(gerr)
 }
 
 // axoverlayGetMaxResolutionHeight reads the maximum resolution height for a camera.
 func AxOverlayGetMaxResolutionHeight(camera int) (int, error) {
 	var gerr *C.GError
 	height := C.axoverlay_get_max_resolution_height(C.gint(camera), &gerr)
-	return int(height), newGError(gerr)
+	return int(height), newOverlayError(gerr)
 }
 
 func AxOverlayGetMaxResolution(camera int) (int, int, error) {
@@ -377,5 +365,6 @@ func AxOverlayGetMaxResolution(camera int) (int, int, error) {
 
 // axoverlayIsBackendSupported checks if a specified backend is supported.
 func AxOverlayIsBackendSupported(backend AxOverlayBackendType) bool {
-	return ctoGoBoolean(C.axoverlay_is_backend_supported(C.enum_axoverlay_backend_type(backend)))
+	supported := C.axoverlay_is_backend_supported(C.enum_axoverlay_backend_type(backend))
+	return supported != C.FALSE
 }

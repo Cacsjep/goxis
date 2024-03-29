@@ -1,4 +1,4 @@
-package acap
+package axoverlay
 
 import (
 	"image/color"

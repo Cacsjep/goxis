@@ -4,23 +4,23 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Cacsjep/goxis/pkg/acap"
+	"github.com/Cacsjep/goxis/pkg/axoverlay"
 )
 
 var onlyOnce = false
 
 type OverlayProvider struct {
-	renderCallback       acap.AxOverlayRenderCallback
-	adjustmentCallback   acap.AxOverlayAdjustmentCallback
-	streamSelectCallback acap.AxOverlayStreamSelectCallback
-	settings             *acap.AxOverlaySettings
-	palleteColors        map[int]acap.AxOverlayPaletteColor
+	renderCallback       axoverlay.AxOverlayRenderCallback
+	adjustmentCallback   axoverlay.AxOverlayAdjustmentCallback
+	streamSelectCallback axoverlay.AxOverlayStreamSelectCallback
+	settings             *axoverlay.AxOverlaySettings
+	palleteColors        map[int]axoverlay.AxOverlayPaletteColor
 	overlays             map[int]*Overlay
 }
 
 type Overlay struct {
 	overlayId        int
-	OverlayData      *acap.AxOverlayOverlayData
+	OverlayData      *axoverlay.AxOverlayOverlayData
 	Camera           int
 	UseMaxResolution bool
 	Userdata         any
@@ -30,24 +30,24 @@ type StreamSelectEvent struct {
 	Camera                  int
 	Width, Height, Rotation int
 	IsMirrored              bool
-	StreamType              acap.AxOverlayStreamType
+	StreamType              axoverlay.AxOverlayStreamType
 }
 
 // Creates a default overlay with anchor center and ARGB32 colorspace
-func NewAnchorCenterRrgbaOverlay(positonType acap.AxOverlayPositionType, userData any) *Overlay {
+func NewAnchorCenterRrgbaOverlay(positonType axoverlay.AxOverlayPositionType, userData any) *Overlay {
 	return &Overlay{
 		UseMaxResolution: true,
-		OverlayData: &acap.AxOverlayOverlayData{
-			AnchorPoint:  acap.AxOverlayAnchorCenter,
+		OverlayData: &axoverlay.AxOverlayOverlayData{
+			AnchorPoint:  axoverlay.AxOverlayAnchorCenter,
 			PositionType: positonType,
-			Colorspace:   acap.AxOverlayColorspaceARGB32,
+			Colorspace:   axoverlay.AxOverlayColorspaceARGB32,
 		},
 		Userdata: userData,
 	}
 }
 
 // Creates a cairo backend overlay Provider, this can only created once !!!
-func NewOverlayProvider(renderCallback acap.AxOverlayRenderCallback, adjustmentCallback acap.AxOverlayAdjustmentCallback, streamSelectCallback acap.AxOverlayStreamSelectCallback) (*OverlayProvider, error) {
+func NewOverlayProvider(renderCallback axoverlay.AxOverlayRenderCallback, adjustmentCallback axoverlay.AxOverlayAdjustmentCallback, streamSelectCallback axoverlay.AxOverlayStreamSelectCallback) (*OverlayProvider, error) {
 	var err error
 
 	if !onlyOnce {
@@ -56,7 +56,7 @@ func NewOverlayProvider(renderCallback acap.AxOverlayRenderCallback, adjustmentC
 		return nil, errors.New("Only one overlay provider could created")
 	}
 
-	if !acap.AxOverlayIsBackendSupported(acap.AxOverlayCairoImageBackend) {
+	if !axoverlay.AxOverlayIsBackendSupported(axoverlay.AxOverlayCairoImageBackend) {
 		return nil, errors.New("Cairo backend not supported")
 	}
 
@@ -67,8 +67,8 @@ func NewOverlayProvider(renderCallback acap.AxOverlayRenderCallback, adjustmentC
 		overlays:             make(map[int]*Overlay),
 	}
 
-	op.settings = acap.NewAxOverlaySettings(op.renderCallback, op.adjustmentCallback, op.streamSelectCallback, acap.AxOverlayCairoImageBackend)
-	if err = acap.AxOverlayInit(op.settings); err != nil {
+	op.settings = axoverlay.NewAxOverlaySettings(op.renderCallback, op.adjustmentCallback, op.streamSelectCallback, axoverlay.AxOverlayCairoImageBackend)
+	if err = axoverlay.AxOverlayInit(op.settings); err != nil {
 		return nil, err
 	}
 	return op, nil
@@ -80,8 +80,8 @@ func (op *OverlayProvider) AddOverlay(overlay *Overlay) (overlayId int, err erro
 			return 0, err
 		}
 	}
-	acap.AxOverlayDataInitalze(overlay.OverlayData)
-	if overlay.overlayId, err = acap.AxOverlayCreateOverlay(overlay.OverlayData, overlay.Userdata); err != nil {
+	axoverlay.AxOverlayDataInitalze(overlay.OverlayData)
+	if overlay.overlayId, err = axoverlay.AxOverlayCreateOverlay(overlay.OverlayData, overlay.Userdata); err != nil {
 		return 0, err
 	}
 	op.overlays[overlay.overlayId] = overlay
@@ -98,7 +98,7 @@ func (op *OverlayProvider) RemoveOverlay(overlayId int) error {
 }
 
 func (op *OverlayProvider) Redraw() error {
-	return acap.AxOverlayRedraw()
+	return axoverlay.AxOverlayRedraw()
 }
 
 func (op *OverlayProvider) Cleanup() {
@@ -106,12 +106,12 @@ func (op *OverlayProvider) Cleanup() {
 	for _, overlay := range op.overlays {
 		op.RemoveOverlay(overlay.overlayId)
 	}
-	acap.AxOvlerayDeleteHandle()
-	acap.AxOverlayCleanup()
+	axoverlay.AxOvlerayDeleteHandle()
+	axoverlay.AxOverlayCleanup()
 }
 
 func (ov *Overlay) SetMaxResolution(camera int) (err error) {
-	if ov.OverlayData.Width, ov.OverlayData.Height, err = acap.AxOverlayGetMaxResolution(1); err != nil {
+	if ov.OverlayData.Width, ov.OverlayData.Height, err = axoverlay.AxOverlayGetMaxResolution(1); err != nil {
 		return err
 	}
 	return nil
@@ -119,5 +119,5 @@ func (ov *Overlay) SetMaxResolution(camera int) (err error) {
 
 func (ov *Overlay) Destroy() {
 	ov.OverlayData.Free()
-	acap.AxOverlayDestroyOverlay(ov.overlayId)
+	axoverlay.AxOverlayDestroyOverlay(ov.overlayId)
 }
