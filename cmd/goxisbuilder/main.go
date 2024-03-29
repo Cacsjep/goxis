@@ -98,6 +98,7 @@ func main() {
 
 		printCompatibility(&buildConfig)
 		listEapDirectory()
+		os.Remove("docker-build.log")
 
 		if buildConfig.Watch {
 			watchPackageLog(&buildConfig)
