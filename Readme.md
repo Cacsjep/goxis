@@ -20,6 +20,10 @@ go get github.com/Cacsjep/goxis
 AcapApplication is a high level based abstraction for an ACAP application,
 it loads at runtime the ***manifest.json***. 
 
+
+> [!None]  
+> Application configurations continue to be defined in the manifest.json file, as it's not possible to automatically generate a manifest before the application starts running.
+
 ### Create a new AcapApplication
 - Create a new directory like *myawesomeacap*
 - Create a .go file
@@ -99,12 +103,18 @@ You can look into any example, a application needs:
 | `-watch`        | Set to true to monitor the package log after building.                                                |  `false`         |
 
 ## Examples
-  - `axevent`	| Demonstrate how to subscribe to an Virutal Input state change
-  - `axoverlay`	| Render rects via axolveray api
-  - `axparameter`  | Demonstrate how to get an parameter and listen to changes
-  - `license` 	| Show how to obtain the license state
-  - `vdostream` 	| High level wrapper demonstration to get video frames (stream)
-  - `webserver`     | Reverse proxy webserver with fiber
+
+Examples are really close to existing C examples of the [AXIS Native SDK repo](https://github.com/AxisCommunications/acap-native-sdk-examples).
+
+| Example         | Description |
+|-----------------|--------------|
+| `axevent`	      | Demonstrate how to subscribe to an Virutal Input state change         |
+| `axoverlay`	| Render rects via axolveray api                                        |
+| `axparameter`   | Demonstrate how to get an parameter and listen to changes             |
+| `axstorage`     | Interact with axstorage api                                           |
+| `license` 	| Show how to obtain the license state                                  |
+| `vdostream` 	| High level wrapper demonstration to get video frames (stream)         |
+| `webserver`     | Reverse proxy webserver with fiber                                    |
 
 
 # ACAP API Docs
