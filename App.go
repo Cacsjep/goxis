@@ -2,11 +2,14 @@ package goxis
 
 import (
 	"errors"
+	"flag"
 	"fmt"
+	"os"
 	"strconv"
 
 	"github.com/Cacsjep/goxis/pkg/acap"
 	"github.com/Cacsjep/goxis/pkg/manifest"
+	"github.com/Cacsjep/goxis/pkg/syslog"
 )
 
 // AcapApplication provides a high-level abstraction for an Axis Communications Application Platform (ACAP) application.
@@ -15,7 +18,7 @@ import (
 // initialization of syslog for logging, handling of application parameters, event handling, and the GMainLoop for the main event loop.
 type AcapApplication struct {
 	Manifest        *manifest.ApplicationManifestSchema
-	Syslog          *acap.Syslog
+	Syslog          *syslog.Syslog
 	ParamHandler    *acap.AXParameter
 	EventHandler    *acap.AXEventHandler
 	Mainloop        *acap.GMainLoop
@@ -40,11 +43,25 @@ func NewAcapApplication() *AcapApplication {
 
 	app := AcapApplication{
 		Manifest:        m,
-		Syslog:          acap.NewSyslog(m.ACAPPackageConf.Setup.AppName, acap.LOG_PID|acap.LOG_CONS, acap.LOG_USER),
+		Syslog:          syslog.NewSyslog(m.ACAPPackageConf.Setup.AppName, syslog.LOG_PID|syslog.LOG_CONS, syslog.LOG_USER),
 		ParamHandler:    pApp,
 		EventHandler:    acap.NewEventHandler(),
 		Mainloop:        acap.NewMainLoop(),
 		OnCloseCleaners: []func(){},
+	}
+
+	showHelp := flag.Bool("h", false, "Displays this help message.")
+	consoleLog := flag.Bool("consoleLog", false, "Enable console logging")
+	flag.Parse()
+
+	if *showHelp {
+		flag.Usage()
+		os.Exit(1)
+	}
+
+	syslog := syslog.NewSyslog(m.ACAPPackageConf.Setup.AppName, syslog.LOG_PID|syslog.LOG_CONS, syslog.LOG_USER)
+	if *consoleLog {
+		syslog.EnableConsole()
 	}
 
 	return &app
