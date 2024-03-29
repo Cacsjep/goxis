@@ -21,7 +21,7 @@ AcapApplication is a high level based abstraction for an ACAP application,
 it loads at runtime the ***manifest.json***. 
 
 
-> [!None]  
+> [!Note]  
 > Application configurations continue to be defined in the manifest.json file, as it's not possible to automatically generate a manifest before the application starts running.
 
 ### Create a new AcapApplication
