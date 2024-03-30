@@ -56,14 +56,14 @@ Upon instantiation, `AcapApplication` undertakes several crucial steps::
 Creating a new ACAP application with Goxis follows a similar project structure to the standard approach recommended in the [AXIS Documentation](https://axiscommunications.github.io/acap-documentation/docs/develop/application-project-structure.html). 
 However, when leveraging the [goxisbuilder](https://github.com/Cacsjep/goxisbuilder) tool for streamlined builds, your application needs to be organized within a specific directory structure.
 
+Each example follow this rule, just check out the examples.
+
 Here's how you can set up your project for success:
 
 - Start by creating a new directory for your project, e.g., `myawesomeacap`. This directory will serve as the container for your application's components.
-  - Inside your project directory, create a Go source file (`*.go`). This will contain the main logic of your application.
+  - Inside your project directory, create a Go source file (`*.go`). Any copy the code below into it.
   - Add a `LICENSE` file to clearly state the licensing terms under which your application is distributed.
-  - Include a `manifest.json` file to describe your application, including essential details such as its name, version, and dependencies.
-
-Each example follow this rule, just check out the examples.
+  - Include a `manifest.json` that should be correctly configured. [AXIS Documentation][https://axiscommunications.github.io/acap-documentation/docs/develop/application-project-structure.html#create-a-manifest-file-from-scratch]
 
 ```go
 package main
