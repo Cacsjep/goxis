@@ -63,7 +63,7 @@ Here's how you can set up your project for success:
 - Start by creating a new directory for your project, e.g., `myawesomeacap`. This directory will serve as the container for your application's components.
   - Inside your project directory, create a Go source file (`*.go`). Any copy the code below into it.
   - Add a `LICENSE` file to clearly state the licensing terms under which your application is distributed.
-  - Include a `manifest.json` that should be correctly configured. [AXIS Documentation][https://axiscommunications.github.io/acap-documentation/docs/develop/application-project-structure.html#create-a-manifest-file-from-scratch]
+  - Include a `manifest.json` that should be correctly configured. [AXIS Documentation](https://axiscommunications.github.io/acap-documentation/docs/develop/application-project-structure.html#create-a-manifest-file-from-scratch)
 
 ```go
 package main
