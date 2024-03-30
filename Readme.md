@@ -70,7 +70,7 @@ or using StorageProvider to easy access camera storage.
 ## Goxisbuilder
 Goxisbuilder is a command line tool that can build docker acap applications.
 ```
-go install github.com/Cacsjep/goxis/cmd/goxisbuilder@latest
+go install github.com/Cacsjep/goxis/cmd/goxisbuilder
 ```
 
 ### Application Structure
