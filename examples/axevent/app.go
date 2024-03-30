@@ -1,14 +1,14 @@
 package main
 
 import (
-	"github.com/Cacsjep/goxis"
+	"github.com/Cacsjep/goxis/pkg/acapapp"
 	"github.com/Cacsjep/goxis/pkg/axevent"
 )
 
 var (
 	err          error
 	subscription int
-	app          *goxis.AcapApplication
+	app          *acapapp.AcapApplication
 )
 
 // This example uses axevent library for subscribing to an ONVIF event.
@@ -16,7 +16,7 @@ var (
 //
 //	https://www.axis.com/developer-community/axis-metadata-monitor
 func main() {
-	app = goxis.NewAcapApplication()
+	app = acapapp.NewAcapApplication()
 
 	/* Initialize an AXEventKeyValueSet that matches Virtual Input 1.
 	 *

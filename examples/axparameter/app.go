@@ -3,17 +3,17 @@ package main
 import (
 	"fmt"
 
-	"github.com/Cacsjep/goxis"
+	"github.com/Cacsjep/goxis/pkg/acapapp"
 )
 
 var (
 	err        error
 	serial_nbr string
-	app        *goxis.AcapApplication
+	app        *acapapp.AcapApplication
 )
 
 func main() {
-	app = goxis.NewAcapApplication()
+	app = acapapp.NewAcapApplication()
 
 	// Parameters outside the application's group requires qualification.
 	// This could also done via vapix and dbus acap.RetrieveVapixCredentials() and acap.VapixGet()

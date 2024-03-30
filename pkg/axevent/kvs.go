@@ -22,13 +22,23 @@ func NewAXEventKeyValueSet() *AXEventKeyValueSet {
 	}
 }
 
+func namespacePtr(namespace string) *string {
+	if namespace == "" {
+		return nil
+	}
+	return &namespace
+}
+
 // Adds an key value to the event set
 func (axEventKeyValueSet *AXEventKeyValueSet) AddKeyValue(key string, namespace *string, value interface{}, value_type AXEventValueType) error {
 	cKey := C.CString(key)
 	defer C.free(unsafe.Pointer(cKey))
 
-	cNamespace := C.CString(*namespace)
-	defer C.free(unsafe.Pointer(cNamespace))
+	cNamespace := nilOrCString(namespace)
+	if cNamespace != nil {
+		defer C.free(unsafe.Pointer(cNamespace))
+	}
+
 	var gerr *C.GError
 	cValue, err := valueConverter(value, value_type)
 
@@ -56,8 +66,11 @@ func (axEventKeyValueSet *AXEventKeyValueSet) GetValueType(key string, namespace
 	cKey := C.CString(key)
 	defer C.free(unsafe.Pointer(cKey))
 
-	cNamespace := C.CString(*namespace)
-	defer C.free(unsafe.Pointer(cNamespace))
+	cNamespace := nilOrCString(namespace)
+	if cNamespace != nil {
+		defer C.free(unsafe.Pointer(cNamespace))
+	}
+
 	var gerr *C.GError
 	var cValueType C.AXEventValueType
 
@@ -82,8 +95,10 @@ func (axEventKeyValueSet *AXEventKeyValueSet) GetString(key string, namespace *s
 	cKey := C.CString(key)
 	defer C.free(unsafe.Pointer(cKey))
 
-	cNamespace := C.CString(*namespace)
-	defer C.free(unsafe.Pointer(cNamespace))
+	cNamespace := nilOrCString(namespace)
+	if cNamespace != nil {
+		defer C.free(unsafe.Pointer(cNamespace))
+	}
 
 	var cValue *C.char
 	defer func() {
@@ -111,8 +126,10 @@ func (axEventKeyValueSet *AXEventKeyValueSet) GetInteger(key string, namespace *
 	cKey := C.CString(key)
 	defer C.free(unsafe.Pointer(cKey))
 
-	cNamespace := C.CString(*namespace)
-	defer C.free(unsafe.Pointer(cNamespace))
+	cNamespace := nilOrCString(namespace)
+	if cNamespace != nil {
+		defer C.free(unsafe.Pointer(cNamespace))
+	}
 
 	var gerr *C.GError
 	var cValue C.gint
@@ -136,8 +153,10 @@ func (axEventKeyValueSet *AXEventKeyValueSet) GetBoolean(key string, namespace *
 	cKey := C.CString(key)
 	defer C.free(unsafe.Pointer(cKey))
 
-	cNamespace := C.CString(*namespace)
-	defer C.free(unsafe.Pointer(cNamespace))
+	cNamespace := nilOrCString(namespace)
+	if cNamespace != nil {
+		defer C.free(unsafe.Pointer(cNamespace))
+	}
 
 	var gerr *C.GError
 	var cValue C.gboolean
@@ -161,8 +180,10 @@ func (axEventKeyValueSet *AXEventKeyValueSet) GetDouble(key string, namespace *s
 	cKey := C.CString(key)
 	defer C.free(unsafe.Pointer(cKey))
 
-	cNamespace := C.CString(*namespace)
-	defer C.free(unsafe.Pointer(cNamespace))
+	cNamespace := nilOrCString(namespace)
+	if cNamespace != nil {
+		defer C.free(unsafe.Pointer(cNamespace))
+	}
 
 	var gerr *C.GError
 	var cValue C.gdouble
@@ -191,8 +212,11 @@ func (axEventKeyValueSet *AXEventKeyValueSet) MarkAsSource(key string, namespace
 	cKey := C.CString(key)
 	defer C.free(unsafe.Pointer(cKey))
 
-	cNamespace := C.CString(*namespace)
-	defer C.free(unsafe.Pointer(cNamespace))
+	cNamespace := nilOrCString(namespace)
+	if cNamespace != nil {
+		defer C.free(unsafe.Pointer(cNamespace))
+	}
+
 	var gerr *C.GError
 
 	success := C.ax_event_key_value_set_mark_as_source(
@@ -217,8 +241,11 @@ func (axEventKeyValueSet *AXEventKeyValueSet) MarkAsData(key string, namespace *
 	cKey := C.CString(key)
 	defer C.free(unsafe.Pointer(cKey))
 
-	cNamespace := C.CString(*namespace)
-	defer C.free(unsafe.Pointer(cNamespace))
+	cNamespace := nilOrCString(namespace)
+	if cNamespace != nil {
+		defer C.free(unsafe.Pointer(cNamespace))
+	}
+
 	var gerr *C.GError
 
 	success := C.ax_event_key_value_set_mark_as_data(
@@ -240,8 +267,10 @@ func (axEventKeyValueSet *AXEventKeyValueSet) MarkAsUserDefined(key string, name
 	cKey := C.CString(key)
 	defer C.free(unsafe.Pointer(cKey))
 
-	cNamespace := C.CString(*namespace)
-	defer C.free(unsafe.Pointer(cNamespace))
+	cNamespace := nilOrCString(namespace)
+	if cNamespace != nil {
+		defer C.free(unsafe.Pointer(cNamespace))
+	}
 
 	cUserTag := C.CString(userTag)
 	defer C.free(unsafe.Pointer(cUserTag))
@@ -267,8 +296,10 @@ func (axEventKeyValueSet *AXEventKeyValueSet) RemoveKey(key string, namespace *s
 	cKey := C.CString(key)
 	defer C.free(unsafe.Pointer(cKey))
 
-	cNamespace := C.CString(*namespace)
-	defer C.free(unsafe.Pointer(cNamespace))
+	cNamespace := nilOrCString(namespace)
+	if cNamespace != nil {
+		defer C.free(unsafe.Pointer(cNamespace))
+	}
 
 	var gerr *C.GError
 	success := C.ax_event_key_value_set_remove_key(
@@ -320,4 +351,13 @@ func valueConverter(value interface{}, value_type AXEventValueType) (C.gconstpoi
 // Frees an AXEventKeyValueSet.
 func (axEventKeyValueSet *AXEventKeyValueSet) Free() {
 	C.ax_event_key_value_set_free(axEventKeyValueSet.Ptr)
+}
+
+// nilOrCString safely converts a Go string pointer to a C string.
+// It returns nil if the input pointer is nil, mimicking optional string behavior in C.
+func nilOrCString(goStrPtr *string) *C.char {
+	if goStrPtr == nil {
+		return nil // Return nil to comply with C functions that accept NULL
+	}
+	return C.CString(*goStrPtr)
 }

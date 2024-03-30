@@ -1,3 +1,16 @@
+/*
+Package axeventwrapper provides a Go wrapper around the axevent C library, facilitating the integration and manipulation of event systems within Axis devices.
+This package abstracts the complexities of direct C interaction, offering Go developers a more accessible and idiomatic way to work with AXEvents.
+
+Important:
+This package relies on CGo for integration with the axevent C library and the GLib library, necessitating a running GMainLoop for proper operation.
+It is designed to work within the ecosystem of Axis device event systems, providing a bridge between Go applications and the native event handling mechanisms of Axis products.
+
+Usage:
+The package facilitates event creation, manipulation, and interaction through idiomatic Go constructs. Events can be created with `NewAXEvent`, key-value pairs added via `AddKeyValue`, and timestamps set using Go's native `time.Time`. For receiving events, the package offers mechanisms to subscribe to specific events or sets of events, adhering to the loose coupling philosophy of the underlying axevent library.
+
+This wrapper aims to simplify the development of applications interacting with the Axis event system, providing a Go-centric approach to event handling, declaration, and subscription within the Axis product ecosystem.
+*/
 package axevent
 
 /*

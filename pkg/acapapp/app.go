@@ -1,4 +1,8 @@
-package goxis
+// Package acapapp provides a high-level abstraction for an Axis Communications Application Platform (ACAP) application.
+// It encapsulates the application's manifest, system logging, parameter handling, event handling, and the main event loop
+// to facilitate easy development of ACAP applications. This includes automatic loading of the application's manifest,
+// initialization of syslog for logging, handling of application parameters, event handling, and the GMainLoop for the main event loop.
+package acapapp
 
 import (
 	"errors"

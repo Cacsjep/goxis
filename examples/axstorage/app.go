@@ -3,18 +3,18 @@ package main
 import (
 	"time"
 
-	"github.com/Cacsjep/goxis"
+	"github.com/Cacsjep/goxis/pkg/acapapp"
 	"github.com/Cacsjep/goxis/pkg/axstorage"
 )
 
 // https://github.com/AxisCommunications/acap-native-sdk-examples/blob/main/axstorage/app/axstorage.c#L200
 func main() {
 	var err error
-	var app *goxis.AcapApplication
+	var app *acapapp.AcapApplication
 	var networkshare *axstorage.DiskItem
 	var diskFound bool
 
-	app = goxis.NewAcapApplication()
+	app = acapapp.NewAcapApplication()
 	sp := app.NewStorageProvider(false)
 
 	if err = sp.Open(); err != nil {
@@ -31,10 +31,11 @@ func main() {
 
 			if networkshare, diskFound = sp.GetDiskItemById("NetworkShare"); !diskFound {
 				app.Syslog.Crit("NetworkShare not found")
+				continue
 			}
 
 			// Writes a file
-			if w := sp.WriteFile(networkshare, demoFile, []byte("Here is my content....")); w.RwError != goxis.RWErrorNone {
+			if w := sp.WriteFile(networkshare, demoFile, []byte("Here is my content....")); w.RwError != acapapp.RWErrorNone {
 				app.Syslog.Errorf("Unable to create file because %s", w.Error)
 				continue
 			}
@@ -44,7 +45,7 @@ func main() {
 			time.Sleep(time.Second * 20)
 
 			// Remove a file
-			if r := sp.RemoveFile(networkshare, demoFile); r.RwError != goxis.RWErrorNone {
+			if r := sp.RemoveFile(networkshare, demoFile); r.RwError != acapapp.RWErrorNone {
 				app.Syslog.Errorf("Unable to remove file because %s", r.Error)
 				continue
 			}

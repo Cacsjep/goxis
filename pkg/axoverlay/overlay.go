@@ -1,3 +1,26 @@
+/*
+Package axoverlay provides a Go interface to the Axis Overlay Library (axoverlay), enabling the creation, management, and rendering of custom overlays on video streams.
+This package simplifies interactions with video streams from Axis cameras, offering developers the ability to overlay text, images, and custom graphical elements directly onto live or recorded video feeds.
+
+Usage:
+1. Initialize the axoverlay system with general settings and callbacks.
+2. Create overlays specifying position, size, color space, and other attributes.
+3. Implement callback functions for dynamic adjustments and custom rendering.
+4. Manage overlays in response to application logic, including repositioning, resizing, and redrawing as needed.
+5. Cleanup resources and properly shutdown the axoverlay system when done.
+
+This package is particularly suited for applications requiring direct manipulation of video streams on Axis devices, such as adding custom watermarks, displaying dynamic text information (e.g., timestamps, sensor data), or integrating graphical user interfaces directly into video feeds.
+
+Requirements:
+- Axis device with support for the axoverlay library.
+- CGo for interfacing with the C library.
+- Appropriate Axis SDK and development tools for compilation and deployment.
+
+Example:
+See the package documentation and examples for detailed usage patterns, including stream selection, overlay creation, and dynamic adjustment based on stream properties.
+
+This package wraps complex interactions with the axoverlay C library into an idiomatic Go API, abstracting the details of memory management, callback registration, and error handling for Go developers working on Axis camera applications.
+*/
 package axoverlay
 
 /*

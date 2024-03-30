@@ -4,7 +4,7 @@ import (
 	"embed"
 	"net/http"
 
-	"github.com/Cacsjep/goxis"
+	"github.com/Cacsjep/goxis/pkg/acapapp"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/filesystem"
 )
@@ -26,10 +26,10 @@ var embedDirStatic embed.FS
 // Thats needed because we want serve our own html files
 func main() {
 	var err error
-	var app *goxis.AcapApplication
+	var app *acapapp.AcapApplication
 	var baseUri string
 
-	app = goxis.NewAcapApplication()
+	app = acapapp.NewAcapApplication()
 
 	// Fiber
 	fapp := fiber.New()

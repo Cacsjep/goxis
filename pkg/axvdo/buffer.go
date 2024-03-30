@@ -1,3 +1,9 @@
+/*
+Package axvdo provides a Go wrapper around the libvdo C library.
+This package abstracts the complexities of direct C interaction, offering Go developers a more accessible and idiomatic way to work with Video capture API.
+
+This wrapper aims to simplify the development of applications interacting with the Axis vdo system.
+*/
 package axvdo
 
 /*
