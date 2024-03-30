@@ -32,11 +32,11 @@ it loads at runtime the ***manifest.json***.
 package main
 
 import (
-	"github.com/Cacsjep/goxis"
+	"github.com/Cacsjep/goxis/pkg/acapapp"
 )
 
 func main() {
-	app := goxis.NewAcapApplication()
+	app := acapapp.NewAcapApplication()
 	app.Syslog.Info("Hello from My awesome acap")
 }
 ```
