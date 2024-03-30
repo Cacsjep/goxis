@@ -1,6 +1,6 @@
 # About
 
-Goxis is a comprehensive library designed to facilitate the development of ACAP (Axis Camera Application Platform) applications for AXIS cameras. By providing a rich set of features and abstractions, Goxis aims to simplify the integration of camera functionalities into your applications.
+Goxis is a library designed to facilitate the development of ACAP (Axis Camera Application Platform) applications for AXIS cameras.
 
 This library includes user-friendly wrappers for most APIs provided by the [native SDK](https://axiscommunications.github.io/acap-documentation/docs/api/native-sdk-api.html).
 
