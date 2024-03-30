@@ -102,9 +102,6 @@ Examples are really close to existing C examples of the [AXIS Native SDK repo](h
 
 ## Useful ACAP Informations
 
-### ACAP API Docs
-https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/
-
 ### ACAP Native SDK hardware compatibility
 
 **Last Modified: 08.03.2024**
