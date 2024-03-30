@@ -100,10 +100,12 @@ Examples are really close to existing C examples of the [AXIS Native SDK repo](h
 | `webserver`     | Reverse proxy webserver with fiber                                    |
 
 
-# ACAP API Docs
+## Useful ACAP Informations
+
+### ACAP API Docs
 https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/
 
-# ACAP Native SDK hardware compatibility
+### ACAP Native SDK hardware compatibility
 
 **Last Modified: 08.03.2024**
 
@@ -118,7 +120,7 @@ https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/
 | S5            | aarch64      |
 | S5L           | aarch64      |
 
-# Manifest schema version mapping
+### Manifest schema version mapping
 
 **Mapping table for schema, firmware and SDK version.**
 
@@ -135,7 +137,7 @@ It’s recommended to use the latest manifest version available for the minimum 
 | 1.5.0  | 11.8     | 1.12 | - Add support for reverse proxy configuration.<br>- Add access policy for ACAP application web content.<br>- Allow - character in secondary groups of linux resources.<br>- Allow strings in requiredMethods and conditionalMethods under dbus to end with .* to match all methods of a D-Bus interface. |
 | 1.6.0  | 11.9     | 1.13 | - Add support for characters $ and \ in apiPath of the reverse proxy configuration.<br>- Add optional field $schema that can point out a manifest schema to use for manifest validation and auto-completion.<br>- Allow strings in requiredMethods and conditionalMethods under dbus to contain -. |
 
-# SDK for software compatibility
+### SDK for software compatibility
 
 **Choose the appropriate SDK version based on what firmware version you want supporting your ACAP application.**
 
@@ -148,7 +150,7 @@ It’s recommended to use the latest manifest version available for the minimum 
 | SDK 3.4     | 10.6 and later                   |
 | SDK 3.5     | 10.9 and later                   |
 
-# ACAP Native SDK
+### ACAP Native SDK
 
 **ACAP Release vs ACAP Native SDK Image version vs Compatible with AXIS OS version**
 
@@ -170,6 +172,6 @@ It’s recommended to use the latest manifest version available for the minimum 
 | 4.13         | 1.13                          | 11.9 and later until LTS        |
 
 
-# Todos:
+### Todos:
   - Rewrite test package 
   - Adding Larod API
