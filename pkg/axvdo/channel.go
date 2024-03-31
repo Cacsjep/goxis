@@ -59,6 +59,7 @@ func VdoChannelGetAll() ([]*VdoStream, error) {
 		}
 		streams = append(streams, vdoStream)
 	})
+	vdoStreamsList.Free()
 	return streams, nil
 }
 
@@ -91,6 +92,7 @@ func VdoChannelGetFilterd(filter *VdoMap) ([]*VdoStream, error) {
 		}
 		streams = append(streams, vdoStream)
 	})
+	vdoStreamsList.Free()
 	return streams, nil
 }
 

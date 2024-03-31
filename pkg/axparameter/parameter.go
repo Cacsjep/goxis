@@ -36,6 +36,8 @@ import (
 	"runtime/cgo"
 	"strconv"
 	"unsafe"
+
+	"github.com/Cacsjep/goxis/pkg/glib"
 )
 
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axparameter/html/ax__parameter_8h.html#a454ef604d7741f45804e708a56f7bf24
@@ -161,27 +163,26 @@ func (axp *AXParameter) List() ([]string, error) {
 	var params []string
 	var gerr *C.GError
 
-	gList := C.ax_parameter_list(
-		axp.Ptr,
-		&gerr,
-	)
-
-	if gList == nil {
-		return params, errors.New("Glist is nil")
+	gList_ptr := C.ax_parameter_list(axp.Ptr, &gerr)
+	if gList_ptr == nil {
+		return params, errors.New("Unable to list parameters, ax_parameter_list returned nil")
 	}
-	defer C.g_list_free_full(gList, (C.GDestroyNotify)(C.g_free))
 
 	if err := newGError(gerr); err != nil {
 		return params, err
 	}
-
-	for l := gList; l != nil; l = l.next {
-		param := C.g_list_nth_data(gList, C.guint(0))
-		if param != nil {
-			params = append(params, C.GoString((*C.char)(param)))
+	paramsListPtr := uintptr(unsafe.Pointer(gList_ptr))
+	paramsList := glib.WrapList(paramsListPtr)
+	paramsList.DataWrapper(wrapString)
+	paramsList.Data()
+	paramsList.Foreach(func(item interface{}) {
+		param, ok := item.(string)
+		if !ok {
+			panic("param: item is not of type string")
 		}
-	}
-
+		params = append(params, param)
+	})
+	paramsList.Free()
 	return params, nil
 }
 
@@ -253,4 +254,8 @@ func (axp *AXParameter) UnregisterCallback(name string) error {
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axparameter/html/ax__parameter_8h.html#a78ff4b5a312a1d9aab120436c116a5a2
 func (axp *AXParameter) Free() {
 	C.ax_parameter_free(axp.Ptr)
+}
+
+func wrapString(ptr unsafe.Pointer) interface{} {
+	return C.GoString((*C.char)(ptr))
 }

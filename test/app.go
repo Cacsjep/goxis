@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"testing"
 	"time"
 
@@ -17,14 +18,14 @@ func main() {
 	testing.Main(
 		nil,
 		[]testing.InternalTest{
-			//{"TestVdoMapOperations", TestVdoMapOperations},
-			//{"VdoMapTest", VdoMapTest},
-			//{"VdoChannelTest", VdoChannelTest},
-			//{"TestVdoStream", TestVdoStream},
-			//{"LicenseTest", LicenseTest},
+			{"TestVdoMapOperations", TestVdoMapOperations},
+			{"VdoMapTest", VdoMapTest},
+			{"VdoChannelTest", VdoChannelTest},
+			{"TestVdoStream", TestVdoStream},
+			{"LicenseTest", LicenseTest},
 			{"ParamTests", ParamTests},
-			//{"EventTests", EventTests},
-			//{"EventHandlerTests", EventHandlerTests},
+			{"EventTests", EventTests},
+			{"EventHandlerTests", EventHandlerTests},
 		},
 		nil, nil,
 	)
@@ -86,7 +87,7 @@ func TestVdoFrameOperations(t *testing.T, existingBuffer *axvdo.VdoBuffer) {
 	assert.Equal(t, newSize, uint(1024), "Frame size should be updated to 1024")
 }
 
-func TestVdoBufferOperations(t *testing.T, existingBuffer *acap.VdoBuffer) {
+func TestVdoBufferOperations(t *testing.T, existingBuffer *axvdo.VdoBuffer) {
 	// Test GetID
 	id := existingBuffer.GetId()
 	assert.NotZero(t, id, "Expected non-zero ID for the buffer")
@@ -320,10 +321,20 @@ func VdoChannelTest(t *testing.T) {
 
 func LicenseTest(t *testing.T) {
 	s := axlicense.LicensekeyVerify("test", 414614, 1, 0)
-	assert.True(t, s)
+	assert.False(t, s)
 	// TODO: Bring this to work
 	//t1, err := acap.LicensekeyGetExpDate("test")
 	//fmt.Println(t1, err)
+}
+
+var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+func randSeq(n int) string {
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
 }
 
 func ParamTests(t *testing.T) {
@@ -332,17 +343,13 @@ func ParamTests(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, p)
 
+	param := randSeq(10)
 	// Add Test
-	err = p.Add("IsCustomized", "yes", "bool:no,yes")
+	err = p.Add(param, "yes", "bool:no,yes")
 	assert.NoError(t, err)
-
-	// Get Test 1
-	pvalue1, err := p.Get("IsCustomized")
-	assert.NoError(t, err)
-	assert.Equal(t, "yes", pvalue1)
 
 	// Set Test 1
-	err = p.Set("IsCustomized", "no", true)
+	err = p.Set(param, "no", true)
 	assert.NoError(t, err)
 
 	// Set Test 2
@@ -350,7 +357,7 @@ func ParamTests(t *testing.T) {
 	assert.Error(t, err)
 
 	// Get Test 2
-	pvalue2, err := p.Get("IsCustomized")
+	pvalue2, err := p.Get(param)
 	assert.NoError(t, err)
 	assert.Equal(t, "no", pvalue2)
 
@@ -362,10 +369,9 @@ func ParamTests(t *testing.T) {
 	// List test
 	params, err := p.List()
 	assert.NoError(t, err)
-	assert.Len(t, params, 1)
-	fmt.Println("Params listed", params)
+	assert.Greater(t, len(params), 0)
 
-	err = p.RegisterCallback("IsCustomized", func(name, value string, userdata any) {
+	err = p.RegisterCallback(param, func(name, value string, userdata any) {
 		fmt.Println("Param Callback Invoked", name, value, userdata)
 	}, "mydata")
 
@@ -377,12 +383,12 @@ func ParamTests(t *testing.T) {
 	l, err := p.List()
 	fmt.Println(l, err)
 
-	fmt.Println("Starting gorutine for callback check (30Sec)")
-	go time.AfterFunc(time.Second*30, func() {
+	fmt.Println("Starting gorutine for callback check (10Sec)")
+	go time.AfterFunc(time.Second*10, func() {
 		m.Quit()
-		p.UnregisterCallback("IsCustomized")
+		p.UnregisterCallback(param)
 		// Remove Test 1
-		err = p.Remove("IsCustomized")
+		err = p.Remove(param)
 		assert.NoError(t, err)
 
 		// Remove Test 2

@@ -60,6 +60,7 @@ func StreamGetAll() ([]*VdoStream, error) {
 		}
 		streams = append(streams, vdoStream)
 	})
+	vdoStreamsList.Free()
 	return streams, nil
 }
 

@@ -170,5 +170,4 @@ It’s recommended to use the latest manifest version available for the minimum 
 
 
 ### Todos:
-  - Rewrite test package 
   - Adding Larod API

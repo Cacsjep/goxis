@@ -49,7 +49,7 @@ func AxStorageList() ([]StorageId, error) {
 
 	disks_list_ptr := C.ax_storage_list(&gerr)
 	if disks_list_ptr == nil {
-		return nil, errors.New("Unable to get storage list, ax_storage_list retuns NULL")
+		return nil, errors.New("Unable to get storage list, ax_storage_list returns nil")
 	}
 
 	if err := newStorageError(gerr); err != nil {
@@ -66,6 +66,7 @@ func AxStorageList() ([]StorageId, error) {
 		}
 		storage_ids = append(storage_ids, (StorageId)(storage_id))
 	})
+	storagesIdsList.Free()
 	return storage_ids, nil
 }
 
