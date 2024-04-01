@@ -259,3 +259,32 @@ func (axp *AXParameter) Free() {
 func wrapString(ptr unsafe.Pointer) interface{} {
 	return C.GoString((*C.char)(ptr))
 }
+
+type ParameterChangeEvent struct {
+	Name  string
+	Value string
+}
+
+func (axp *AXParameter) OnChange(param_name string, callback func(*ParameterChangeEvent)) error {
+	return axp.RegisterCallback(param_name, func(param_name, value string, userdata any) {
+		callback(&ParameterChangeEvent{Name: param_name, Value: value})
+	}, nil)
+}
+
+func (axp *AXParameter) OnAnyChange(callback func(*ParameterChangeEvent)) error {
+	var err error
+	params, err := axp.List()
+
+	if err != nil {
+		return err
+	}
+
+	for _, p := range params {
+		if err = axp.RegisterCallback(p, func(param_name, value string, userdata any) {
+			callback(&ParameterChangeEvent{Name: param_name, Value: value})
+		}, nil); err != nil {
+			return err
+		}
+	}
+	return nil
+}
