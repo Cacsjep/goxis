@@ -27,12 +27,12 @@ func main() {
 	 *           active=NULL     <-- Subscribe to all states
 	 */
 
-	set := axevent.NewAXEventKeyValueSet()
-	err = set.AddKeyValue("topic0", &axevent.OnfivNameSpaceTns1, "Device", axevent.AXValueTypeString)
-	err = set.AddKeyValue("topic1", &axevent.OnfivNameSpaceTnsAxis, "IO", axevent.AXValueTypeString)
-	err = set.AddKeyValue("topic2", &axevent.OnfivNameSpaceTnsAxis, "VirtualInput", axevent.AXValueTypeString)
-	err = set.AddKeyValue("port", nil, 1, axevent.AXValueTypeInt)
-	err = set.AddKeyValue("active", nil, nil, axevent.AXValueTypeBool)
+	event_declare_kvs := axevent.NewAXEventKeyValueSet()
+	err = event_declare_kvs.AddKeyValue("topic0", &axevent.OnfivNameSpaceTns1, "Device", axevent.AXValueTypeString)
+	err = event_declare_kvs.AddKeyValue("topic1", &axevent.OnfivNameSpaceTnsAxis, "IO", axevent.AXValueTypeString)
+	err = event_declare_kvs.AddKeyValue("topic2", &axevent.OnfivNameSpaceTnsAxis, "VirtualInput", axevent.AXValueTypeString)
+	err = event_declare_kvs.AddKeyValue("port", nil, 1, axevent.AXValueTypeInt)
+	err = event_declare_kvs.AddKeyValue("active", nil, nil, axevent.AXValueTypeBool)
 
 	// Subscribe to the event.
 	// You can test the callback via changing the state of the virtual input via:
@@ -45,20 +45,21 @@ func main() {
 	//		nor should any lengthy processing be made in the callback functions.
 	//		Failure to comply with this convention will prevent the event system from,
 	//		or delay it in, sending or delivering any more events to the calling application.
-	subscription, err = app.EventHandler.Subscribe(set, func(subscription int, event *axevent.AXEvent, userdata any) {
+	//		For this reason, it is recommended to use a gorutine for any processing that may take time.
+	subscription, err = app.EventHandler.Subscribe(event_declare_kvs, func(subscription int, event *axevent.AXEvent, userdata any) {
 
 		// Get the key value set from event
-		kvs := event.GetKeyValueSet()
+		event_kvs := event.GetKeyValueSet()
 
 		// Get the port value
-		port, err := kvs.GetInteger("port", nil)
+		port, err := event_kvs.GetInteger("port", nil)
 		if err != nil {
 			app.Syslog.Error("Unable to get port value from event key value set")
 			return
 		}
 
 		// Get the active value
-		active, err := kvs.GetBoolean("active", nil)
+		active, err := event_kvs.GetBoolean("active", nil)
 		if err != nil {
 			app.Syslog.Error("Unable to get active value from event key value set")
 			return
@@ -72,7 +73,10 @@ func main() {
 			userdata,
 		)
 
+		// event is automatically freed after the callback
 	}, "my importand user data")
+
+	app.Syslog.Infof("Subscription ID: %d", subscription)
 
 	if err != nil {
 		app.Syslog.Crit(err.Error())

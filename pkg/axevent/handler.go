@@ -78,7 +78,9 @@ func GoSubscriptionCallback(subscription C.guint, event *C.AXEvent, user_data un
 		fmt.Println("Error: in value conv (GoSubscriptionCallback)")
 		return
 	}
-	data.Callback(int(subscription), &AXEvent{Ptr: event}, data.Userdata)
+	evt := &AXEvent{Ptr: event}
+	data.Callback(int(subscription), evt, data.Userdata)
+	evt.Free()
 }
 
 // Subscribes to an event or a set of events.
