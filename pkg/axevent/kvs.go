@@ -3,6 +3,8 @@ package axevent
 /*
 #cgo pkg-config: axevent
 #include <axsdk/axevent.h>
+#include <stdbool.h>
+#include <stdlib.h>
 */
 import "C"
 import (
@@ -318,33 +320,81 @@ func (axEventKeyValueSet *AXEventKeyValueSet) RemoveKey(key string, namespace *s
 
 // Convert a interface value to correct c type for the set
 func valueConverter(value interface{}, value_type AXEventValueType) (C.gconstpointer, error) {
-	if value != nil {
-		switch value_type {
-		case AXValueTypeInt:
-			intval := value.(int)
-			cvalue := C.int(intval)
-			return C.gconstpointer(&cvalue), nil
-		case AXValueTypeString:
-			strval := value.(string)
-			cvalue := C.CString(strval)
-			return C.gconstpointer(cvalue), nil
-		case AXValueTypeBool:
-			var cvalue C.gboolean
-			if value.(bool) {
+	if value == nil {
+		return nil, nil
+	}
+
+	switch value_type {
+	case AXValueTypeInt:
+		var cvalue C.int
+		switch v := value.(type) {
+		case *int:
+			if v == nil {
+				return C.gconstpointer(C.NULL), nil
+			}
+			cvalue = C.int(*v)
+		case int:
+			cvalue = C.int(v)
+		default:
+			return nil, fmt.Errorf("unexpected type for AXValueTypeInt, got %T", value)
+		}
+		return C.gconstpointer(&cvalue), nil
+
+	case AXValueTypeString:
+		var cvalue *C.char
+		switch v := value.(type) {
+		case *string:
+			if v == nil {
+				return C.gconstpointer(C.NULL), nil
+			}
+			cvalue = C.CString(*v)
+		case string:
+			cvalue = C.CString(v)
+		default:
+			return nil, fmt.Errorf("unexpected type for AXValueTypeString, got %T", value)
+		}
+		return C.gconstpointer(cvalue), nil
+
+	case AXValueTypeBool:
+		var cvalue C.gboolean
+		switch v := value.(type) {
+		case *bool:
+			if v == nil {
+				return C.gconstpointer(C.NULL), nil
+			}
+			if *v {
 				cvalue = C.gboolean(1)
 			} else {
 				cvalue = C.gboolean(0)
 			}
-			return C.gconstpointer(&cvalue), nil
-		case AXValueTypeDouble:
-			floatval := value.(float64)
-			cvalue := C.double(floatval)
-			return C.gconstpointer(&cvalue), nil
+		case bool:
+			if v {
+				cvalue = C.gboolean(1)
+			} else {
+				cvalue = C.gboolean(0)
+			}
 		default:
-			return nil, fmt.Errorf("unexpected type")
+			return nil, fmt.Errorf("unexpected type for AXValueTypeBool, got %T", value)
 		}
-	} else {
-		return nil, nil
+		return C.gconstpointer(&cvalue), nil
+
+	case AXValueTypeDouble:
+		var cvalue C.double
+		switch v := value.(type) {
+		case *float64:
+			if v == nil {
+				return C.gconstpointer(C.NULL), nil
+			}
+			cvalue = C.double(*v)
+		case float64:
+			cvalue = C.double(v)
+		default:
+			return nil, fmt.Errorf("unexpected type for AXValueTypeDouble, got %T", value)
+		}
+		return C.gconstpointer(&cvalue), nil
+
+	default:
+		return nil, fmt.Errorf("unexpected value type: %v", value_type)
 	}
 }
 

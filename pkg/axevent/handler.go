@@ -12,6 +12,7 @@ import "C"
 import (
 	"fmt"
 	"runtime/cgo"
+	"time"
 	"unsafe"
 )
 
@@ -202,4 +203,17 @@ func (eh *AXEventHandler) Unsubscribe(subscription int) error {
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axevent/html/ax__event__handler_8h.html#ac8fa0ee5cba77fffffad4153833b040d
 func (eh *AXEventHandler) Free() {
 	C.ax_event_handler_free(eh.Ptr)
+}
+
+type Event struct {
+	Kvs       *AXEventKeyValueSet
+	Timestamp time.Time
+}
+
+func (eh *AXEventHandler) OnEvent(kvs *AXEventKeyValueSet, callback func(*Event)) (subscription int, err error) {
+	subscription, err = eh.Subscribe(kvs, func(subscription int, event *AXEvent, userdata any) {
+		callback(&Event{Kvs: event.GetKeyValueSet(), Timestamp: event.GetTimestamp()})
+	}, nil)
+	kvs.Free()
+	return
 }
