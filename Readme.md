@@ -171,3 +171,4 @@ It’s recommended to use the latest manifest version available for the minimum 
 
 ### Todos:
   - Adding Larod API
+  - Adding more go event types
