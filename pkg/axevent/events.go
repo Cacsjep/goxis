@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+// KeyValueEntrie is a key-value pair for an AXEventKeyValueSet.
 type KeyValueEntrie struct {
 	key        string
 	namespace  *string
@@ -13,7 +14,8 @@ type KeyValueEntrie struct {
 	value_type AXEventValueType
 }
 
-func tnsAxisEvent(topic0 string, topic1 string, topic2 *string, topic3 *string, keyvalues []*KeyValueEntrie) (*AXEventKeyValueSet, error) {
+// TnsAxisEvent creates a new AXEventKeyValueSet with the given topics and key-value pairs.
+func TnsAxisEvent(topic0 string, topic1 string, topic2 *string, topic3 *string, keyvalues []*KeyValueEntrie) (*AXEventKeyValueSet, error) {
 	kvs := NewAXEventKeyValueSet()
 	if err := kvs.AddKeyValue("topic0", &OnfivNameSpaceTns1, topic0, AXValueTypeString); err != nil {
 		return nil, fmt.Errorf("failed to add key-value for topic0: %w", err)
@@ -42,14 +44,17 @@ func tnsAxisEvent(topic0 string, topic1 string, topic2 *string, topic3 *string, 
 	return kvs, nil
 }
 
+// NewStringPointer returns a pointer to the given string value.
 func NewStringPointer(value string) *string {
 	return &value
 }
 
+// NewIntPointer returns a pointer to the given int value.
 func NewIntPointer(value int) *int {
 	return &value
 }
 
+// UnmarshalEvent unmarshals the given event into the provided struct.
 func UnmarshalEvent(e *Event, v interface{}) error {
 	val := reflect.ValueOf(v)
 	if val.Kind() != reflect.Ptr || val.Elem().Kind() != reflect.Struct {

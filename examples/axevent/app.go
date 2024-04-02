@@ -14,10 +14,8 @@ var (
 	app              *acapapp.AcapApplication
 )
 
-// This example uses axevent library for subscribing to an ONVIF event.
 // Tipp: Use Axis Metadata Monitor to see live with events are produced by camera
-//
-//	https://www.axis.com/developer-community/axis-metadata-monitor
+// https://www.axis.com/developer-community/axis-metadata-monitor
 func main() {
 	app = acapapp.NewAcapApplication()
 
