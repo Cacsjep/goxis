@@ -8,7 +8,9 @@ import (
 var (
 	err              error
 	vio_subscription int
+	vi               axevent.VirtualInputEvent
 	dn_subscription  int
+	dn               axevent.DayNightEvent
 	app              *acapapp.AcapApplication
 )
 
@@ -27,94 +29,54 @@ func main() {
 	 *           port=1    		 <-- Subscribe to port number 1
 	 *           active=NULL     <-- Subscribe to all states
 	 */
-	vio_event, err := axevent.VirtualInputEvent(1, nil)
+	// VirtualInputEvent is a helper function to create a AXEventKeyValueSet for a VirtualInput event.
+	vio_event, err := axevent.VirtualInputEventKvs(1, nil)
 	if err != nil {
 		app.Syslog.Crit(err.Error())
 	}
 
-	// VirtualInputEvent is a helper function to create a AXEventKeyValueSet for a VirtualInput event.
-	/* func VirtualInputEvent(port int) (*AXEventKeyValueSet, error) {
-		vio_event := NewAXEventKeyValueSet()
-		if err := vio_event.AddKeyValue("topic0", &OnfivNameSpaceTns1, "Device", AXValueTypeString); err != nil {
-			return nil, fmt.Errorf("failed to add key-value for topic0: %w", err)
-		}
-		if err := vio_event.AddKeyValue("topic1", &OnfivNameSpaceTnsAxis, "IO", AXValueTypeString); err != nil {
-			return nil, fmt.Errorf("failed to add key-value for topic1: %w", err)
-		}
-		if err := vio_event.AddKeyValue("topic2", &OnfivNameSpaceTnsAxis, "VirtualInput", AXValueTypeString); err != nil {
-			return nil, fmt.Errorf("failed to add key-value for topic2: %w", err)
-		}
-		if err := vio_event.AddKeyValue("port", nil, port, AXValueTypeInt); err != nil {
-			return nil, fmt.Errorf("failed to add key-value for port: %w", err)
-		}
-		if err := vio_event.AddKeyValue("active", nil, true, AXValueTypeBool); err != nil { // Assuming active is always true, as nil was passed for value before
-			return nil, fmt.Errorf("failed to add key-value for active: %w", err)
-		}
-		return vio_event, nil
-	} */
+	/* Initialize an AXEventKeyValueSet that matches DayNightVision for video source 1.
+	 *
+	 *      tns1:topic0=VideoSource
+	 *   tnsaxis:topic1=DayNightVision
+	 *   VideoSourceConfigurationToken=1   <-- Subscribe to Video source 1
+	 */
+	// DayNightEventKvs is a helper function to create a AXEventKeyValueSet for a DayNight event.
+	dn_event, err := axevent.DayNightEventKvs(axevent.NewIntPointer(1), nil)
+	if err != nil {
+		app.Syslog.Crit(err.Error())
+	}
 
 	// OnEvent create a subscription callback for the given event key value set.
 	// You can test via changing the state of the virtual input via:
 	// Activate: 	http://<ip>/axis-cgi/virtualinput/activate.cgi?schemaversion=1&port=1
 	// Deactivate:  http://<ip>/axis-cgi/virtualinput/deactivate.cgi?schemaversion=1&port=1
 	// A note on callback functions:
-	//  	The callback functions registered with the AXEventHandler
-	//		will be called from the GMainLoop thread in the default context.
-	//		This means that the client may not prevent callback functions from returning,
-	//		nor should any lengthy processing be made in the callback functions.
-	//		Failure to comply with this convention will prevent the event system from,
-	//		or delay it in, sending or delivering any more events to the calling application.
-	//		For this reason, it is recommended to use a gorutine for any processing that may take time.
+	//  	Any call to axparam in the callback should again should be done via a goroutine.
+	//  	Otherwise, the callback will block the event handler.
 	vio_subscription, err = app.EventHandler.OnEvent(vio_event, func(e *axevent.Event) {
-
-		// Get the port value
-		port, err := e.Kvs.GetInteger("port", nil)
-		if err != nil {
-			app.Syslog.Error("Unable to get port value from event key value set")
+		if err := axevent.UnmarshalEvent(e, &vi); err != nil {
+			app.Syslog.Error(err.Error())
 			return
 		}
-
-		// Get the active value
-		active, err := e.Kvs.GetBoolean("active", nil)
-		if err != nil {
-			app.Syslog.Error("Unable to get active value from event key value set")
-			return
-		}
-
-		app.Syslog.Infof(
-			"VIO Callback, Port: %d, Active: %t, Timestamp: %s",
-			port,
-			active,
-			e.Timestamp.Format("2006-01-02 15:04:05"),
-		)
+		app.Syslog.Infof("VirtualInput Port: %d, Active: %t", vi.Port, vi.Active)
 	})
-	source := 1 // Starts with 1
-	dn_event, err := axevent.DayNightEvent(&source, nil)
-	if err != nil {
-		app.Syslog.Crit(err.Error())
-	}
 
 	dn_subscription, err = app.EventHandler.OnEvent(dn_event, func(e *axevent.Event) {
-		day, err := e.Kvs.GetBoolean("day", nil)
-		if err != nil {
-			app.Syslog.Error("Unable to get day value from event key value set")
+		if err := axevent.UnmarshalEvent(e, &dn); err != nil {
+			app.Syslog.Error(err.Error())
 			return
 		}
-		app.Syslog.Infof(
-			"DN Callback, Day: %t, Timestamp: %s",
-			day,
-			e.Timestamp.Format("2006-01-02 15:04:05"),
-		)
+		app.Syslog.Infof("DayNight, VideoSource: %d, Day: %t", dn.VideoSourceConfigurationToken, dn.Day)
 	})
 
-	app.Syslog.Infof("VIO Subscription ID: %d", vio_subscription)
-	app.Syslog.Infof("DN Subscription ID: %d", dn_subscription)
+	app.Syslog.Infof("VirtualInput Subscription ID: %d", vio_subscription)
+	app.Syslog.Infof("DayNight Subscription ID: %d", dn_subscription)
 
 	if err != nil {
 		app.Syslog.Crit(err.Error())
 	}
 
 	// Signal handler automatically internally created for SIGTERM, SIGINT
-	// This blocks now the main thread.
 	app.Run()
 }
