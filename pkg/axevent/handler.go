@@ -157,7 +157,7 @@ func (eh *AXEventHandler) Declare(keyValueSet *AXEventKeyValueSet, stateless boo
 // Declares a new event based upon an event template
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axevent/html/ax__event__handler_8h.html#aa7d1fd47acc735ded14835b1b2c693f3
-func (eh *AXEventHandler) DeclareFromTemplate(keyValueSet *AXEventKeyValueSet, template string, callback DeclarationCompleteCallback, userdata any) (int, error) {
+func (eh *AXEventHandler) DeclareFromTemplate(template string, keyValueSet *AXEventKeyValueSet, callback DeclarationCompleteCallback, userdata any) (int, error) {
 	var declaration C.guint
 	var gerr *C.GError
 	data := &declarationComplete{Callback: callback, Userdata: userdata}
