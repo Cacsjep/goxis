@@ -1,5 +1,5 @@
 *.eap
 cmd
 *.log
-.vscode
 todo
+/.vscode
