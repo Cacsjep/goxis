@@ -14,8 +14,8 @@ type KeyValueEntrie struct {
 	value_type AXEventValueType
 }
 
-// TnsAxisEvent creates a new AXEventKeyValueSet with the given topics and key-value pairs.
-func TnsAxisEvent(topic0 string, topic1 string, topic2 *string, topic3 *string, keyvalues []*KeyValueEntrie) (*AXEventKeyValueSet, error) {
+// NewTns1AxisEvent creates a new AXEventKeyValueSet with the given topics and key-value pairs.
+func NewTns1AxisEvent(topic0 string, topic1 string, topic2 *string, topic3 *string, keyvalues []*KeyValueEntrie) (*AXEventKeyValueSet, error) {
 	kvs := NewAXEventKeyValueSet()
 	if err := kvs.AddKeyValue("topic0", &OnfivNameSpaceTns1, topic0, AXValueTypeString); err != nil {
 		return nil, fmt.Errorf("failed to add key-value for topic0: %w", err)
@@ -44,14 +44,34 @@ func TnsAxisEvent(topic0 string, topic1 string, topic2 *string, topic3 *string, 
 	return kvs, nil
 }
 
-// NewStringPointer returns a pointer to the given string value.
-func NewStringPointer(value string) *string {
-	return &value
-}
+// TnsAxisEvent creates a new AXEventKeyValueSet with the given topics and key-value pairs.
+func NewTnsAxisEvent(topic0 string, topic1 string, topic2 *string, topic3 *string, keyvalues []*KeyValueEntrie) (*AXEventKeyValueSet, error) {
+	kvs := NewAXEventKeyValueSet()
+	if err := kvs.AddKeyValue("topic0", &OnfivNameSpaceTnsAxis, topic0, AXValueTypeString); err != nil {
+		return nil, fmt.Errorf("failed to add key-value for topic0: %w", err)
+	}
+	if err := kvs.AddKeyValue("topic1", &OnfivNameSpaceTnsAxis, topic1, AXValueTypeString); err != nil {
+		return nil, fmt.Errorf("failed to add key-value for topic1: %w", err)
+	}
+	if topic2 != nil {
+		if err := kvs.AddKeyValue("topic2", &OnfivNameSpaceTnsAxis, *topic2, AXValueTypeString); err != nil {
+			return nil, fmt.Errorf("failed to add key-value for topic2: %w", err)
+		}
+	}
+	if topic3 != nil {
+		if err := kvs.AddKeyValue("topic3", &OnfivNameSpaceTnsAxis, *topic3, AXValueTypeString); err != nil {
+			return nil, fmt.Errorf("failed to add key-value for topic2: %w", err)
+		}
+	}
+	if keyvalues != nil {
+		for _, kv := range keyvalues {
+			if err := kvs.AddKeyValue(kv.key, kv.namespace, kv.value, kv.value_type); err != nil {
+				return nil, fmt.Errorf("failed to add key-value for %s: %w", kv.key, err)
+			}
+		}
 
-// NewIntPointer returns a pointer to the given int value.
-func NewIntPointer(value int) *int {
-	return &value
+	}
+	return kvs, nil
 }
 
 // UnmarshalEvent unmarshals the given event into the provided struct.

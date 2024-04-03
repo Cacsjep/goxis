@@ -1,8 +1,9 @@
 package axevent
 
-//Topic: VideoSource Event: DayNightVision, IsProp: true, Source: {VideoSourceConfigurationToken xsd:int}, Data {day xsd:boolean}
+import "github.com/Cacsjep/goxis/pkg/utils"
+
 func DayNightEventKvs(videoSourceConfigurationToken *int, day *bool) (*AXEventKeyValueSet, error) {
-	return TnsAxisEvent("VideoSource", "DayNightVision", nil, nil, []*KeyValueEntrie{
+	return NewTns1AxisEvent("VideoSource", "DayNightVision", nil, nil, []*KeyValueEntrie{
 		{key: "VideoSourceConfigurationToken", value: videoSourceConfigurationToken, value_type: AXValueTypeInt},
 		{key: "day", value: day, value_type: AXValueTypeBool},
 	})
@@ -13,9 +14,8 @@ type DayNightEvent struct {
 	Day                           bool `eventKey:"day"`
 }
 
-//Topic: VideoSource Event: LiveStreamAccessed, IsProp: true, Source: { }, Data {accessed xsd:boolean}
 func LiveStreamAccessedEventKvs() (*AXEventKeyValueSet, error) {
-	return TnsAxisEvent("VideoSource", "LiveStreamAccessed", nil, nil, []*KeyValueEntrie{
+	return NewTns1AxisEvent("VideoSource", "LiveStreamAccessed", nil, nil, []*KeyValueEntrie{
 		{key: "accessed", value_type: AXValueTypeBool},
 	})
 }
@@ -24,9 +24,8 @@ type LiveStreamAccessedEvent struct {
 	Accessed bool `eventKey:"accessed"`
 }
 
-//Topic: VideoSource Event: Autofocus, IsProp: true, Source: {VideoSourceConfigurationToken xsd:int}, Data {focus xsd:double}
 func AutofocusEventKvs(videoSourceConfigurationToken *int) (*AXEventKeyValueSet, error) {
-	return TnsAxisEvent("VideoSource", "Autofocus", nil, nil, []*KeyValueEntrie{
+	return NewTns1AxisEvent("VideoSource", "Autofocus", nil, nil, []*KeyValueEntrie{
 		{key: "VideoSourceConfigurationToken", value: videoSourceConfigurationToken, value_type: AXValueTypeInt},
 		{key: "focus", value_type: AXValueTypeDouble},
 	})
@@ -37,11 +36,10 @@ type AutofocusEvent struct {
 	Focus                         float64 `eventKey:"focus"`
 }
 
-// Topic: VideoSource Event: Tampering, IsProp: false, Source: {channel xsd:int}, Data {tampering xsd:int}
-func TamperingEventKvs(channel *int) (*AXEventKeyValueSet, error) {
-	return TnsAxisEvent("VideoSource", "Tampering", nil, nil, []*KeyValueEntrie{
+func TamperingEventKvs(channel *int, tampering *int) (*AXEventKeyValueSet, error) {
+	return NewTns1AxisEvent("VideoSource", "Tampering", nil, nil, []*KeyValueEntrie{
 		{key: "channel", value: channel, value_type: AXValueTypeInt},
-		{key: "tampering", value_type: AXValueTypeInt},
+		{key: "tampering", value: tampering, value_type: AXValueTypeInt},
 	})
 }
 
@@ -50,15 +48,26 @@ type TamperingEvent struct {
 	Tampering int `eventKey:"tampering"`
 }
 
-// Topic: VideoSource Event: MotionAlarm, IsProp: true, Source: {Source tt:ReferenceToken}, Data {State xsd:boolean}
-func MotionAlarmEventKvs(source *string) (*AXEventKeyValueSet, error) {
-	return TnsAxisEvent("VideoSource", "MotionAlarm", nil, nil, []*KeyValueEntrie{
+func MotionAlarmEventKvs(source *string, state *bool) (*AXEventKeyValueSet, error) {
+	return NewTns1AxisEvent("VideoSource", "MotionAlarm", nil, nil, []*KeyValueEntrie{
 		{key: "Source", value: source, value_type: AXValueTypeString},
-		{key: "State", value_type: AXValueTypeBool},
+		{key: "State", value: state, value_type: AXValueTypeBool},
 	})
 }
 
 type MotionAlarmEvent struct {
+	Source string `eventKey:"Source"`
+	State  bool   `eventKey:"State"`
+}
+
+func GlobalSceneChangeEventKvs(source *string, state *bool) (*AXEventKeyValueSet, error) {
+	return NewTns1AxisEvent("VideoSource", "GlobalSceneChange", utils.NewStringPointer("ImagingService"), nil, []*KeyValueEntrie{
+		{key: "Source", value: source, value_type: AXValueTypeString},
+		{key: "State", value: state, value_type: AXValueTypeBool},
+	})
+}
+
+type GlobalSceneChangeEvent struct {
 	Source string `eventKey:"Source"`
 	State  bool   `eventKey:"State"`
 }

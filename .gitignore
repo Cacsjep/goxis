@@ -1,3 +1,5 @@
 *.eap
 cmd
 *.log
+.vscode
+todo
