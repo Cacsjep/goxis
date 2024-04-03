@@ -11,14 +11,9 @@ import (
 func main() {
 	app := acapapp.NewAcapApplication()
 
-	// VirtualInputEvent is a helper function to create a AXEventKeyValueSet for a VirtualInput event.
-	vio_event, err := axevent.VirtualInputEventKvs(utils.NewIntPointer(1), nil)
-	if err != nil {
-		app.Syslog.Crit(err.Error())
-	}
-
-	// DayNightEventKvs is a helper function to create a AXEventKeyValueSet for a DayNight event.
-	dn_event, err := axevent.DayNightEventKvs(utils.NewIntPointer(1), nil)
+	// VirtualInputEventKvs is a helper function to create a AXEventKeyValueSet for a VirtualInput event.
+	// You can build your own AXEventKeyValueSet with the NewTns1AxisEvent or NewTnsAxisEvent.
+	vio_event, err := axevent.VirtualInputEventKvs(utils.NewIntPointer(1), nil) // We pass nil because we want to listen to all input states. If you want to listen to a specific state, you can pass utils.NewBoolPointer(true) or utils.NewBoolPointer(false)
 	if err != nil {
 		app.Syslog.Crit(err.Error())
 	}
@@ -31,29 +26,25 @@ func main() {
 	//  	Any call to axparam in the callback should again should be done via a goroutine.
 	//  	Otherwise, the callback will block the event handler.
 	vio_subscription_id, err := app.EventHandler.OnEvent(vio_event, func(e *axevent.Event) {
+
+		// You can also build your own events =)
 		var vi axevent.VirtualInputEvent
+		// You could aslo read manually from the event kvs like
+		// e.Kvs.GetInteger("port", nil) or
+		// e.Kvs.GetBoolean("active", nil)
 		if err := axevent.UnmarshalEvent(e, &vi); err != nil {
 			app.Syslog.Error(err.Error())
 			return
 		}
+
 		app.Syslog.Infof("VirtualInput Port: %d, Active: %t", vi.Port, vi.Active)
 	})
-
-	dn_subscription_id, err := app.EventHandler.OnEvent(dn_event, func(e *axevent.Event) {
-		var dn axevent.DayNightEvent
-		if err := axevent.UnmarshalEvent(e, &dn); err != nil {
-			app.Syslog.Error(err.Error())
-			return
-		}
-		app.Syslog.Infof("DayNight, VideoSource: %d, Day: %t", dn.VideoSourceConfigurationToken, dn.Day)
-	})
-
-	app.Syslog.Infof("VirtualInput SubsId: %d, DayNight SubsId: %d", vio_subscription_id, dn_subscription_id)
-
 	if err != nil {
 		app.Syslog.Crit(err.Error())
 	}
 
-	// Signal handler automatically internally created for SIGTERM, SIGINT
+	app.Syslog.Infof("VirtualInput subscription id: %d", vio_subscription_id)
+
+	// Run gmain loop with signal handler attached.
 	app.Run()
 }

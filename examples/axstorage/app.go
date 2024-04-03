@@ -9,19 +9,17 @@ import (
 
 // https://github.com/AxisCommunications/acap-native-sdk-examples/blob/main/axstorage/app/axstorage.c#L200
 func main() {
-	var err error
-	var app *acapapp.AcapApplication
-	var networkshare *axstorage.DiskItem
-	var diskFound bool
+	app := acapapp.NewAcapApplication()
 
-	app = acapapp.NewAcapApplication()
+	// Storage provider setup
 	sp := app.NewStorageProvider(false)
-
-	if err = sp.Open(); err != nil {
+	if err := sp.Open(); err != nil {
 		app.Syslog.Crit(err.Error())
 	}
 	app.AddCloseCleanFunc(sp.Close)
 
+	var networkshare *axstorage.DiskItem
+	var diskFound bool
 	demoFile := "demo.txt"
 
 	go func() int {
@@ -53,5 +51,6 @@ func main() {
 		}
 	}()
 
+	// Run gmain loop with signal handler attached.
 	app.Run()
 }
