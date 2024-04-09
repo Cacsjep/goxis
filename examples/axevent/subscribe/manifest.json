@@ -2,7 +2,7 @@
     "schemaVersion": "1.6.0",
     "acapPackageConf": {
         "setup": {
-            "friendlyName": "Goxis AxEvent subscribe Example",
+            "friendlyName": "Goxis AxEventSubscribe Example",
             "appName": "axeventsubscribe",
             "vendor": "Goxis",
             "embeddedSdkVersion": "3.0",

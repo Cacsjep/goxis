@@ -19,4 +19,5 @@ const (
 var (
 	OnfivNameSpaceTns1    string = "tns1"
 	OnfivNameSpaceTnsAxis string = "tnsaxis"
+	OnfivTagOnKeyValue    string = "tag-on-key-value"
 )

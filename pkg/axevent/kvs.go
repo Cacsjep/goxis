@@ -24,6 +24,15 @@ func NewAXEventKeyValueSet() *AXEventKeyValueSet {
 	}
 }
 
+// Creates a new AXEventKeyValueSet from a list of KeyValueEntries
+func NewAXEventKeyValueSetFromEntries(entries []KeyValueEntrie) *AXEventKeyValueSet {
+	kvs := NewAXEventKeyValueSet()
+	for _, entry := range entries {
+		kvs.AddKeyValue(entry.Key, entry.Namespace, entry.Value, entry.ValueType)
+	}
+	return kvs
+}
+
 func namespacePtr(namespace string) *string {
 	if namespace == "" {
 		return nil
