@@ -4,6 +4,9 @@ Goxis is a library designed to facilitate the development of ACAP (Axis Camera A
 
 This library includes user-friendly wrappers for most APIs provided by the [native SDK](https://axiscommunications.github.io/acap-documentation/docs/api/native-sdk-api.html).
 
+[![Discord](https://img.shields.io/badge/Discord-Join%20us-blue?style=for-the-badge&logo=discord)](https://discord.gg/we6EqDSJ)
+
+
 ## C-API Wrappers
 
 Goxis organizes its functionality around several key areas of the native SDK, each encapsulated within its own package for ease of use:
