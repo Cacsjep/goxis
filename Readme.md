@@ -91,7 +91,9 @@ Examples are really close to existing C examples of the [AXIS Native SDK repo](h
 
 | Example         | Description |
 |-----------------|--------------|
-| `axevent`	      | Demonstrate how to subscribe to an Virutal Input state change         |
+| `axevent/send`	      | Demonstrate how to declare and send an event         |
+| `axevent/subscribe`	      | Demonstrate how to subscribe to an Virutal Input state change         |
+| `axevent/sendMqtt`	      | High level abstraction of declare and sending events, for demo it could a mqtt based event          |
 | `axoverlay`	| Render rects via axolveray api                                        |
 | `axparameter`   | Demonstrate how to get an parameter and listen to changes             |
 | `axstorage`     | Interact with axstorage api                                           |
