@@ -40,7 +40,7 @@ func newEventError(gerr *C.GError) error {
 }
 
 func (e *EventError) Error() string {
-	return fmt.Sprintf("%s, AxEventError: %d", e.Message, e.Code.ErrorName())
+	return fmt.Sprintf("%s, AxEventError: %s", e.Message, e.Code.ErrorName())
 }
 
 // ErrorName returns the string representation of the AxOverlayErrorCode.

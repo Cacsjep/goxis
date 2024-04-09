@@ -2,10 +2,10 @@ package axevent
 
 func StorageAlertEventKvs(wear *int, overall_health *int, temperature *int, alert *bool) (*AXEventKeyValueSet, error) {
 	return NewTnsAxisEvent("Storage", "Alert", nil, nil, []*KeyValueEntrie{
-		{key: "wear", value: wear, value_type: AXValueTypeInt},
-		{key: "overall_health", value: overall_health, value_type: AXValueTypeInt},
-		{key: "temperature", value: temperature, value_type: AXValueTypeInt},
-		{key: "alert", value: alert, value_type: AXValueTypeBool},
+		{Key: "wear", Value: wear, ValueType: AXValueTypeInt},
+		{Key: "overall_health", Value: overall_health, ValueType: AXValueTypeInt},
+		{Key: "temperature", Value: temperature, ValueType: AXValueTypeInt},
+		{Key: "alert", Value: alert, ValueType: AXValueTypeBool},
 	})
 }
 
@@ -18,8 +18,8 @@ type StorageAlertEvent struct {
 
 func StorageDisruptionEventKvs(disk_id *string, disruption *bool) (*AXEventKeyValueSet, error) {
 	return NewTnsAxisEvent("Storage", "Disruption", nil, nil, []*KeyValueEntrie{
-		{key: "disk_id", value: disk_id, value_type: AXValueTypeString},
-		{key: "disruption", value: disruption, value_type: AXValueTypeBool},
+		{Key: "disk_id", Value: disk_id, ValueType: AXValueTypeString},
+		{Key: "disruption", Value: disruption, ValueType: AXValueTypeBool},
 	})
 }
 
@@ -30,7 +30,7 @@ type StorageDisruptionEvent struct {
 
 func StorageRecordingEventKvs(recording *bool) (*AXEventKeyValueSet, error) {
 	return NewTnsAxisEvent("Storage", "Recording", nil, nil, []*KeyValueEntrie{
-		{key: "recording", value: recording, value_type: AXValueTypeBool},
+		{Key: "recording", Value: recording, ValueType: AXValueTypeBool},
 	})
 }
 

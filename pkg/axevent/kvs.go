@@ -265,7 +265,7 @@ func (axEventKeyValueSet *AXEventKeyValueSet) MarkAsData(key string, namespace *
 }
 
 // Mark a key in AXEventKeyValueSet with an user defined tag.
-func (axEventKeyValueSet *AXEventKeyValueSet) MarkAsUserDefined(key string, namespace *string, userTag string) error {
+func (axEventKeyValueSet *AXEventKeyValueSet) MarkAsUserDefined(key string, namespace *string, userTag *string) error {
 	cKey := C.CString(key)
 	defer C.free(unsafe.Pointer(cKey))
 
@@ -274,8 +274,10 @@ func (axEventKeyValueSet *AXEventKeyValueSet) MarkAsUserDefined(key string, name
 		defer C.free(unsafe.Pointer(cNamespace))
 	}
 
-	cUserTag := C.CString(userTag)
-	defer C.free(unsafe.Pointer(cUserTag))
+	cUserTag := nilOrCString(userTag)
+	if cUserTag != nil {
+		defer C.free(unsafe.Pointer(cUserTag))
+	}
 
 	var gerr *C.GError
 	success := C.ax_event_key_value_set_mark_as_user_defined(
@@ -283,6 +285,43 @@ func (axEventKeyValueSet *AXEventKeyValueSet) MarkAsUserDefined(key string, name
 		cKey,
 		cNamespace,
 		cUserTag,
+		&gerr,
+	)
+
+	if int(success) == 0 {
+		return newEventError(gerr)
+	}
+
+	return nil
+}
+
+// AddNiceNames sets human-readable names for a key/value pair in an AXEventKeyValueSet.
+func (axEventKeyValueSet *AXEventKeyValueSet) AddNiceNames(key string, namespace *string, keyNiceName *string, valueNiceName *string) error {
+	cKey := C.CString(key)
+	defer C.free(unsafe.Pointer(cKey))
+
+	cNamespace := nilOrCString(namespace)
+	if cNamespace != nil {
+		defer C.free(unsafe.Pointer(cNamespace))
+	}
+
+	cKeyNiceName := nilOrCString(keyNiceName)
+	if cKeyNiceName != nil {
+		defer C.free(unsafe.Pointer(cKeyNiceName))
+	}
+
+	cValueNiceName := nilOrCString(valueNiceName)
+	if cValueNiceName != nil {
+		defer C.free(unsafe.Pointer(cValueNiceName))
+	}
+
+	var gerr *C.GError
+	success := C.ax_event_key_value_set_add_nice_names(
+		axEventKeyValueSet.Ptr,
+		cKey,
+		cNamespace,
+		cKeyNiceName,
+		cValueNiceName,
 		&gerr,
 	)
 

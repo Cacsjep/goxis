@@ -8,10 +8,10 @@ import (
 
 // KeyValueEntrie is a key-value pair for an AXEventKeyValueSet.
 type KeyValueEntrie struct {
-	key        string
-	namespace  *string
-	value      interface{}
-	value_type AXEventValueType
+	Key       string
+	Namespace *string
+	Value     interface{}
+	ValueType AXEventValueType
 }
 
 // NewTns1AxisEvent creates a new AXEventKeyValueSet with the given topics and key-value pairs.
@@ -35,8 +35,8 @@ func NewTns1AxisEvent(topic0 string, topic1 string, topic2 *string, topic3 *stri
 	}
 	if keyvalues != nil {
 		for _, kv := range keyvalues {
-			if err := kvs.AddKeyValue(kv.key, kv.namespace, kv.value, kv.value_type); err != nil {
-				return nil, fmt.Errorf("failed to add key-value for %s: %w", kv.key, err)
+			if err := kvs.AddKeyValue(kv.Key, kv.Namespace, kv.Value, kv.ValueType); err != nil {
+				return nil, fmt.Errorf("failed to add key-value for %s: %w", kv.Key, err)
 			}
 		}
 
@@ -65,8 +65,8 @@ func NewTnsAxisEvent(topic0 string, topic1 string, topic2 *string, topic3 *strin
 	}
 	if keyvalues != nil {
 		for _, kv := range keyvalues {
-			if err := kvs.AddKeyValue(kv.key, kv.namespace, kv.value, kv.value_type); err != nil {
-				return nil, fmt.Errorf("failed to add key-value for %s: %w", kv.key, err)
+			if err := kvs.AddKeyValue(kv.Key, kv.Namespace, kv.Value, kv.ValueType); err != nil {
+				return nil, fmt.Errorf("failed to add key-value for %s: %w", kv.Key, err)
 			}
 		}
 

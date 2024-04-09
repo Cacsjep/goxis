@@ -6,7 +6,7 @@ import (
 	"github.com/Cacsjep/goxis/pkg/utils"
 )
 
-// Tipp: Use Axis Metadata Monitor to see live with events are produced by camera
+// Tipp: Use Axis Metadata Monitor to see live which events are produced by camera
 // https://www.axis.com/developer-community/axis-metadata-monitor
 func main() {
 	app := acapapp.NewAcapApplication()

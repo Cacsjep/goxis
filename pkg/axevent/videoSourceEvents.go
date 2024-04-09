@@ -4,8 +4,8 @@ import "github.com/Cacsjep/goxis/pkg/utils"
 
 func DayNightEventKvs(videoSourceConfigurationToken *int, day *bool) (*AXEventKeyValueSet, error) {
 	return NewTns1AxisEvent("VideoSource", "DayNightVision", nil, nil, []*KeyValueEntrie{
-		{key: "VideoSourceConfigurationToken", value: videoSourceConfigurationToken, value_type: AXValueTypeInt},
-		{key: "day", value: day, value_type: AXValueTypeBool},
+		{Key: "VideoSourceConfigurationToken", Value: videoSourceConfigurationToken, ValueType: AXValueTypeInt},
+		{Key: "day", Value: day, ValueType: AXValueTypeBool},
 	})
 }
 
@@ -16,7 +16,7 @@ type DayNightEvent struct {
 
 func LiveStreamAccessedEventKvs() (*AXEventKeyValueSet, error) {
 	return NewTns1AxisEvent("VideoSource", "LiveStreamAccessed", nil, nil, []*KeyValueEntrie{
-		{key: "accessed", value_type: AXValueTypeBool},
+		{Key: "accessed", ValueType: AXValueTypeBool},
 	})
 }
 
@@ -26,8 +26,8 @@ type LiveStreamAccessedEvent struct {
 
 func AutofocusEventKvs(videoSourceConfigurationToken *int) (*AXEventKeyValueSet, error) {
 	return NewTns1AxisEvent("VideoSource", "Autofocus", nil, nil, []*KeyValueEntrie{
-		{key: "VideoSourceConfigurationToken", value: videoSourceConfigurationToken, value_type: AXValueTypeInt},
-		{key: "focus", value_type: AXValueTypeDouble},
+		{Key: "VideoSourceConfigurationToken", Value: videoSourceConfigurationToken, ValueType: AXValueTypeInt},
+		{Key: "focus", ValueType: AXValueTypeDouble},
 	})
 }
 
@@ -38,8 +38,8 @@ type AutofocusEvent struct {
 
 func TamperingEventKvs(channel *int, tampering *int) (*AXEventKeyValueSet, error) {
 	return NewTns1AxisEvent("VideoSource", "Tampering", nil, nil, []*KeyValueEntrie{
-		{key: "channel", value: channel, value_type: AXValueTypeInt},
-		{key: "tampering", value: tampering, value_type: AXValueTypeInt},
+		{Key: "channel", Value: channel, ValueType: AXValueTypeInt},
+		{Key: "tampering", Value: tampering, ValueType: AXValueTypeInt},
 	})
 }
 
@@ -50,8 +50,8 @@ type TamperingEvent struct {
 
 func MotionAlarmEventKvs(source *string, state *bool) (*AXEventKeyValueSet, error) {
 	return NewTns1AxisEvent("VideoSource", "MotionAlarm", nil, nil, []*KeyValueEntrie{
-		{key: "Source", value: source, value_type: AXValueTypeString},
-		{key: "State", value: state, value_type: AXValueTypeBool},
+		{Key: "Source", Value: source, ValueType: AXValueTypeString},
+		{Key: "State", Value: state, ValueType: AXValueTypeBool},
 	})
 }
 
@@ -62,8 +62,8 @@ type MotionAlarmEvent struct {
 
 func GlobalSceneChangeEventKvs(source *string, state *bool) (*AXEventKeyValueSet, error) {
 	return NewTns1AxisEvent("VideoSource", "GlobalSceneChange", utils.NewStringPointer("ImagingService"), nil, []*KeyValueEntrie{
-		{key: "Source", value: source, value_type: AXValueTypeString},
-		{key: "State", value: state, value_type: AXValueTypeBool},
+		{Key: "Source", Value: source, ValueType: AXValueTypeString},
+		{Key: "State", Value: state, ValueType: AXValueTypeBool},
 	})
 }
 
