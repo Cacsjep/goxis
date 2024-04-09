@@ -43,11 +43,9 @@ func declareRandomNumbersEvent(app *acapapp.AcapApplication) (int, error) {
 
 // Create a new random number event
 func newRandomNumberEvent() *axevent.AXEvent {
-	kvs := axevent.NewAXEventKeyValueSetFromEntries([]axevent.KeyValueEntrie{
+	return axevent.NewAxEvent(axevent.NewAXEventKeyValueSetFromEntries([]axevent.KeyValueEntrie{
 		{Key: "random_int", Value: rand.IntN(100), ValueType: axevent.AXValueTypeInt},
 		{Key: "random_float", Value: rand.Float64(), ValueType: axevent.AXValueTypeDouble},
-	})
-	new_event := axevent.NewAxEvent(kvs, nil)
-	defer kvs.Free()
-	return new_event
+	}), nil)
+
 }

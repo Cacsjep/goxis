@@ -160,6 +160,45 @@ func UnmarshalEvent(e *Event, v interface{}) error {
 	return nil
 }
 
+// NewCameraApplicationPlatformEvent creates a new AXEventKeyValueSet instance for representing a Camera Application Platform event.
+// This function encapsulates the process of initializing an event with specific application setup details, event identifiers,
+// key-value pairs for event data, and various types of markers (source, data, user-defined) to provide additional context
+// or categorization for the event data. Additionally, it facilitates assigning 'nice names' to event key-value pairs for
+// enhanced readability.
+//
+// Parameters:
+//   - app_setup: An axmanifest.Setup structure containing the application setup details. It includes information such as
+//     application name and friendly name, which are used to contextualize the event within a specific application platform.
+//   - event_name: A string representing the unique identifier of the event.
+//   - event_nice_name: An optional pointer to a string that provides a human-readable name for the event. If provided, it
+//     overrides the default event name in the context where 'nice names' are used.
+//   - kvs_entries: A slice of pointers to KeyValueEntrie structures, each representing a key-value pair that forms part of
+//     the event's data.
+//   - source_markers: A slice of pointers to AxEventKeyValueSetSourceMark structures. Each source marker specifies a key
+//     within the event data that serves as a 'source' identifier, providing a means to distinguish between similar events.
+//   - data_markers: A slice of pointers to AxEventKeyValueSetDataMark structures. Each data marker specifies a key within
+//     the event data that represents the state or value of the event, which is critical for the event's semantic meaning.
+//   - user_defined_markers: A slice of pointers to AxEventKeyValueSetUserDefineMark structures. These markers allow for
+//     additional, user-defined categorization or tagging of event data.
+//   - nice_names: A slice of pointers to AxEventKeyValueSetNiceNames structures. These specify human-readable names for
+//     certain keys or values within the event data, enhancing the interpretability of the event information.
+//
+// Returns:
+//   - A pointer to an AXEventKeyValueSet instance.
+//   - An error, which will be non-nil if any part of the event creation process fails.
+//
+// The function utilizes the NewTnsAxisEvent helper function to initialize the AXEventKeyValueSet, specifying a structured
+// set of topics ('topic0' to 'topic3').
+// Specifically, the topics are assigned as follows:
+//   - 'topic0' is set to "CameraApplicationPlatform", identifying the event as part of the Camera Application Platform.
+//     This serves as the primary categorization layer, indicating the event's general domain.
+//   - 'topic1' is derived from the `app_setup.AppName`, tying the event to a specific application by its name. This
+//     further refines the event's context within the platform, associating it with a particular application's events.
+//   - 'topic2' is optionally set to a user-provided string via `event_name` or `event_nice_name`, if provided. This allows
+//     for a more descriptive labeling of the event, enhancing the readability and interpretability of the event data.
+//     If `event_nice_name` is not null, it prefixes the nice name with the app's friendly name for clearer identification.
+//     If both are null, `topic2` effectively utilizes the raw `event_name` for technical identification.
+//   - 'topic3' is intentionally left as nil/null.
 func NewCameraApplicationPlatformEvent(
 	app_setup axmanifest.Setup,
 	event_name string,

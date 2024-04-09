@@ -41,7 +41,6 @@ func main() {
 
 // Send event to the event handler
 func sendEvent(app *acapapp.AcapApplication, event_name string, event_id int, event *axevent.AXEvent) {
-	defer event.Free()
 	if err := app.EventHandler.SendEvent(event_id, event); err != nil {
 		app.Syslog.Errorf("Error sending %s event: %s", event_name, err.Error())
 	} else {

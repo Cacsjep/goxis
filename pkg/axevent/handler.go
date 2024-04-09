@@ -44,6 +44,7 @@ func (ev *AXEventHandler) SendEvent(declaration int, evt *AXEvent) error {
 	if int(C.ax_event_handler_send_event(ev.Ptr, C.guint(declaration), evt.Ptr, &gerr)) == 0 {
 		return newEventError(gerr)
 	}
+	evt.Free()
 	return nil
 }
 

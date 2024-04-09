@@ -39,6 +39,8 @@ func NewAxEvent(axEventKeyValueSet *AXEventKeyValueSet, datetime *time.Time) *AX
 		unixTimestamp := datetime.Unix()
 		cDateTime = C.g_date_time_new_from_unix_local(C.gint64(unixTimestamp))
 	}
+
+	defer axEventKeyValueSet.Free()
 	return &AXEvent{
 		Ptr: C.ax_event_new2(axEventKeyValueSet.Ptr, cDateTime),
 	}

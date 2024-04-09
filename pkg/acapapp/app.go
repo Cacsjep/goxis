@@ -25,12 +25,13 @@ import (
 // to facilitate easy development of ACAP applications. This includes automatic loading of the application's manifest,
 // initialization of syslog for logging, handling of application parameters, event handling, and the GMainLoop for the main event loop.
 type AcapApplication struct {
-	Manifest        *axmanifest.ApplicationManifestSchema
-	Syslog          *axsyslog.Syslog
-	ParamHandler    *axparameter.AXParameter
-	EventHandler    *axevent.AXEventHandler
-	Mainloop        *glib.GMainLoop
-	OnCloseCleaners []func()
+	Manifest            *axmanifest.ApplicationManifestSchema
+	Syslog              *axsyslog.Syslog
+	ParamHandler        *axparameter.AXParameter
+	EventHandler        *axevent.AXEventHandler
+	Mainloop            *glib.GMainLoop
+	OnCloseCleaners     []func()
+	eventDeclarationIds []int
 }
 
 // NewAcapApplication initializes a new AcapApplication instance, loading the application's manifest,
@@ -107,6 +108,9 @@ func (a *AcapApplication) Close() {
 	for _, f := range a.OnCloseCleaners {
 		f()
 	}
+	for _, declaration_id := range a.eventDeclarationIds {
+		a.EventHandler.Undeclare(declaration_id)
+	}
 	a.Mainloop.Quit()     // Terminate the main loop.
 	a.ParamHandler.Free() // Release the parameter handler.
 	a.EventHandler.Free() // Release the event handler.
@@ -139,4 +143,95 @@ func (a *AcapApplication) AcapWebBaseUri() (string, error) {
 	}
 	pkgcfg := a.Manifest.ACAPPackageConf
 	return fmt.Sprintf("/local/%s/%s", pkgcfg.Setup.AppName, pkgcfg.Configuration.ReverseProxy[0].ApiPath), nil
+}
+
+func (a *AcapApplication) AddCameraPlatformEvent(cpe *CameraPlatformEvent) (int, error) {
+	event, err := axevent.NewCameraApplicationPlatformEvent(
+		a.Manifest.ACAPPackageConf.Setup,
+		cpe.Name,
+		cpe.NiceName,
+		cpe.KvsEntries,
+		cpe.SourceMarkers,
+		cpe.DataMarkers,
+		cpe.UserDefinedMarkers,
+		cpe.NiceNames,
+	)
+	if err != nil {
+		return 0, err
+	}
+
+	declarationID, err := a.EventHandler.Declare(event, cpe.Stateless, func(subscription int, userdata any) {}, nil)
+	if err != nil {
+		return 0, err
+	}
+	a.eventDeclarationIds = append(a.eventDeclarationIds, declarationID)
+	return declarationID, nil
+}
+
+// SendPlatformEvent sends a platform event with the specified event ID and event creation function.
+func (a *AcapApplication) SendPlatformEvent(eventID int, createEventFunc func() (*axevent.AXEvent, error)) error {
+	event, err := createEventFunc()
+	if err != nil {
+		return err
+	}
+	return a.EventHandler.SendEvent(eventID, event)
+}
+
+type CameraPlatformEvent struct {
+	Name               string
+	NiceName           *string
+	KvsEntries         []*axevent.KeyValueEntrie
+	SourceMarkers      []*axevent.AxEventKeyValueSetSourceMark
+	DataMarkers        []*axevent.AxEventKeyValueSetDataMark
+	UserDefinedMarkers []*axevent.AxEventKeyValueSetUserDefineMark
+	NiceNames          []*axevent.AxEventKeyValueSetNiceNames
+	Stateless          bool
+}
+
+type KeyValueMap map[string]interface{}
+
+// NewEvent creates a new AXEvent based on predefined keys and dynamic values.
+// It returns the new AXEvent or an error if the values provided do not match the expected types.
+// The valuesMap parameter should contain the values for each key in the KeyValueSet.
+// The keys in the valuesMap should match the keys in the KeyValueSet of the CameraPlatformEvent.
+func (cpe *CameraPlatformEvent) NewEvent(valuesMap KeyValueMap) (*axevent.AXEvent, error) {
+	var kvsEntries []axevent.KeyValueEntrie
+
+	for _, entry := range cpe.KvsEntries {
+		value, exists := valuesMap[entry.Key]
+		if !exists {
+			return nil, fmt.Errorf("no value provided for key: %s", entry.Key)
+		}
+
+		switch entry.ValueType {
+		case axevent.AXValueTypeInt:
+			if intValue, ok := value.(int); ok {
+				kvsEntries = append(kvsEntries, axevent.KeyValueEntrie{Key: entry.Key, Value: intValue, ValueType: entry.ValueType})
+			} else {
+				return nil, fmt.Errorf("type mismatch for key %s: expected int", entry.Key)
+			}
+		case axevent.AXValueTypeDouble:
+			if floatValue, ok := value.(float64); ok {
+				kvsEntries = append(kvsEntries, axevent.KeyValueEntrie{Key: entry.Key, Value: floatValue, ValueType: entry.ValueType})
+			} else {
+				return nil, fmt.Errorf("type mismatch for key %s: expected float64", entry.Key)
+			}
+		case axevent.AXValueTypeString:
+			if stringValue, ok := value.(string); ok {
+				kvsEntries = append(kvsEntries, axevent.KeyValueEntrie{Key: entry.Key, Value: stringValue, ValueType: entry.ValueType})
+			} else {
+				return nil, fmt.Errorf("type mismatch for key %s: expected string", entry.Key)
+			}
+		case axevent.AXValueTypeBool:
+			if boolValue, ok := value.(bool); ok {
+				kvsEntries = append(kvsEntries, axevent.KeyValueEntrie{Key: entry.Key, Value: boolValue, ValueType: entry.ValueType})
+			} else {
+				return nil, fmt.Errorf("type mismatch for key %s: expected bool", entry.Key)
+			}
+		default:
+			return nil, fmt.Errorf("unsupported type for key %s", entry.Key)
+		}
+	}
+
+	return axevent.NewAxEvent(axevent.NewAXEventKeyValueSetFromEntries(kvsEntries), nil), nil
 }

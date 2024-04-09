@@ -47,11 +47,9 @@ func declareFeatureEvent(app *acapapp.AcapApplication) (int, error) {
 
 // Create a new random number event
 func newFeatureEvent() *axevent.AXEvent {
-	kvs := axevent.NewAXEventKeyValueSetFromEntries([]axevent.KeyValueEntrie{
+	return axevent.NewAxEvent(axevent.NewAXEventKeyValueSetFromEntries([]axevent.KeyValueEntrie{
 		{Key: "feature", Value: "myfeature", ValueType: axevent.AXValueTypeString},
 		{Key: "enabled", Namespace: &axevent.OnfivNameSpaceTnsAxis, Value: rand.Intn(2) == 1, ValueType: axevent.AXValueTypeBool},
-	})
-	new_event := axevent.NewAxEvent(kvs, nil)
-	defer kvs.Free()
-	return new_event
+	}), nil)
+
 }
