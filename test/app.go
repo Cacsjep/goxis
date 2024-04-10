@@ -514,7 +514,8 @@ func EventTests(t *testing.T) {
 	err7 := set.MarkAsData("topic3", nil)
 	assert.NoError(t, err7)
 
-	err8 := set.MarkAsUserDefined("topic2", nil, "mytag")
+	tag := "mytag"
+	err8 := set.MarkAsUserDefined("topic2", nil, &tag)
 	assert.NoError(t, err8)
 
 	now := time.Now()

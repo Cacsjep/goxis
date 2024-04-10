@@ -3,7 +3,7 @@ package axevent
 import "github.com/Cacsjep/goxis/pkg/utils"
 
 func CameraApplicationPlatformVmdCamera1ProfileANYEventKvs(active *bool) (*AXEventKeyValueSet, error) {
-	return NewTnsAxisEvent("CameraApplicationPlatform", "VMD", utils.NewStringPointer("Camera1ProfileANY"), nil, []*KeyValueEntrie{
+	return NewTnsAxisEvent("CameraApplicationPlatform", "VMD", utils.StrPtr("Camera1ProfileANY"), nil, []*KeyValueEntrie{
 		{Key: "active", Value: active, ValueType: AXValueTypeBool},
 	})
 }

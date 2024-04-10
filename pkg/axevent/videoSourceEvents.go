@@ -61,7 +61,7 @@ type MotionAlarmEvent struct {
 }
 
 func GlobalSceneChangeEventKvs(source *string, state *bool) (*AXEventKeyValueSet, error) {
-	return NewTns1AxisEvent("VideoSource", "GlobalSceneChange", utils.NewStringPointer("ImagingService"), nil, []*KeyValueEntrie{
+	return NewTns1AxisEvent("VideoSource", "GlobalSceneChange", utils.StrPtr("ImagingService"), nil, []*KeyValueEntrie{
 		{Key: "Source", Value: source, ValueType: AXValueTypeString},
 		{Key: "State", Value: state, ValueType: AXValueTypeBool},
 	})

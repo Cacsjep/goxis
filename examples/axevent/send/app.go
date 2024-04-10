@@ -1,49 +1,57 @@
 package main
 
 import (
+	"math/rand"
 	"time"
 
 	"github.com/Cacsjep/goxis/pkg/acapapp"
 	"github.com/Cacsjep/goxis/pkg/axevent"
+	"github.com/Cacsjep/goxis/pkg/utils"
 )
 
-// Tipp: Use Axis Metadata Monitor to see live which events are produced by camera
-// https://www.axis.com/developer-community/axis-metadata-monitor
 func main() {
+	// Initialize a new ACAP application instance.
 	app := acapapp.NewAcapApplication()
 
-	random_numbers_event_id, err := declareRandomNumbersEvent(app)
-	if err != nil {
-		app.Syslog.Critf("Error declaring random numbers event: %s", err.Error())
+	myEvent := &acapapp.CameraPlatformEvent{
+		Name:     "myevent",                // Unique identifier for the event.
+		NiceName: utils.StrPtr("My Event"), // Human-readable name for the event.
+		Entries: []*acapapp.EventEntry{
+			{Key: "foo", ValueType: axevent.AXValueTypeInt, IsData: utils.BoolPtr(true), KeyNiceName: utils.StrPtr("Foo Value")},
+			{Key: "bar", ValueType: axevent.AXValueTypeDouble, IsData: utils.BoolPtr(true), KeyNiceName: utils.StrPtr("Bar Value")},
+			{Key: "baz", ValueType: axevent.AXValueTypeString, IsData: utils.BoolPtr(true), KeyNiceName: utils.StrPtr("Baz Value")},
+			{Key: "qux", ValueType: axevent.AXValueTypeBool, IsData: utils.BoolPtr(true), KeyNiceName: utils.StrPtr("Qux Value")},
+		},
+		Stateless: true,
 	}
-	app.Syslog.Infof("Random numbers event declared with id: %d", random_numbers_event_id)
 
-	feature_event_id, err := declareFeatureEvent(app)
+	mqtt_event_id, err := app.AddCameraPlatformEvent(myEvent)
 	if err != nil {
-		app.Syslog.Critf("Error declaring features event: %s", err.Error())
+		app.Syslog.Critf("Error adding event declaration: %s", err.Error())
 	}
-	app.Syslog.Infof("Features event declared with id: %d", feature_event_id)
 
 	go func() {
-		for true {
+		for {
 			time.Sleep(1 * time.Second)
-			sendEvent(app, "Random", random_numbers_event_id, newRandomNumberEvent())
-			sendEvent(app, "Feature", feature_event_id, newFeatureEvent())
+
+			// Attempt to send a newly created event with dynamic values.
+			err := app.SendPlatformEvent(mqtt_event_id, func() (*axevent.AXEvent, error) {
+				return myEvent.NewEvent(acapapp.KeyValueMap{
+					"foo": rand.Int(),        // Random integer value.
+					"bar": rand.Float64(),    // Random floating-point value.
+					"baz": "oh yeah",         // Static string value.
+					"qux": rand.Intn(2) == 1, // Random boolean value (true or false).
+				})
+			})
+
+			if err != nil {
+				app.Syslog.Errorf("Error sending event: %s", err.Error())
+			} else {
+				app.Syslog.Infof("Event send")
+			}
 		}
 	}()
 
-	app.AddCloseCleanFunc(func() {
-		app.EventHandler.Undeclare(random_numbers_event_id)
-		app.EventHandler.Undeclare(feature_event_id)
-	})
+	// Run gmain loop with signal handler attached.
 	app.Run()
-}
-
-// Send event to the event handler
-func sendEvent(app *acapapp.AcapApplication, event_name string, event_id int, event *axevent.AXEvent) {
-	if err := app.EventHandler.SendEvent(event_id, event); err != nil {
-		app.Syslog.Errorf("Error sending %s event: %s", event_name, err.Error())
-	} else {
-		app.Syslog.Infof("Event %s send", event_name)
-	}
 }

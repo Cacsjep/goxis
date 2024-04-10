@@ -211,6 +211,7 @@ type Event struct {
 	Timestamp time.Time
 }
 
+// OnEvent creates a subscription callback for the given event key value set.
 func (eh *AXEventHandler) OnEvent(kvs *AXEventKeyValueSet, callback func(*Event)) (subscription int, err error) {
 	subscription, err = eh.Subscribe(kvs, func(subscription int, event *AXEvent, userdata any) {
 		callback(&Event{Kvs: event.GetKeyValueSet(), Timestamp: event.GetTimestamp()})

@@ -13,7 +13,7 @@ func main() {
 
 	// VirtualInputEventKvs is a helper function to create a AXEventKeyValueSet for a VirtualInput event.
 	// You can build your own AXEventKeyValueSet with the NewTns1AxisEvent or NewTnsAxisEvent.
-	vio_event, err := axevent.VirtualInputEventKvs(utils.NewIntPointer(1), nil) // We pass nil because we want to listen to all input states. If you want to listen to a specific state, you can pass utils.NewBoolPointer(true) or utils.NewBoolPointer(false)
+	vio_event, err := axevent.VirtualInputEventKvs(utils.IntPtr(1), nil) // We pass nil because we want to listen to all input states. If you want to listen to a specific state, you can pass utils.BoolPtr(true) or utils.BoolPtr(false)
 	if err != nil {
 		app.Syslog.Crit(err.Error())
 	}
@@ -25,18 +25,16 @@ func main() {
 	// A note on callback functions:
 	//  	Any call to axparam in the callback should again should be done via a goroutine.
 	//  	Otherwise, the callback will block the event handler.
-	vio_subscription_id, err := app.EventHandler.OnEvent(vio_event, func(e *axevent.Event) {
-
+	vio_subscription_id, err := app.OnEvent(vio_event, func(e *axevent.Event) {
 		// You can also build your own events =)
 		var vi axevent.VirtualInputEvent
 		// You could aslo read manually from the event kvs like
 		// e.Kvs.GetInteger("port", nil) or
 		// e.Kvs.GetBoolean("active", nil)
-		if err := axevent.UnmarshalEvent(e, &vi); err != nil {
+		if err := acapapp.UnmarshalEvent(e, &vi); err != nil {
 			app.Syslog.Error(err.Error())
 			return
 		}
-
 		app.Syslog.Infof("VirtualInput Port: %d, Active: %t", vi.Port, vi.Active)
 	})
 	if err != nil {

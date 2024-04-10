@@ -3,7 +3,7 @@ package axevent
 import "github.com/Cacsjep/goxis/pkg/utils"
 
 func SupervisedPortEventKvs(port *int, tampered *bool) (*AXEventKeyValueSet, error) {
-	return NewTns1AxisEvent("Device", "IO", utils.NewStringPointer("SupervisedPort"), nil, []*KeyValueEntrie{
+	return NewTns1AxisEvent("Device", "IO", utils.StrPtr("SupervisedPort"), nil, []*KeyValueEntrie{
 		{Key: "port", Value: port, ValueType: AXValueTypeInt},
 		{Key: "tampered", Value: tampered, ValueType: AXValueTypeBool},
 	})
@@ -15,7 +15,7 @@ type SupervisedPortEvent struct {
 }
 
 func VirtualInputEventKvs(port *int, active *bool) (*AXEventKeyValueSet, error) {
-	return NewTns1AxisEvent("Device", "IO", utils.NewStringPointer("VirtualInput"), nil, []*KeyValueEntrie{
+	return NewTns1AxisEvent("Device", "IO", utils.StrPtr("VirtualInput"), nil, []*KeyValueEntrie{
 		{Key: "port", Value: port, ValueType: AXValueTypeInt},
 		{Key: "active", Value: active, ValueType: AXValueTypeBool},
 	})
@@ -27,7 +27,7 @@ type VirtualInputEvent struct {
 }
 
 func StorageFailureEventKvs(disk_id *string, disruption *bool) (*AXEventKeyValueSet, error) {
-	return NewTns1AxisEvent("Device", "HardwareFailure", utils.NewStringPointer("StorageFailure"), nil, []*KeyValueEntrie{
+	return NewTns1AxisEvent("Device", "HardwareFailure", utils.StrPtr("StorageFailure"), nil, []*KeyValueEntrie{
 		{Key: "disk_id", Value: disk_id, ValueType: AXValueTypeString},
 		{Key: "disruption", Value: disruption, ValueType: AXValueTypeBool},
 	})
@@ -39,7 +39,7 @@ type StorageFailureEvent struct {
 }
 
 func HeaterStatusEventKvs(heater *int, running *bool) (*AXEventKeyValueSet, error) {
-	return NewTns1AxisEvent("Device", "Heater", utils.NewStringPointer("Status"), nil, []*KeyValueEntrie{
+	return NewTns1AxisEvent("Device", "Heater", utils.StrPtr("Status"), nil, []*KeyValueEntrie{
 		{Key: "heater", Value: heater, ValueType: AXValueTypeInt},
 		{Key: "running", Value: running, ValueType: AXValueTypeBool},
 	})
@@ -51,7 +51,7 @@ type HeaterStatusEvent struct {
 }
 
 func SystemReadyStatusEventKvs(ready *bool) (*AXEventKeyValueSet, error) {
-	return NewTns1AxisEvent("Device", "Status", utils.NewStringPointer("SystemReady"), nil, []*KeyValueEntrie{
+	return NewTns1AxisEvent("Device", "Status", utils.StrPtr("SystemReady"), nil, []*KeyValueEntrie{
 		{Key: "ready", Value: ready, ValueType: AXValueTypeBool},
 	})
 }
@@ -61,7 +61,7 @@ type SystemReadyStatusEvent struct {
 }
 
 func TriggerRelayEventKvs(relayToken *int, logicalState *string) (*AXEventKeyValueSet, error) {
-	return NewTns1AxisEvent("Device", "Trigger", utils.NewStringPointer("Relay"), nil, []*KeyValueEntrie{
+	return NewTns1AxisEvent("Device", "Trigger", utils.StrPtr("Relay"), nil, []*KeyValueEntrie{
 		{Key: "RelayToken", Value: relayToken, ValueType: AXValueTypeInt},
 		{Key: "LogicalState", Value: logicalState, ValueType: AXValueTypeString},
 	})
@@ -73,7 +73,7 @@ type TriggerRelayEvent struct {
 }
 
 func DigitalInputEventKvs(inputToken *int, logicalState *bool) (*AXEventKeyValueSet, error) {
-	return NewTns1AxisEvent("Device", "Trigger", utils.NewStringPointer("DigitalInput"), nil, []*KeyValueEntrie{
+	return NewTns1AxisEvent("Device", "Trigger", utils.StrPtr("DigitalInput"), nil, []*KeyValueEntrie{
 		{Key: "InputToken", Value: inputToken, ValueType: AXValueTypeInt},
 		{Key: "LogicalState", Value: logicalState, ValueType: AXValueTypeBool},
 	})
