@@ -257,25 +257,25 @@ func (cpe *CameraPlatformEvent) NewEvent(valuesMap KeyValueMap) (*axevent.AXEven
 		switch entry.ValueType {
 		case axevent.AXValueTypeInt:
 			if intValue, ok := value.(int); ok {
-				kvsEntries = append(kvsEntries, axevent.KeyValueEntrie{Key: entry.Key, Value: intValue, ValueType: entry.ValueType})
+				kvsEntries = append(kvsEntries, axevent.KeyValueEntrie{Key: entry.Key, Value: intValue, ValueType: entry.ValueType, Namespace: entry.Namespace})
 			} else {
 				return nil, fmt.Errorf("type mismatch for key %s: expected int", entry.Key)
 			}
 		case axevent.AXValueTypeDouble:
 			if floatValue, ok := value.(float64); ok {
-				kvsEntries = append(kvsEntries, axevent.KeyValueEntrie{Key: entry.Key, Value: floatValue, ValueType: entry.ValueType})
+				kvsEntries = append(kvsEntries, axevent.KeyValueEntrie{Key: entry.Key, Value: floatValue, ValueType: entry.ValueType, Namespace: entry.Namespace})
 			} else {
 				return nil, fmt.Errorf("type mismatch for key %s: expected float64", entry.Key)
 			}
 		case axevent.AXValueTypeString:
 			if stringValue, ok := value.(string); ok {
-				kvsEntries = append(kvsEntries, axevent.KeyValueEntrie{Key: entry.Key, Value: stringValue, ValueType: entry.ValueType})
+				kvsEntries = append(kvsEntries, axevent.KeyValueEntrie{Key: entry.Key, Value: stringValue, ValueType: entry.ValueType, Namespace: entry.Namespace})
 			} else {
 				return nil, fmt.Errorf("type mismatch for key %s: expected string", entry.Key)
 			}
 		case axevent.AXValueTypeBool:
 			if boolValue, ok := value.(bool); ok {
-				kvsEntries = append(kvsEntries, axevent.KeyValueEntrie{Key: entry.Key, Value: boolValue, ValueType: entry.ValueType})
+				kvsEntries = append(kvsEntries, axevent.KeyValueEntrie{Key: entry.Key, Value: boolValue, ValueType: entry.ValueType, Namespace: entry.Namespace})
 			} else {
 				return nil, fmt.Errorf("type mismatch for key %s: expected bool", entry.Key)
 			}
