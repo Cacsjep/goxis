@@ -23,7 +23,7 @@ type LarodModel struct {
 }
 
 // LarodLoadModel loads a new model onto a specified device.
-func (l *Larod) LoadModel(fd int, dev *LarodDevice, access LarodAccess, name string, params *LarodMap) (*LarodModel, error) {
+func (l *Larod) LoadModel(fd *uintptr, dev *LarodDevice, access LarodAccess, name string, params *LarodMap) (*LarodModel, error) {
 	cName := C.CString(name)
 	defer C.free(unsafe.Pointer(cName))
 
@@ -34,7 +34,13 @@ func (l *Larod) LoadModel(fd int, dev *LarodDevice, access LarodAccess, name str
 	} else {
 		cParams = nil
 	}
-	cModel := C.larodLoadModel(l.conn.ptr, C.int(fd), dev.ptr, C.larodAccess(access), cName, cParams, &cError)
+
+	_fd := C.int(-1)
+	if fd != nil {
+		_fd = C.int(*fd)
+	}
+
+	cModel := C.larodLoadModel(l.conn.ptr, _fd, dev.ptr, C.larodAccess(access), cName, cParams, &cError)
 	if cModel == nil {
 		if cError != nil {
 			return nil, newLarodError(cError)
@@ -42,4 +48,12 @@ func (l *Larod) LoadModel(fd int, dev *LarodDevice, access LarodAccess, name str
 		return nil, fmt.Errorf("larodLoadModel failed without setting an error")
 	}
 	return &LarodModel{ptr: cModel}, nil
+}
+
+func (l *Larod) LoadModelWithDeviceName(fd *uintptr, dev_name string, access LarodAccess, name string, params *LarodMap) (*LarodModel, error) {
+	device, err := l.GetDeviceByName(dev_name)
+	if err != nil {
+		return nil, err
+	}
+	return l.LoadModel(fd, device, access, name, params)
 }

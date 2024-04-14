@@ -55,3 +55,12 @@ func (l *Larod) Disconnect() error {
 	}
 	return nil
 }
+
+func (l *Larod) GetDeviceByName(name string) (*LarodDevice, error) {
+	for _, device := range l.Devices {
+		if device.Name == name {
+			return device, nil
+		}
+	}
+	return nil, fmt.Errorf("device not found")
+}
