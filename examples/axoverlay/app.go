@@ -21,17 +21,16 @@ var (
 	counter         int
 )
 
-// callback functtion that can be used to select which streams to render overlays to.
+// streamSelectCallback can be used to select which streams to render overlays to.
 // Note that YCBCR streams are always skipped since these are used for analytics.
 // ! Just for demo demonstration
 func streamSelectCallback(streamSelectEvent *axoverlay.OverlayStreamSelectEvent) bool {
 	return true
 }
 
-// callback function called when an overlay needs adjustments.
-// This function is called to let developers make adjustments to
-// the size and position of their overlays for each stream. This callback
-// function is called prior to rendering every time when an overlay
+// adjustmentCallback is called when an overlay needs adjustments.
+// This let developers make adjustments to the size and position of their overlays for each stream.
+// This callback function is called prior to rendering every time when an overlay
 // is rendered on a stream, which is useful if the resolution has been
 // updated or rotation has changed.
 func adjustmentCallback(adjustmentEvent *axoverlay.OverlayAdjustmentEvent) {
@@ -43,9 +42,8 @@ func adjustmentCallback(adjustmentEvent *axoverlay.OverlayAdjustmentEvent) {
 	*adjustmentEvent.OverlayHeight = adjustmentEvent.Stream.Height
 }
 
-// callback function called when an overlay needs to be drawn.
-// This function is called whenever the system redraws an overlay. This can
-// happen in two cases, Redraw() is called or a new stream is started.
+// renderCallback is called whenever the system redraws an overlay
+// This can happen in two cases, Redraw() is called or a new stream is started.
 func renderCallback(renderEvent *axoverlay.OverlayRenderEvent) {
 	app := renderEvent.Userdata.(*acapapp.AcapApplication)
 	app.Syslog.Infof("Render callback for camera: %d", renderEvent.Stream.Camera)
