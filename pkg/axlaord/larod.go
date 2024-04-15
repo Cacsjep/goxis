@@ -7,6 +7,7 @@ package axlarod
 import "C"
 import (
 	"fmt"
+	"os"
 )
 
 type Larod struct {
@@ -49,6 +50,7 @@ func (l *Larod) Connect() error {
 }
 
 func (l *Larod) Disconnect() error {
+
 	var cError *C.larodError
 	if C.larodDisconnect(&l.conn.ptr, &cError) == C.bool(false) {
 		return newLarodError(cError)
@@ -56,11 +58,55 @@ func (l *Larod) Disconnect() error {
 	return nil
 }
 
-func (l *Larod) GetDeviceByName(name string) (*LarodDevice, error) {
-	for _, device := range l.Devices {
-		if device.Name == name {
-			return device, nil
+func (l *Larod) Connection() *LarodConnection {
+	return l.conn
+}
+
+func (l *Larod) DestroyModel(model *LarodModel) error {
+	var cError *C.larodError
+
+	for _, m := range model.maps {
+		C.larodDestroyMap(&m.ptr)
+	}
+
+	C.larodDestroyModel(&model.ptr)
+
+	if model.Job != nil {
+		C.larodDestroyJobRequest(&model.Job.ptr)
+	}
+
+	if C.larodDestroyTensors(l.conn.ptr, &model.inputTensorPtr, C.uint(model.LarodModelIO.InputsCount), &cError) == C.bool(false) {
+		return newLarodError(cError)
+	}
+	for _, t := range model.LarodModelIO.Inputs {
+
+		if err := t.TmpFile.UnmapMemory(); err != nil {
+			return err
+		}
+
+		if err := t.TmpFile.File.Close(); err != nil {
+			return err
+		}
+		if err := os.Remove(t.TmpFile.File.Name()); err != nil {
+			return err
 		}
 	}
-	return nil, fmt.Errorf("device not found")
+
+	if C.larodDestroyTensors(l.conn.ptr, &model.outputTensorPtr, C.uint(model.LarodModelIO.OutputsCount), &cError) == C.bool(false) {
+		return newLarodError(cError)
+	}
+	for _, t := range model.LarodModelIO.Outputs {
+
+		if err := t.TmpFile.UnmapMemory(); err != nil {
+			return err
+		}
+
+		if err := t.TmpFile.File.Close(); err != nil {
+			return err
+		}
+		if err := os.Remove(t.TmpFile.File.Name()); err != nil {
+			return err
+		}
+	}
+	return nil
 }

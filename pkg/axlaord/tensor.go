@@ -7,6 +7,7 @@ package axlarod
 import "C"
 import (
 	"fmt"
+	"unsafe"
 )
 
 const LAROD_TENSOR_MAX_LEN = 12
@@ -43,14 +44,15 @@ const (
 )
 
 type LarodTensor struct {
-	ptr **C.larodTensor // Pointer to an array of tensor pointers
+	ptr     *C.larodTensor
+	TmpFile *TmpFile
 }
 
 type LarodModelIO struct {
-	Inputs        *LarodTensor
+	Inputs        []*LarodTensor
 	InputsCount   uint
 	InputPitches  *LarodTensorPitches
-	Outputs       *LarodTensor
+	Outputs       []*LarodTensor
 	OutputsCount  uint
 	OutputPitches *LarodTensorPitches
 }
@@ -64,27 +66,41 @@ func (lmt *LarodModelIO) String() string {
 	return fmt.Sprintf("LarodModelIO{InputsCount: %d, InputPitches %d, OutputsCount: %d, OutputPitches: %d}", lmt.InputsCount, lmt.InputPitches.Pitches, lmt.OutputsCount, lmt.OutputPitches.Pitches)
 }
 
-func (model *LarodModel) CreateModelInputs() (*LarodTensor, uint, error) {
+func (model *LarodModel) CreateModelInputs() ([]*LarodTensor, uint, error) {
 	var numTensors C.size_t
 	var cError *C.larodError
 	tensors := C.larodCreateModelInputs(model.ptr, &numTensors, &cError)
 	if cError != nil {
 		return nil, 0, newLarodError(cError)
 	}
-	return &LarodTensor{ptr: tensors}, uint(numTensors), nil
+	model.inputTensorPtr = tensors
+	length := uint(numTensors)
+	result := make([]*LarodTensor, length)
+	for i := 0; i < int(length); i++ {
+		tensorPtr := (**C.larodTensor)(unsafe.Pointer(uintptr(unsafe.Pointer(tensors)) + uintptr(i)*unsafe.Sizeof(*tensors)))
+		result[i] = &LarodTensor{ptr: *tensorPtr}
+	}
+	return result, length, nil
 }
 
-func (model *LarodModel) CreateModelOutputs() (*LarodTensor, uint, error) {
+func (model *LarodModel) CreateModelOutputs() ([]*LarodTensor, uint, error) {
 	var numTensors C.size_t
 	var cError *C.larodError
 	tensors := C.larodCreateModelOutputs(model.ptr, &numTensors, &cError)
 	if cError != nil {
 		return nil, 0, newLarodError(cError)
 	}
-	return &LarodTensor{ptr: tensors}, uint(numTensors), nil
+	model.outputTensorPtr = tensors
+	length := uint(numTensors)
+	result := make([]*LarodTensor, length)
+	for i := 0; i < int(length); i++ {
+		tensorPtr := (**C.larodTensor)(unsafe.Pointer(uintptr(unsafe.Pointer(tensors)) + uintptr(i)*unsafe.Sizeof(*tensors)))
+		result[i] = &LarodTensor{ptr: *tensorPtr}
+	}
+	return result, length, nil
 }
 
-func (model *LarodModel) CreateModelTensors() (*LarodModelIO, error) {
+func (model *LarodModel) CreateModelTensors(model_defs *ModelTmpMapDefiniton) (*LarodModelIO, error) {
 	inputs, inputsCount, err := model.CreateModelInputs()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create model inputs: %w", err)
@@ -95,30 +111,37 @@ func (model *LarodModel) CreateModelTensors() (*LarodModelIO, error) {
 		return nil, fmt.Errorf("failed to create model outputs: %w", err)
 	}
 
-	inputsPitches, err := inputs.GetTensorPitches()
+	inputsPitches, err := inputs[0].GetTensorPitches()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get input tensor pitches: %w", err)
 	}
 
-	outputsPitches, err := outputs.GetTensorPitches()
+	outputsPitches, err := outputs[0].GetTensorPitches()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get output tensor pitches: %w", err)
 	}
 
-	return &LarodModelIO{
+	model.LarodModelIO = &LarodModelIO{
 		Inputs:        inputs,
 		InputsCount:   inputsCount,
 		InputPitches:  inputsPitches,
 		Outputs:       outputs,
 		OutputsCount:  outputsCount,
 		OutputPitches: outputsPitches,
-	}, nil
+	}
+
+	err = model.MapModelTmpFiles(model_defs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map model tmp files: %w", err)
+	}
+
+	return model.LarodModelIO, nil
 }
 
 // GetTensorPitches retrieves the pitch information of a tensor and converts it to a Go struct.
 func (tensor *LarodTensor) GetTensorPitches() (*LarodTensorPitches, error) {
 	var cError *C.larodError
-	cPitches := C.larodGetTensorPitches(*tensor.ptr, &cError)
+	cPitches := C.larodGetTensorPitches(tensor.ptr, &cError)
 	if cPitches == nil {
 		if cError != nil {
 			return nil, newLarodError(cError)
@@ -135,4 +158,24 @@ func (tensor *LarodTensor) GetTensorPitches() (*LarodTensorPitches, error) {
 	}
 
 	return goPitches, nil
+}
+
+func (tensor *LarodTensor) SetTensorFd(fd uintptr) error {
+	var cError *C.larodError
+	result := C.larodSetTensorFd(tensor.ptr, C.int(fd), &cError)
+	if result == C.bool(false) {
+		if cError != nil {
+			return newLarodError(cError)
+		}
+		return fmt.Errorf("failed to set tensor file descriptor without a specific error")
+	}
+	return nil
+}
+
+func (tensor *LarodTensor) CopyDataInto(data []byte) error {
+	return CopyDataToMappedMemory(tensor.TmpFile.MemoryAddress, data)
+}
+
+func (tensor *LarodTensor) GetData(size int) ([]byte, error) {
+	return CopyDataFromMappedMemory(tensor.TmpFile.MemoryAddress, size)
 }

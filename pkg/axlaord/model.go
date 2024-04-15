@@ -3,10 +3,13 @@ package axlarod
 /*
 #cgo pkg-config: liblarod
 #include "larod.h"
+#include <sys/mman.h>
+
 */
 import "C"
 import (
 	"fmt"
+	"os"
 	"unsafe"
 )
 
@@ -19,11 +22,37 @@ const (
 )
 
 type LarodModel struct {
-	ptr *C.larodModel
+	ptr             *C.larodModel
+	inputTensorPtr  **C.larodTensor
+	outputTensorPtr **C.larodTensor
+	LarodModelIO    *LarodModelIO
+	maps            []*LarodMap
+	Fd              uintptr
+	Job             *JobRequest
+}
+
+// Does not check if index exists !
+func (m *LarodModel) GetInputTensor(index int) *LarodTensor {
+	return m.LarodModelIO.Inputs[index]
+}
+
+// Does not check if index exists !
+func (m *LarodModel) GetOutputTensor(index int) *LarodTensor {
+	return m.LarodModelIO.Outputs[index]
 }
 
 // LarodLoadModel loads a new model onto a specified device.
-func (l *Larod) LoadModel(fd *uintptr, dev *LarodDevice, access LarodAccess, name string, params *LarodMap) (*LarodModel, error) {
+func (l *Larod) LoadModel(file_path *string, dev *LarodDevice, access LarodAccess, name string, params *LarodMap) (*LarodModel, error) {
+	_fd := C.int(-1)
+
+	if file_path != nil {
+		model_file, err := os.Open(*file_path)
+		if err != nil {
+			return nil, err
+		}
+		_fd = C.int(model_file.Fd())
+	}
+
 	cName := C.CString(name)
 	defer C.free(unsafe.Pointer(cName))
 
@@ -35,11 +64,6 @@ func (l *Larod) LoadModel(fd *uintptr, dev *LarodDevice, access LarodAccess, nam
 		cParams = nil
 	}
 
-	_fd := C.int(-1)
-	if fd != nil {
-		_fd = C.int(*fd)
-	}
-
 	cModel := C.larodLoadModel(l.conn.ptr, _fd, dev.ptr, C.larodAccess(access), cName, cParams, &cError)
 	if cModel == nil {
 		if cError != nil {
@@ -47,13 +71,18 @@ func (l *Larod) LoadModel(fd *uintptr, dev *LarodDevice, access LarodAccess, nam
 		}
 		return nil, fmt.Errorf("larodLoadModel failed without setting an error")
 	}
-	return &LarodModel{ptr: cModel}, nil
+
+	maps := make([]*LarodMap, 0)
+	maps = append(maps, params)
+
+	model := &LarodModel{ptr: cModel, maps: maps}
+	return model, nil
 }
 
-func (l *Larod) LoadModelWithDeviceName(fd *uintptr, dev_name string, access LarodAccess, name string, params *LarodMap) (*LarodModel, error) {
+func (l *Larod) LoadModelWithDeviceName(file_path *string, dev_name string, access LarodAccess, name string, params *LarodMap) (*LarodModel, error) {
 	device, err := l.GetDeviceByName(dev_name)
 	if err != nil {
 		return nil, err
 	}
-	return l.LoadModel(fd, device, access, name, params)
+	return l.LoadModel(file_path, device, access, name, params)
 }
