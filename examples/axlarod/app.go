@@ -14,22 +14,22 @@ var (
 )
 
 type larodExampleApplication struct {
-	app              *acapapp.AcapApplication
-	PPModel          *axlarod.LarodModel
-	DetectionModel   *axlarod.LarodModel
-	streamWidth      int
-	streamHeight     int
-	fps              int
-	sconfig          *axvdo.VideoSteamConfiguration
-	fp               *acapapp.FrameProvider
-	pp_result        *axlarod.JobResult
-	infer_result     *axlarod.JobResult
-	detection_result *DetectionResult
+	app               *acapapp.AcapApplication
+	PPModel           *axlarod.LarodModel
+	DetectionModel    *axlarod.LarodModel
+	streamWidth       int
+	streamHeight      int
+	fps               int
+	sconfig           *axvdo.VideoSteamConfiguration
+	fp                *acapapp.FrameProvider
+	pp_result         *axlarod.JobResult
+	infer_result      *axlarod.JobResult
+	prediction_result *PredictionResult
 }
 
 // Initalize all we need
 func Initalize() (*larodExampleApplication, error) {
-	lea := &larodExampleApplication{streamWidth: 480, streamHeight: 270}
+	lea := &larodExampleApplication{streamWidth: 480, streamHeight: 270, fps: 1}
 	lea.app = acapapp.NewAcapApplication()
 
 	if err := lea.app.InitalizeLarod(); err != nil {
@@ -44,7 +44,7 @@ func Initalize() (*larodExampleApplication, error) {
 		fmt.Println(d.Name)
 	}
 
-	if err = lea.InitalizeDetectionModel("converted_model.tflite", "idon"); err != nil {
+	if err = lea.InitalizeDetectionModel("converted_model.tflite", "cpu-tflite"); err != nil {
 		return nil, err
 	}
 
@@ -80,17 +80,14 @@ func main() {
 				continue
 			}
 
-			lea.detection_result, err = lea.DetectionResultConverter(lea.infer_result.OutputData)
-
-			lea.app.Syslog.Infof("Frame: %s, PP exec time: %d, Inference exec time: %d, Persons: %f, Car: %f",
+			lea.prediction_result, err = lea.PredictionResultConverter(lea.infer_result.OutputData)
+			lea.app.Syslog.Infof("Frame: %s, PP exec time: %f, Inference exec time: %f, Persons: %f, Car: %f",
 				frame.String(),
 				lea.pp_result.ExecutionTime,
 				lea.infer_result.ExecutionTime,
-				lea.detection_result.Persons,
-				lea.detection_result.Car,
+				lea.prediction_result.Persons,
+				lea.prediction_result.Car,
 			)
-
-			return
 		}
 	}
 }

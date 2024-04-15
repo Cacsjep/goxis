@@ -46,7 +46,6 @@ func (lea *larodExampleApplication) getDResult() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	output := make([]byte, 8)
 	copy(output[0:4], persons)
 	copy(output[4:8], car)
@@ -66,25 +65,28 @@ func (lea *larodExampleApplication) Inference(preProcessedRgbData []byte) (*axla
 		return nil, err
 	}
 
-	if pp_result, err = lea.app.Larod.ExecuteJob(lea.DetectionModel, func() error {
+	var result *axlarod.JobResult
+	if result, err = lea.app.Larod.ExecuteJob(lea.DetectionModel, func() error {
 		return lea.feedDModel(preProcessedRgbData)
 	}, func() ([]byte, error) {
 		return lea.getDResult()
 	}); err != nil {
 		return nil, err
 	}
-	return pp_result, nil
+	return result, nil
 }
 
-type DetectionResult struct {
+type PredictionResult struct {
 	Persons float32
 	Car     float32
 }
 
-func (lea *larodExampleApplication) DetectionResultConverter(result []byte) (*DetectionResult, error) {
+func (lea *larodExampleApplication) PredictionResultConverter(result []byte) (*PredictionResult, error) {
 	if len(result) < 8 {
 		return nil, fmt.Errorf("result slice too short, expected at least 8 bytes, got %d", len(result))
 	}
+
+	fmt.Println(result)
 
 	// Create readers for each part of the slice
 	personReader := bytes.NewReader(result[0:4])
@@ -100,5 +102,5 @@ func (lea *larodExampleApplication) DetectionResultConverter(result []byte) (*De
 		return nil, fmt.Errorf("failed to read car data: %v", err)
 	}
 
-	return &DetectionResult{Persons: person, Car: car}, nil
+	return &PredictionResult{Persons: person * 100, Car: car * 100}, nil
 }

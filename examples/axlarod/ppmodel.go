@@ -33,12 +33,13 @@ func (lea *larodExampleApplication) getPPResult() ([]byte, error) {
 }
 
 func (lea *larodExampleApplication) PreProcess(frame *axvdo.VideoFrame) (*axlarod.JobResult, error) {
-	if pp_result, err = lea.app.Larod.ExecuteJob(lea.PPModel, func() error {
+	var result *axlarod.JobResult
+	if result, err = lea.app.Larod.ExecuteJob(lea.PPModel, func() error {
 		return lea.feedPPModel(frame.Data)
 	}, func() ([]byte, error) {
 		return lea.getPPResult()
 	}); err != nil {
 		return nil, err
 	}
-	return pp_result, nil
+	return result, nil
 }
