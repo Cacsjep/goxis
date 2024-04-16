@@ -9,11 +9,11 @@ import (
 )
 
 func (lea *larodExampleApplication) InitalizeDetectionModel(modelFilePath string, chipString string) error {
-	model_defs := axlarod.ModelTmpMapDefiniton{
-		InputTmpMapFiles: map[int]*axlarod.TmpFile{
-			0: {Size: uint(lea.streamWidth * lea.streamHeight * 3)}, // Input Tensor 0
+	model_defs := axlarod.MemMapConfiguration{
+		InputTmpMapFiles: map[int]*axlarod.MemMapFile{
+			0: lea.PPModel.Outputs[0].MemMapFile, // Input Tensor 0
 		},
-		OutputTmpMapFiles: map[int]*axlarod.TmpFile{
+		OutputTmpMapFiles: map[int]*axlarod.MemMapFile{
 			0: {Size: 4}, // Output Tensor 1
 			1: {Size: 4}, // Output Tensor 2
 		},
@@ -34,15 +34,15 @@ func (lea *larodExampleApplication) InitalizeDetectionModel(modelFilePath string
 }
 
 func (lea *larodExampleApplication) feedDModel(fdata []byte) error {
-	return lea.DetectionModel.GetInputTensor(0).CopyDataInto(fdata)
+	return lea.DetectionModel.Inputs[0].CopyDataInto(fdata)
 }
 
 func (lea *larodExampleApplication) getDResult() ([]byte, error) {
-	persons, err := lea.DetectionModel.GetOutputTensor(0).GetData(4)
+	persons, err := lea.DetectionModel.Outputs[0].GetData(4)
 	if err != nil {
 		return nil, err
 	}
-	car, err := lea.DetectionModel.GetOutputTensor(1).GetData(4)
+	car, err := lea.DetectionModel.Outputs[1].GetData(4)
 	if err != nil {
 		return nil, err
 	}
@@ -52,22 +52,22 @@ func (lea *larodExampleApplication) getDResult() ([]byte, error) {
 	return output, nil
 }
 
-func (lea *larodExampleApplication) Inference(preProcessedRgbData []byte) (*axlarod.JobResult, error) {
+func (lea *larodExampleApplication) Inference() (*axlarod.JobResult, error) {
 	// Since larodOutputAddr points to the beginning of the fd we should
 	// rewind the file position before each job.
-	_, err = lea.DetectionModel.LarodModelIO.Outputs[0].TmpFile.File.Seek(0, 0)
+	_, err = lea.DetectionModel.Outputs[0].MemMapFile.File.Seek(0, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = lea.DetectionModel.LarodModelIO.Outputs[1].TmpFile.File.Seek(0, 0)
+	_, err = lea.DetectionModel.Outputs[1].MemMapFile.File.Seek(0, 0)
 	if err != nil {
 		return nil, err
 	}
 
 	var result *axlarod.JobResult
 	if result, err = lea.app.Larod.ExecuteJob(lea.DetectionModel, func() error {
-		return lea.feedDModel(preProcessedRgbData)
+		return nil // is feeded via memmap
 	}, func() ([]byte, error) {
 		return lea.getDResult()
 	}); err != nil {
@@ -86,9 +86,6 @@ func (lea *larodExampleApplication) PredictionResultConverter(result []byte) (*P
 		return nil, fmt.Errorf("result slice too short, expected at least 8 bytes, got %d", len(result))
 	}
 
-	fmt.Println(result)
-
-	// Create readers for each part of the slice
 	personReader := bytes.NewReader(result[0:4])
 	carReader := bytes.NewReader(result[4:8])
 

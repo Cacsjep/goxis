@@ -7,7 +7,6 @@ package axlarod
 import "C"
 import (
 	"fmt"
-	"os"
 )
 
 type Larod struct {
@@ -75,36 +74,30 @@ func (l *Larod) DestroyModel(model *LarodModel) error {
 		C.larodDestroyJobRequest(&model.Job.ptr)
 	}
 
-	if C.larodDestroyTensors(l.conn.ptr, &model.inputTensorPtr, C.uint(model.LarodModelIO.InputsCount), &cError) == C.bool(false) {
+	if C.larodDestroyTensors(l.conn.ptr, &model.inputTensorPtr, C.uint(model.InputsCount), &cError) == C.bool(false) {
 		return newLarodError(cError)
 	}
-	for _, t := range model.LarodModelIO.Inputs {
+	for _, t := range model.Inputs {
 
-		if err := t.TmpFile.UnmapMemory(); err != nil {
+		if err := t.MemMapFile.UnmapMemory(); err != nil {
 			return err
 		}
 
-		if err := t.TmpFile.File.Close(); err != nil {
-			return err
-		}
-		if err := os.Remove(t.TmpFile.File.Name()); err != nil {
+		if err := t.MemMapFile.File.Close(); err != nil {
 			return err
 		}
 	}
 
-	if C.larodDestroyTensors(l.conn.ptr, &model.outputTensorPtr, C.uint(model.LarodModelIO.OutputsCount), &cError) == C.bool(false) {
+	if C.larodDestroyTensors(l.conn.ptr, &model.outputTensorPtr, C.uint(model.OutputsCount), &cError) == C.bool(false) {
 		return newLarodError(cError)
 	}
-	for _, t := range model.LarodModelIO.Outputs {
+	for _, t := range model.Outputs {
 
-		if err := t.TmpFile.UnmapMemory(); err != nil {
+		if err := t.MemMapFile.UnmapMemory(); err != nil {
 			return err
 		}
 
-		if err := t.TmpFile.File.Close(); err != nil {
-			return err
-		}
-		if err := os.Remove(t.TmpFile.File.Name()); err != nil {
+		if err := t.MemMapFile.File.Close(); err != nil {
 			return err
 		}
 	}

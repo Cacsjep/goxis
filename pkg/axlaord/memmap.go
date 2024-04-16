@@ -20,6 +20,10 @@ int createAndMapTmpFile(char* fileName, size_t fileSize, void** mappedAddr, int*
         return errno;
     }
 
+	if (unlink(fileName)) {
+        return errno;
+    }
+
     *mappedAddr = mmap(NULL, fileSize, PROT_READ | PROT_WRITE, MAP_SHARED, *fd, 0);
     if (*mappedAddr == MAP_FAILED) {
         close(*fd);
@@ -38,7 +42,7 @@ import (
 	"unsafe"
 )
 
-type TmpFile struct {
+type MemMapFile struct {
 	MemoryAddress unsafe.Pointer
 	File          *os.File
 	Size          uint
@@ -46,42 +50,44 @@ type TmpFile struct {
 	UsePitch0Size bool
 }
 
-func (t *TmpFile) UnmapMemory() error {
-	if ret := C.munmap(t.MemoryAddress, C.size_t(t.Size)); ret != 0 {
-		return fmt.Errorf("failed to unmap memory: return code %d", int(ret))
+type MemMapConfiguration struct {
+	InputTmpMapFiles  map[int]*MemMapFile
+	OutputTmpMapFiles map[int]*MemMapFile
+}
+
+func (model *LarodModel) configureMemMapFile(file_map map[int]*MemMapFile, tensors []*LarodTensor, pitches *LarodTensorPitches) error {
+	var err error
+	for i, f := range file_map {
+		// Create file other wise reuse fd
+		if f.File == nil {
+			f.FilePattern = generateRandomMapFilePattern(fmt.Sprintf("%s-in", model.Name), i)
+			if f.UsePitch0Size {
+				f.Size = pitches.Pitches[0]
+			}
+			f.MemoryAddress, f.File, err = CreateAndMapTmpFile(f.FilePattern, f.Size)
+			if err != nil {
+				return err
+			}
+		}
+		tensors[i].SetTensorFd(f.File.Fd())
+		tensors[i].MemMapFile = f
 	}
 	return nil
 }
 
-type ModelTmpMapDefiniton struct {
-	InputTmpMapFiles  map[int]*TmpFile
-	OutputTmpMapFiles map[int]*TmpFile
+func (model *LarodModel) MapModelTmpFiles(m *MemMapConfiguration) error {
+	if err := model.configureMemMapFile(m.InputTmpMapFiles, model.Inputs, model.InputPitches); err != nil {
+		return err
+	}
+	if err := model.configureMemMapFile(m.OutputTmpMapFiles, model.Outputs, model.OutputPitches); err != nil {
+		return err
+	}
+	return nil
 }
 
-func (l *LarodModel) MapModelTmpFiles(m *ModelTmpMapDefiniton) error {
-	var err error
-	for i, tmp_file := range m.InputTmpMapFiles {
-		tmp_file.FilePattern = generateRandomMapFilePattern()
-		if tmp_file.UsePitch0Size {
-			tmp_file.Size = l.LarodModelIO.InputPitches.Pitches[0]
-		}
-		tmp_file.MemoryAddress, tmp_file.File, err = CreateAndMapTmpFile(tmp_file.FilePattern, tmp_file.Size)
-		if err != nil {
-			return err
-		}
-		l.LarodModelIO.Inputs[i].SetTensorFd(tmp_file.File.Fd())
-		l.LarodModelIO.Inputs[i].TmpFile = tmp_file
-		fmt.Println("Input Tensor", i, "mapped to", tmp_file.FilePattern, "with size", tmp_file.Size, "address", tmp_file.MemoryAddress)
-	}
-	for i, tmp_file := range m.OutputTmpMapFiles {
-		tmp_file.FilePattern = generateRandomMapFilePattern()
-		tmp_file.MemoryAddress, tmp_file.File, err = CreateAndMapTmpFile(tmp_file.FilePattern, tmp_file.Size)
-		if err != nil {
-			return err
-		}
-		l.LarodModelIO.Outputs[i].SetTensorFd(tmp_file.File.Fd())
-		l.LarodModelIO.Outputs[i].TmpFile = tmp_file
-		fmt.Println("Output Tensor", i, "mapped to", tmp_file.FilePattern, "with size", tmp_file.Size, "address", tmp_file.MemoryAddress)
+func (t *MemMapFile) UnmapMemory() error {
+	if ret := C.munmap(t.MemoryAddress, C.size_t(t.Size)); ret != 0 {
+		return fmt.Errorf("failed to unmap memory: return code %d", int(ret))
 	}
 	return nil
 }
@@ -136,8 +142,8 @@ func randomString(length int, charset string) string {
 }
 
 // generatePath creates a path string with a random 10 character string.
-func generateRandomMapFilePattern() string {
+func generateRandomMapFilePattern(prefix string, tensor_io_index int) string {
 	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	randomPart := randomString(10, charset)
-	return "/tmp/larod." + randomPart + "-XXXXXX"
+	return fmt.Sprintf("/tmp/larod-%s-%d.%s-XXXXXX", prefix, tensor_io_index, randomPart)
 }

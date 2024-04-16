@@ -25,11 +25,11 @@ func (lea *larodExampleApplication) InitalizePPModel() error {
 }
 
 func (lea *larodExampleApplication) feedPPModel(fdata []byte) error {
-	return lea.PPModel.GetInputTensor(0).CopyDataInto(fdata)
+	return lea.PPModel.Inputs[0].CopyDataInto(fdata)
 }
 
 func (lea *larodExampleApplication) getPPResult() ([]byte, error) {
-	return lea.PPModel.GetOutputTensor(0).GetData(lea.streamWidth * lea.streamHeight * 3)
+	return lea.PPModel.Outputs[0].GetData(lea.streamWidth * lea.streamHeight * 3)
 }
 
 func (lea *larodExampleApplication) PreProcess(frame *axvdo.VideoFrame) (*axlarod.JobResult, error) {

@@ -81,10 +81,8 @@ func (model *LarodModel) CreateJobRequest(inputTensors []*LarodTensor, outputTen
 		cParams = nil
 	}
 
-	// Call the C function
 	job := C.larodCreateJobRequest(model.ptr, &cInputTensors[0], numInputs, &cOutputTensors[0], numOutputs, cParams, &cError)
 
-	// Check for errors
 	if job == nil {
 		if cError != nil {
 			return nil, fmt.Errorf("larodCreateJobRequest failed: %s", C.GoString(cError.msg))
@@ -93,7 +91,5 @@ func (model *LarodModel) CreateJobRequest(inputTensors []*LarodTensor, outputTen
 	}
 
 	model.Job = &JobRequest{ptr: job}
-
-	// Return a wrapped JobRequest
 	return model.Job, nil
 }

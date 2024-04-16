@@ -75,14 +75,18 @@ func main() {
 				continue
 			}
 
-			if lea.infer_result, err = lea.Inference(lea.pp_result.OutputData); err != nil {
+			if lea.infer_result, err = lea.Inference(); err != nil {
 				lea.app.Syslog.Errorf("Failed to execute Detection Model: %s", err.Error())
 				continue
 			}
 
 			lea.prediction_result, err = lea.PredictionResultConverter(lea.infer_result.OutputData)
-			lea.app.Syslog.Infof("Frame: %s, PP exec time: %f, Inference exec time: %f, Persons: %f, Car: %f",
-				frame.String(),
+			if err != nil {
+				lea.app.Syslog.Errorf("Failed to convert prediction result: %s", err.Error())
+				continue
+			}
+			lea.app.Syslog.Infof("Frame: %d, PP exec time: %.2fms, Inference exec time: %.2fms, Persons: %.2f, Car: %.2f",
+				frame.SequenceNbr,
 				lea.pp_result.ExecutionTime,
 				lea.infer_result.ExecutionTime,
 				lea.prediction_result.Persons,

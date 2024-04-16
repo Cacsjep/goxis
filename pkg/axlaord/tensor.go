@@ -44,17 +44,8 @@ const (
 )
 
 type LarodTensor struct {
-	ptr     *C.larodTensor
-	TmpFile *TmpFile
-}
-
-type LarodModelIO struct {
-	Inputs        []*LarodTensor
-	InputsCount   uint
-	InputPitches  *LarodTensorPitches
-	Outputs       []*LarodTensor
-	OutputsCount  uint
-	OutputPitches *LarodTensorPitches
+	ptr        *C.larodTensor
+	MemMapFile *MemMapFile
 }
 
 type LarodTensorPitches struct {
@@ -62,8 +53,8 @@ type LarodTensorPitches struct {
 	Len     uint
 }
 
-func (lmt *LarodModelIO) String() string {
-	return fmt.Sprintf("LarodModelIO{InputsCount: %d, InputPitches %d, OutputsCount: %d, OutputPitches: %d}", lmt.InputsCount, lmt.InputPitches.Pitches, lmt.OutputsCount, lmt.OutputPitches.Pitches)
+func (lmt *LarodModel) String() string {
+	return fmt.Sprintf("LarodModel{InputsCount: %d, InputPitches %d, OutputsCount: %d, OutputPitches: %d}", lmt.InputsCount, lmt.InputPitches.Pitches, lmt.OutputsCount, lmt.OutputPitches.Pitches)
 }
 
 func (model *LarodModel) CreateModelInputs() ([]*LarodTensor, uint, error) {
@@ -100,42 +91,40 @@ func (model *LarodModel) CreateModelOutputs() ([]*LarodTensor, uint, error) {
 	return result, length, nil
 }
 
-func (model *LarodModel) CreateModelTensors(model_defs *ModelTmpMapDefiniton) (*LarodModelIO, error) {
+func (model *LarodModel) CreateModelTensors(model_defs *MemMapConfiguration) error {
 	inputs, inputsCount, err := model.CreateModelInputs()
 	if err != nil {
-		return nil, fmt.Errorf("failed to create model inputs: %w", err)
+		return fmt.Errorf("failed to create model inputs: %w", err)
 	}
 
 	outputs, outputsCount, err := model.CreateModelOutputs()
 	if err != nil {
-		return nil, fmt.Errorf("failed to create model outputs: %w", err)
+		return fmt.Errorf("failed to create model outputs: %w", err)
 	}
 
 	inputsPitches, err := inputs[0].GetTensorPitches()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get input tensor pitches: %w", err)
+		return fmt.Errorf("failed to get input tensor pitches: %w", err)
 	}
 
 	outputsPitches, err := outputs[0].GetTensorPitches()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get output tensor pitches: %w", err)
+		return fmt.Errorf("failed to get output tensor pitches: %w", err)
 	}
 
-	model.LarodModelIO = &LarodModelIO{
-		Inputs:        inputs,
-		InputsCount:   inputsCount,
-		InputPitches:  inputsPitches,
-		Outputs:       outputs,
-		OutputsCount:  outputsCount,
-		OutputPitches: outputsPitches,
-	}
+	model.Inputs = inputs
+	model.InputsCount = inputsCount
+	model.InputPitches = inputsPitches
+	model.Outputs = outputs
+	model.OutputsCount = outputsCount
+	model.OutputPitches = outputsPitches
 
 	err = model.MapModelTmpFiles(model_defs)
 	if err != nil {
-		return nil, fmt.Errorf("failed to map model tmp files: %w", err)
+		return fmt.Errorf("failed to map model tmp files: %w", err)
 	}
 
-	return model.LarodModelIO, nil
+	return nil
 }
 
 // GetTensorPitches retrieves the pitch information of a tensor and converts it to a Go struct.
@@ -173,9 +162,9 @@ func (tensor *LarodTensor) SetTensorFd(fd uintptr) error {
 }
 
 func (tensor *LarodTensor) CopyDataInto(data []byte) error {
-	return CopyDataToMappedMemory(tensor.TmpFile.MemoryAddress, data)
+	return CopyDataToMappedMemory(tensor.MemMapFile.MemoryAddress, data)
 }
 
 func (tensor *LarodTensor) GetData(size int) ([]byte, error) {
-	return CopyDataFromMappedMemory(tensor.TmpFile.MemoryAddress, size)
+	return CopyDataFromMappedMemory(tensor.MemMapFile.MemoryAddress, size)
 }

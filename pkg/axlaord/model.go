@@ -25,20 +25,16 @@ type LarodModel struct {
 	ptr             *C.larodModel
 	inputTensorPtr  **C.larodTensor
 	outputTensorPtr **C.larodTensor
-	LarodModelIO    *LarodModelIO
 	maps            []*LarodMap
 	Fd              uintptr
 	Job             *JobRequest
-}
-
-// Does not check if index exists !
-func (m *LarodModel) GetInputTensor(index int) *LarodTensor {
-	return m.LarodModelIO.Inputs[index]
-}
-
-// Does not check if index exists !
-func (m *LarodModel) GetOutputTensor(index int) *LarodTensor {
-	return m.LarodModelIO.Outputs[index]
+	Name            string
+	Inputs          []*LarodTensor
+	InputsCount     uint
+	InputPitches    *LarodTensorPitches
+	Outputs         []*LarodTensor
+	OutputsCount    uint
+	OutputPitches   *LarodTensorPitches
 }
 
 // LarodLoadModel loads a new model onto a specified device.
@@ -75,7 +71,7 @@ func (l *Larod) LoadModel(file_path *string, dev *LarodDevice, access LarodAcces
 	maps := make([]*LarodMap, 0)
 	maps = append(maps, params)
 
-	model := &LarodModel{ptr: cModel, maps: maps}
+	model := &LarodModel{ptr: cModel, maps: maps, Name: name}
 	return model, nil
 }
 
