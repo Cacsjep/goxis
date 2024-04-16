@@ -1,21 +1,28 @@
 package main
 
 import (
-	"bytes"
-	"encoding/binary"
 	"fmt"
 
-	axlarod "github.com/Cacsjep/goxis/pkg/axlaord"
+	"github.com/Cacsjep/goxis/pkg/axlarod"
 )
 
+// PredictionResult holds the probabilities of detecting specific objects (e.g., persons, cars)
+type PredictionResult struct {
+	Persons float32
+	Car     float32
+}
+
+// InitializeDetectionModel configures a detection model with the given model file and hardware chip.
+// It sets up memory-mapped file configurations for input and output tensors.
+// Returns an error if model initialization fails.
 func (lea *larodExampleApplication) InitalizeDetectionModel(modelFilePath string, chipString string) error {
 	model_defs := axlarod.MemMapConfiguration{
 		InputTmpMapFiles: map[int]*axlarod.MemMapFile{
-			0: lea.PPModel.Outputs[0].MemMapFile, // Input Tensor 0
+			0: lea.PPModel.Outputs[0].MemMapFile, // Using of ppmodel output as input for detection model
 		},
 		OutputTmpMapFiles: map[int]*axlarod.MemMapFile{
-			0: {Size: 4}, // Output Tensor 1
-			1: {Size: 4}, // Output Tensor 2
+			0: {Size: 1}, // Output Tensor 1, since is not for ambarella-cvflow chips we could use Size: 1
+			1: {Size: 1}, // Output Tensor 2, since is not for ambarella-cvflow chips we could use Size: 1
 		},
 	}
 
@@ -33,35 +40,35 @@ func (lea *larodExampleApplication) InitalizeDetectionModel(modelFilePath string
 	return nil
 }
 
-func (lea *larodExampleApplication) feedDModel(fdata []byte) error {
-	return lea.DetectionModel.Inputs[0].CopyDataInto(fdata)
-}
-
+// getDResult retrieves the detection results from the model's output tensors.
+// Returns the raw byte output and an error if retrieval fails.
 func (lea *larodExampleApplication) getDResult() ([]byte, error) {
-	persons, err := lea.DetectionModel.Outputs[0].GetData(4)
+	persons, err := lea.DetectionModel.Outputs[0].GetData(1)
 	if err != nil {
 		return nil, err
 	}
-	car, err := lea.DetectionModel.Outputs[1].GetData(4)
+	car, err := lea.DetectionModel.Outputs[1].GetData(1)
 	if err != nil {
 		return nil, err
 	}
-	output := make([]byte, 8)
-	copy(output[0:4], persons)
-	copy(output[4:8], car)
+	output := make([]byte, 2)
+	copy(output[0:1], persons)
+	copy(output[1:2], car)
 	return output, nil
 }
 
+// Inference executes the model and retrieves the processed results.
+// It ensures the model's file pointers are correctly positioned before execution.
+// Returns a JobResult containing the inference results or an error if the inference process fails.
 func (lea *larodExampleApplication) Inference() (*axlarod.JobResult, error) {
-	// Since larodOutputAddr points to the beginning of the fd we should
-	// rewind the file position before each job.
-	_, err = lea.DetectionModel.Outputs[0].MemMapFile.File.Seek(0, 0)
-	if err != nil {
+
+	// Rewind the file position before each job.
+	if err = lea.DetectionModel.Outputs[0].MemMapFile.Rewind(); err != nil {
 		return nil, err
 	}
 
-	_, err = lea.DetectionModel.Outputs[1].MemMapFile.File.Seek(0, 0)
-	if err != nil {
+	// Rewind the file position before each job.
+	if err = lea.DetectionModel.Outputs[1].MemMapFile.Rewind(); err != nil {
 		return nil, err
 	}
 
@@ -73,31 +80,19 @@ func (lea *larodExampleApplication) Inference() (*axlarod.JobResult, error) {
 	}); err != nil {
 		return nil, err
 	}
+
 	return result, nil
 }
 
-type PredictionResult struct {
-	Persons float32
-	Car     float32
-}
-
-func (lea *larodExampleApplication) PredictionResultConverter(result []byte) (*PredictionResult, error) {
-	if len(result) < 8 {
-		return nil, fmt.Errorf("result slice too short, expected at least 8 bytes, got %d", len(result))
+// InferenceOutputRead converts raw model output data into structured prediction results.
+// Returns a PredictionResult or an error if data conversion fails.
+//
+// https://github.com/AxisCommunications/acap-native-sdk-examples/blob/7bff215e7673e4a72630bb89f04c2f7b64cf319c/vdo-larod/app/vdo_larod.c#L486C33-L486C50
+func (lea *larodExampleApplication) InferenceOutputRead(result []byte) (*PredictionResult, error) {
+	if len(result) < 2 { // Check that we have enough bytes to avoid panics
+		return nil, fmt.Errorf("not enough data in result")
 	}
-
-	personReader := bytes.NewReader(result[0:4])
-	carReader := bytes.NewReader(result[4:8])
-
-	var person, car float32
-
-	// Read the data into the float32 variables
-	if err := binary.Read(personReader, binary.LittleEndian, &person); err != nil {
-		return nil, fmt.Errorf("failed to read person data: %v", err)
-	}
-	if err := binary.Read(carReader, binary.LittleEndian, &car); err != nil {
-		return nil, fmt.Errorf("failed to read car data: %v", err)
-	}
-
-	return &PredictionResult{Persons: person * 100, Car: car * 100}, nil
+	person := float32(result[0]) / 255.0 * 100
+	car := float32(result[1]) / 255.0 * 100
+	return &PredictionResult{Persons: person, Car: car}, nil
 }

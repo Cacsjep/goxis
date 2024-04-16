@@ -14,7 +14,7 @@ import (
 	"strings"
 
 	"github.com/Cacsjep/goxis/pkg/axevent"
-	axlarod "github.com/Cacsjep/goxis/pkg/axlaord"
+	"github.com/Cacsjep/goxis/pkg/axlarod"
 	"github.com/Cacsjep/goxis/pkg/axlicense"
 	"github.com/Cacsjep/goxis/pkg/axmanifest"
 	"github.com/Cacsjep/goxis/pkg/axparameter"
