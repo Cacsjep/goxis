@@ -64,7 +64,7 @@ func (model *LarodModel) CreateModelInputs() ([]*LarodTensor, uint, error) {
 	if cError != nil {
 		return nil, 0, newLarodError(cError)
 	}
-	model.inputTensorPtr = tensors
+	model.inputTensorsPtr = tensors
 	length := uint(numTensors)
 	result := make([]*LarodTensor, length)
 	for i := 0; i < int(length); i++ {
@@ -81,7 +81,7 @@ func (model *LarodModel) CreateModelOutputs() ([]*LarodTensor, uint, error) {
 	if cError != nil {
 		return nil, 0, newLarodError(cError)
 	}
-	model.outputTensorPtr = tensors
+	model.outputTensorsPtr = tensors
 	length := uint(numTensors)
 	result := make([]*LarodTensor, length)
 	for i := 0; i < int(length); i++ {

@@ -74,7 +74,7 @@ func (l *Larod) DestroyModel(model *LarodModel) error {
 		C.larodDestroyJobRequest(&model.Job.ptr)
 	}
 
-	if C.larodDestroyTensors(l.conn.ptr, &model.inputTensorPtr, C.uint(model.InputsCount), &cError) == C.bool(false) {
+	if C.larodDestroyTensors(l.conn.ptr, &model.inputTensorsPtr, C.uint(model.InputsCount), &cError) == C.bool(false) {
 		return newLarodError(cError)
 	}
 	for _, t := range model.Inputs {
@@ -88,7 +88,7 @@ func (l *Larod) DestroyModel(model *LarodModel) error {
 		}
 	}
 
-	if C.larodDestroyTensors(l.conn.ptr, &model.outputTensorPtr, C.uint(model.OutputsCount), &cError) == C.bool(false) {
+	if C.larodDestroyTensors(l.conn.ptr, &model.outputTensorsPtr, C.uint(model.OutputsCount), &cError) == C.bool(false) {
 		return newLarodError(cError)
 	}
 	for _, t := range model.Outputs {

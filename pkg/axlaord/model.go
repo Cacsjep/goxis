@@ -22,19 +22,19 @@ const (
 )
 
 type LarodModel struct {
-	ptr             *C.larodModel
-	inputTensorPtr  **C.larodTensor
-	outputTensorPtr **C.larodTensor
-	maps            []*LarodMap
-	Fd              uintptr
-	Job             *JobRequest
-	Name            string
-	Inputs          []*LarodTensor
-	InputsCount     uint
-	InputPitches    *LarodTensorPitches
-	Outputs         []*LarodTensor
-	OutputsCount    uint
-	OutputPitches   *LarodTensorPitches
+	ptr              *C.larodModel
+	inputTensorsPtr  **C.larodTensor
+	outputTensorsPtr **C.larodTensor
+	maps             []*LarodMap
+	Fd               uintptr
+	Job              *JobRequest
+	Name             string
+	Inputs           []*LarodTensor
+	InputsCount      uint
+	InputPitches     *LarodTensorPitches
+	Outputs          []*LarodTensor
+	OutputsCount     uint
+	OutputPitches    *LarodTensorPitches
 }
 
 // LarodLoadModel loads a new model onto a specified device.
