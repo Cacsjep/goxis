@@ -97,6 +97,7 @@ Examples are really close to existing C examples of the [AXIS Native SDK repo](h
 | `axevent/send`	      | Demonstrate how to declare and send an event using acapapp package     |
 | `axevent/subscribe`	      | Demonstrate how to subscribe to an Virutal Input state change         |
 | `axoverlay`	| Render rects via axolveray api                                        |
+| `axlarod`	| Inference example with larod and vdo api  (artpec-8)                                     |
 | `axparameter`   | Demonstrate how to get an parameter and listen to changes             |
 | `axstorage`     | Interact with axstorage api                                           |
 | `license` 	| Show how to obtain the license state                                  |
@@ -174,5 +175,5 @@ It’s recommended to use the latest manifest version available for the minimum 
 
 
 ### Todos:
-  - Adding Larod API
+  - Finalize Larod API
   - Adding more go event types

@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/Cacsjep/goxis/pkg/axevent"
+	"github.com/Cacsjep/goxis/pkg/axlarod"
 	"github.com/Cacsjep/goxis/pkg/axlicense"
 	"github.com/Cacsjep/goxis/pkg/axmanifest"
 	"github.com/Cacsjep/goxis/pkg/axparameter"
@@ -35,6 +36,7 @@ type AcapApplication struct {
 	Mainloop            *glib.GMainLoop
 	OnCloseCleaners     []func()
 	eventDeclarationIds []int
+	Larod               *axlarod.Larod
 }
 
 // NewAcapApplication initializes a new AcapApplication instance, loading the application's manifest,
@@ -78,6 +80,14 @@ func NewAcapApplication() *AcapApplication {
 	return &app
 }
 
+func (a *AcapApplication) InitalizeLarod() error {
+	a.Larod = axlarod.NewLarod()
+	if err := a.Larod.Initalize(); err != nil {
+		return err
+	}
+	return nil
+}
+
 // IsLicenseValid checks the validity of the application's license for a given major and minor version.
 // It returns true if the license is valid, or false along with an error if the check fails.
 func (a *AcapApplication) IsLicenseValid(major_version int, minor_version int) (bool, error) {
@@ -113,6 +123,9 @@ func (a *AcapApplication) Close() {
 	}
 	for _, declaration_id := range a.eventDeclarationIds {
 		a.EventHandler.Undeclare(declaration_id)
+	}
+	if a.Larod != nil {
+		a.Larod.Disconnect()
 	}
 	a.Mainloop.Quit()     // Terminate the main loop.
 	a.ParamHandler.Free() // Release the parameter handler.
