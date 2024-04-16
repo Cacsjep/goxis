@@ -1,3 +1,12 @@
+// Package axlarod provides a Go wrapper for interacting with the Larod API, facilitating the management and execution of deep learning models on Axis devices.
+// This package abstracts complex operations involving the Larod service, offering a simplified interface for connecting to the service,
+// managing devices, creating and executing models, and handling associated resources.
+//
+// The package includes types and functions for:
+// - Establishing and terminating connections with the Larod service.
+// - Querying, listing, and managing devices capable of running inference models.
+// - Managing the lifecycle of models, including creation, execution, and resource cleanup.
+// - Manipulating and transferring data between Go structures and the underlying hardware through Larod's memory management systems.
 package axlarod
 
 /*
