@@ -4,9 +4,8 @@ import (
 	"github.com/Cacsjep/goxis/pkg/utils"
 )
 
-type TmpFileSize int
-
-func (l *Larod) NewInferModel(filename, device string, model_defs MemMapConfiguration) (*LarodModel, error) {
+// NewInferModel creates a new model for inference, just a tiny wrapper around LoadModelWithDeviceName, CreateModelTensors and CreateJobRequest
+func (l *Larod) NewInferModel(filename, device string, model_defs MemMapConfiguration, job_params *LarodMap) (*LarodModel, error) {
 	var err error
 	var infer_model *LarodModel
 
@@ -18,7 +17,7 @@ func (l *Larod) NewInferModel(filename, device string, model_defs MemMapConfigur
 		return nil, err
 	}
 
-	_, err = infer_model.CreateJobRequest(infer_model.Inputs, infer_model.Outputs, nil)
+	_, err = infer_model.CreateJobRequest(infer_model.Inputs, infer_model.Outputs, job_params)
 	if err != nil {
 		return nil, err
 	}

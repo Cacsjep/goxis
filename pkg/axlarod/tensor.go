@@ -6,6 +6,8 @@ package axlarod
 */
 import "C"
 import (
+	"bytes"
+	"encoding/binary"
 	"fmt"
 	"unsafe"
 )
@@ -196,4 +198,52 @@ func (tensor *LarodTensor) CopyDataInto(data []byte) error {
 // GetData retrieves data from the memory mapped file associated with a tensor.
 func (tensor *LarodTensor) GetData(size int) ([]byte, error) {
 	return CopyDataFromMappedMemory(tensor.MemMapFile.MemoryAddress, size)
+}
+
+func (tensor *LarodTensor) GetDataAsFloat32Slice(size int) ([]float32, error) {
+	b, err := CopyDataFromMappedMemory(tensor.MemMapFile.MemoryAddress, size)
+	if err != nil {
+		return nil, err
+	}
+	return bytesToFloat32Slice(b)
+}
+
+func (tensor *LarodTensor) GetDataAsFloat32(size int) (float32, error) {
+	b, err := CopyDataFromMappedMemory(tensor.MemMapFile.MemoryAddress, size)
+	if err != nil {
+		return 0, err
+	}
+	return bytesToFloat32(b)
+}
+
+func bytesToFloat32(b []byte) (float32, error) {
+	if len(b) != 4 {
+		return 0, fmt.Errorf("input slice must contain exactly 4 bytes")
+	}
+
+	buf := bytes.NewReader(b)
+	var num float32
+	if err := binary.Read(buf, binary.LittleEndian, &num); err != nil {
+		return 0, err
+	}
+	return num, nil
+}
+
+func bytesToFloat32Slice(b []byte) ([]float32, error) {
+	if len(b)%4 != 0 {
+		return nil, fmt.Errorf("byte slice length must be a multiple of 4")
+	}
+
+	var floats []float32
+	reader := bytes.NewReader(b)
+
+	for reader.Len() > 0 {
+		var num float32
+		if err := binary.Read(reader, binary.LittleEndian, &num); err != nil {
+			return nil, fmt.Errorf("failed to read float32 from byte slice: %w", err)
+		}
+		floats = append(floats, num)
+	}
+
+	return floats, nil
 }

@@ -57,6 +57,11 @@ const (
 )
 
 // axoverlay_position_type defines overlay position types.
+// This enum contains constants for the different position types. For the first four types any x and y coordinates specified are ignored.
+// If the type is set to AxOverlayCustomNormalized then x and y coordinates should be normalized between -1 and 1.
+// If the type is set to AxOverlayCustomSource then the overlay will be placed relative to the video source and not the video frame.
+// If DPTZ is used the overlay will remain locked to the scene and not the video frame. Coordinates should be between 0 and max witdh and max height respectivly.
+// In case the video is rotated the coordinates have be transformed to an unrotated coordinate system.
 type AxOverlayPositionType int
 
 const (
@@ -64,8 +69,8 @@ const (
 	AxOverlayTopRight
 	AxOverlayBottomLeft
 	AxOverlayBottomRight
-	AxOverlayCustomNormalized
-	AxOverlayCustomSource
+	AxOverlayCustomNormalized // Custom position normalized between [-1, 1]
+	AxOverlayCustomSource     // Custom position in absolute coordinates relative to the max resolution
 )
 
 func (opt AxOverlayPositionType) String() string {

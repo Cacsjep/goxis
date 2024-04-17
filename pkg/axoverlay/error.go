@@ -38,7 +38,7 @@ func newOverlayError(gerr *C.GError) error {
 }
 
 func (e *OverlayError) Error() string {
-	return fmt.Sprintf("%s, AxOverlayError: %d", e.Message, e.Code.ErrorName())
+	return fmt.Sprintf("%s, AxOverlayError: %s", e.Message, e.Code.ErrorName())
 }
 
 // ErrorName returns the string representation of the AxOverlayErrorCode.

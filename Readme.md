@@ -94,15 +94,16 @@ Examples are really close to existing C examples of the [AXIS Native SDK repo](h
 
 | Example         | Description |
 |-----------------|--------------|
-| `axevent/send`	      | Demonstrate how to declare and send an event using acapapp package     |
-| `axevent/subscribe`	      | Demonstrate how to subscribe to an Virutal Input state change         |
-| `axoverlay`	| Render rects via axolveray api                                        |
-| `axlarod`	| Inference example with larod and vdo api  (artpec-8)                                     |
-| `axparameter`   | Demonstrate how to get an parameter and listen to changes             |
-| `axstorage`     | Interact with axstorage api                                           |
-| `license` 	| Show how to obtain the license state                                  |
-| `vdostream` 	| High level wrapper demonstration to get video frames (stream)         |
-| `webserver`     | Reverse proxy webserver with fiber                                    |
+| `axevent/send`	            | Demonstrate how to declare and send an event using acapapp package     |
+| `axevent/subscribe`	        | Demonstrate how to subscribe to an Virutal Input state change          |
+| `axoverlay`	                | Render rects via axolveray api                                         |
+| `axlarod/classify`	        | Classification example with larod and vdo api  (artpec-8)              |
+| `axlarod/object_detection`	| Object detection example with larod/vdo and overlay api api  (artpec-8)|
+| `axparameter`               | Demonstrate how to get an parameter and listen to changes              |
+| `axstorage`                 | Interact with axstorage api                                            |
+| `license` 	                | Show how to obtain the license state                                   |
+| `vdostream` 	              | High level wrapper demonstration to get video frames (stream)          |
+| `webserver`                 | Reverse proxy webserver with fiber                                     |
 
 
 ## Useful ACAP Informations

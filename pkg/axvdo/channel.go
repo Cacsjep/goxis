@@ -8,6 +8,7 @@ package axvdo
 import "C"
 import (
 	"errors"
+	"math"
 	"unsafe"
 
 	"github.com/Cacsjep/goxis/pkg/glib"
@@ -169,6 +170,33 @@ func (c *VdoChannel) GetResolutions(filter *VdoMap) ([]VdoResolution, error) {
 		resolutions = append(resolutions, VdoResolution{Width: int(resolutionPtr.width), Height: int(resolutionPtr.height)})
 	}
 	return resolutions, nil
+}
+
+// ChooseStreamResolution finds the smallest resolution that meets or exceeds the requested dimensions
+func (c *VdoChannel) ChooseStreamResolution(reqWidth, reqHeight int) (*VdoResolution, error) {
+	resos, err := c.GetResolutions(nil)
+	if err != nil {
+		return nil, err
+	}
+
+	bestResolution := VdoResolution{}
+	bestResolutionArea := math.MaxInt32
+
+	for _, res := range resos {
+		if res.Width >= reqWidth && res.Height >= reqHeight {
+			area := res.Width * res.Height
+			if area < bestResolutionArea {
+				bestResolution = res
+				bestResolutionArea = area
+			}
+		}
+	}
+
+	if bestResolutionArea == math.MaxInt32 {
+		return nil, errors.New("no suitable resolution found")
+	}
+
+	return &bestResolution, nil
 }
 
 // Get the settings for this channel.

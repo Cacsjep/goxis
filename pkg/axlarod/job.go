@@ -12,7 +12,7 @@ import (
 
 type JobResult struct {
 	ExecutionTime float64
-	OutputData    []byte
+	OutputData    any
 }
 
 type JobRequest struct {
@@ -44,7 +44,7 @@ func (model *LarodModel) Execute(conn *LarodConnection) error {
 // ExecuteJob orchestrates the execution of a model with data setting and retrieving processes.
 // It measures the execution time and returns a JobResult with the execution time and the output data.
 // If any step (setting data, executing the model, or retrieving data) fails, it returns an error detailing the failure.
-func (l *Larod) ExecuteJob(model *LarodModel, dataSetterFunc func() error, dataGetterFunc func() ([]byte, error)) (*JobResult, error) {
+func (l *Larod) ExecuteJob(model *LarodModel, dataSetterFunc func() error, dataGetterFunc func() (any, error)) (*JobResult, error) {
 	start := time.Now()
 	if err := dataSetterFunc(); err != nil {
 		return nil, fmt.Errorf("error setting data: %w", err)

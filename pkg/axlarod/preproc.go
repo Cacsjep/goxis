@@ -19,7 +19,7 @@ func (lr *LarodResolution) ToArray() [2]int64 {
 }
 
 // NewPreProccessModel creates a new pre-processing model with the specified device, input size, output size, and output format.
-func (l *Larod) NewPreProccessModel(device string, inputSize LarodResolution, outputSize LarodResolution, outputFormat PreProccessOutputFormat) (*LarodModel, error) {
+func (l *Larod) NewPreProccessModel(device string, inputSize LarodResolution, outputSize LarodResolution, outputFormat PreProccessOutputFormat, job_params *LarodMap) (*LarodModel, error) {
 	var err error
 	var ppmap *LarodMap
 	var pp_model *LarodModel
@@ -57,7 +57,7 @@ func (l *Larod) NewPreProccessModel(device string, inputSize LarodResolution, ou
 		return nil, fmt.Errorf("Expected size of RGB buffer is %d, but got %d", expectedSize, rgb_buffer_size)
 	}
 
-	_, err = pp_model.CreateJobRequest(pp_model.Inputs, pp_model.Outputs, nil)
+	_, err = pp_model.CreateJobRequest(pp_model.Inputs, pp_model.Outputs, job_params)
 	if err != nil {
 		return nil, err
 	}
