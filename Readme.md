@@ -6,28 +6,34 @@ This library includes user-friendly wrappers for most APIs provided by the [nati
 
 [![Discord](https://img.shields.io/badge/Discord-Join%20us-blue?style=for-the-badge&logo=discord)](https://discord.gg/we6EqDSJ)
 
+[![GoDocs](https://img.shields.io/badge/go-documentation-blue)](https://pkg.go.dev/github.com/Cacsjep/goxis)
+
+
 
 ## C-API Wrappers
 
 Goxis organizes its functionality around several key areas of the native SDK, each encapsulated within its own package for ease of use:
 
-- `axevent` - Event API for managing camera events.
-- `axoverlay` - Overlay API, including support for Cairo, for drawing over video feeds.
-- `axparameter` - Parameter API for managing camera parameters.
-- `axstorage` - Edge Storage API for accessing and managing on-camera storage.
-- `axvdo` - Video Capture API for handling video streams.
-- `axlicense` - License Key API for managing application licenses.
-- `axsyslog` - Syslog for logging and diagnostics.
+[![GoDocs](https://img.shields.io/badge/go%20pkg-documentation-purple)](https://pkg.go.dev/github.com/Cacsjep/goxis/pkg)
+
+- [axevent](https://pkg.go.dev/github.com/Cacsjep/goxis/pkg/axevent) - Event API for managing camera events.
+- [axoverlay](https://pkg.go.dev/github.com/Cacsjep/goxis/pkg/axoverlay) - Overlay API, including support for Cairo, for drawing over video feeds.
+- [axparameter](https://pkg.go.dev/github.com/Cacsjep/goxis/pkg/axparameter) - Parameter API for managing camera parameters.
+- [axstorage](https://pkg.go.dev/github.com/Cacsjep/goxis/pkg/axstorage) - Edge Storage API for accessing and managing on-camera storage.
+- [axvdo](https://pkg.go.dev/github.com/Cacsjep/goxis/pkg/axvdo) - Video Capture API for handling video streams.
+- [axlarod](https://pkg.go.dev/github.com/Cacsjep/goxis/pkg/axlarod) - Larod API
+- [axlicense](https://pkg.go.dev/github.com/Cacsjep/goxis/pkg/axlicense) - License Key API for managing application licenses.
+- [axsyslog](https://pkg.go.dev/github.com/Cacsjep/goxis/pkg/axsyslog) - Syslog for logging and diagnostics.
 
 ## Additional Packages
 
 Beyond the core API wrappers, Goxis also provides several additional packages designed to speed up the development process and enhance application capabilities:
 
-- `acapapp` - Offers a high-level abstraction for quick and efficient ACAP application development.
-- `dbus` - Provides helpers for interacting with the D-Bus interface, including retrieving VAPIX credentials.
-- `glib` - Includes helpers for working with GLib, such as managing the main event loop.
-- `vapix` - Facilitates the use of the VAPIX API for interacting with camera functionalities.
-- `axmanifest` - Aids in loading and parsing manifest files, simplifying application configuration and setup.
+- [acapapp](https://pkg.go.dev/github.com/Cacsjep/goxis/pkg/acapapp) - Offers a high-level abstraction for quick and efficient ACAP application development.
+- [axmanifest](https://pkg.go.dev/github.com/Cacsjep/goxis/pkg/axmanifest) - Aids in loading and parsing manifest files, simplifying application configuration and setup.
+- [dbus](https://pkg.go.dev/github.com/Cacsjep/goxis/pkg/dbus) - Provides helpers for interacting with the D-Bus interface, including retrieving VAPIX credentials.
+- [vapix](https://pkg.go.dev/github.com/Cacsjep/goxis/pkg/vapix) - Facilitates the use of the VAPIX API for interacting with camera functionalities.
+- [glib](https://pkg.go.dev/github.com/Cacsjep/goxis/pkg/glib) - Includes helpers for working with GLib, such as managing the main event loop.
 
 # Prerequisites
 - Docker for building the ACAP applications
