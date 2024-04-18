@@ -179,8 +179,3 @@ It’s recommended to use the latest manifest version available for the minimum 
 | 4.11         | 1.11                          | 11.7 and later until LTS        |
 | 4.12         | 1.12                          | 11.8 and later until LTS        |
 | 4.13         | 1.13                          | 11.9 and later until LTS        |
-
-
-### Todos:
-  - Finalize Larod API
-  - Adding more go event types
