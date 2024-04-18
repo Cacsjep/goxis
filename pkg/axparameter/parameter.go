@@ -1,23 +1,5 @@
 /*
 Package axparameter provides a Go interface to the AXParameter library, enabling the management of application-specific parameters on Axis devices.
-This package allows applications to add, remove, set, and get parameters, as well as to register callbacks for parameter changes.
-It is particularly useful for applications that need to manage configuration settings dynamically or respond to changes in their environment.
-
-Usage:
-1. Initialize an AXParameter instance for your application.
-2. Add parameters with initial values and types, optionally using control words for special behavior.
-3. Register callbacks for parameters you need to monitor for changes, providing a function that will react to updates.
-4. Use the Set and Get functions to update parameters dynamically and retrieve their current values as needed.
-5. Properly free the AXParameter instance when your application shuts down or no longer needs to manage parameters.
-
-This package is essential for ACAP developers who need to manage application parameters, providing a flexible and dynamic way to handle configuration settings. It abstracts away the complexities of the underlying C library, offering a simple and idiomatic Go API.
-
-Requirements:
-- An Axis device capable of running ACAP applications.
-- The ACAP SDK and appropriate development tools for compilation and deployment.
-
-Example:
-See the package examples for detailed usage patterns, including how to add parameters, register callbacks for updates, and dynamically change parameter values based on application logic.
 */
 package axparameter
 
