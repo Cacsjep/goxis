@@ -10,7 +10,7 @@ func (lea *larodExampleApplication) InitalizeAndStartVdo() error {
 	vdo_format := axvdo.VdoFormatYUV
 	stream_cfg := axvdo.VideoSteamConfiguration{Format: &vdo_format, Width: &lea.streamWidth, Height: &lea.streamHeight, Framerate: &lea.fps}
 
-	if lea.app.FrameProvider, err = lea.app.NewFrameProvider(stream_cfg); err != nil {
+	if err = lea.app.NewFrameProvider(stream_cfg); err != nil {
 		return err
 	}
 

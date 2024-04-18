@@ -44,7 +44,12 @@ type FrameProviderStats struct {
 
 // NewFrameProvider initializes a new FrameProvider with the given configuration and application context.
 // It prepares the frame provider for operation but does not start streaming frames until Start is called.
-func (a *AcapApplication) NewFrameProvider(config axvdo.VideoSteamConfiguration) (*FrameProvider, error) {
+//
+// Note:
+//
+//	Currently this supports only one FrameProvider per application. If you need more then one dont use frameProvider in AcapApplication.
+//	Create a new FrameProvider for each stream, and manage them separately, dont forget to call Stop() when you are done.
+func (a *AcapApplication) NewFrameProvider(config axvdo.VideoSteamConfiguration) error {
 	fp := &FrameProvider{
 		Config:             config,
 		state:              FrameProviderStateInit,
@@ -54,11 +59,11 @@ func (a *AcapApplication) NewFrameProvider(config axvdo.VideoSteamConfiguration)
 	}
 	stream, err := fp.createStream()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	fp.stream = stream
 	a.FrameProvider = fp
-	return fp, nil
+	return nil
 }
 
 // createStream initializes the video stream based on the FrameProvider's configuration.
