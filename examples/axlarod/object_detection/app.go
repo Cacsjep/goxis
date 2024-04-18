@@ -36,7 +36,7 @@ type larodExampleApplication struct {
 // Returns a configured instance of larodExampleApplication or an error if initialization fails.
 func Initalize() (*larodExampleApplication, error) {
 
-	lea := &larodExampleApplication{fps: 12, threshold: 0.5, cocoInputWidth: 300, cocoInputHeight: 300, detections: []Detection{}}
+	lea := &larodExampleApplication{fps: 12, threshold: 0.4, cocoInputWidth: 300, cocoInputHeight: 300, detections: []Detection{}}
 	lea.app = acapapp.NewAcapApplication()
 
 	if err := lea.SetupStreamResolution(); err != nil {
