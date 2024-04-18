@@ -2,6 +2,7 @@ package axlarod
 
 import "github.com/Cacsjep/goxis/pkg/axvdo"
 
+// CreateCropMap creates a LarodMap with the crop values for the input and stream dimensions
 func CreateCropMap(inputWidth int, inputHeight int, streamWidth int, streamHeight int) (*LarodMap, error) {
 	c := axvdo.CalculateCropDimensions(inputWidth, inputHeight, streamWidth, streamHeight)
 	return NewLarodMapWithEntries([]*LarodMapEntries{

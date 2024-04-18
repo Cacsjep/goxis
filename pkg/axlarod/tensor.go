@@ -200,6 +200,7 @@ func (tensor *LarodTensor) GetData(size int) ([]byte, error) {
 	return CopyDataFromMappedMemory(tensor.MemMapFile.MemoryAddress, size)
 }
 
+// GetDataAsFloat32Slice retrieves data from the memory mapped file associated with a tensor and converts it to a float32 slice.
 func (tensor *LarodTensor) GetDataAsFloat32Slice(size int) ([]float32, error) {
 	b, err := CopyDataFromMappedMemory(tensor.MemMapFile.MemoryAddress, size)
 	if err != nil {
@@ -208,12 +209,21 @@ func (tensor *LarodTensor) GetDataAsFloat32Slice(size int) ([]float32, error) {
 	return bytesToFloat32Slice(b)
 }
 
-func (tensor *LarodTensor) GetDataAsFloat32(size int) (float32, error) {
-	b, err := CopyDataFromMappedMemory(tensor.MemMapFile.MemoryAddress, size)
+// GetDataAsFloat32 retrieves a single float32 value from the memory mapped file associated with a tensor.
+func (tensor *LarodTensor) GetDataAsFloat32() (float32, error) {
+	b, err := CopyDataFromMappedMemory(tensor.MemMapFile.MemoryAddress, 4)
 	if err != nil {
 		return 0, err
 	}
 	return bytesToFloat32(b)
+}
+
+func (tensor *LarodTensor) GetDataAsInt() (int, error) {
+	b, err := CopyDataFromMappedMemory(tensor.MemMapFile.MemoryAddress, 1)
+	if err != nil {
+		return 0, err
+	}
+	return int(b[0]), nil
 }
 
 func bytesToFloat32(b []byte) (float32, error) {

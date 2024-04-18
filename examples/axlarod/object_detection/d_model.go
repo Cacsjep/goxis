@@ -37,14 +37,7 @@ func (lea *larodExampleApplication) InitalizeDetectionModel(modelFilePath string
 	if lea.DetectionModel, err = lea.app.Larod.NewInferModel(modelFilePath, chipString, model_defs, nil); err != nil {
 		return err
 	}
-
-	lea.app.AddCloseCleanFunc(func() {
-		err := lea.app.Larod.DestroyModel(lea.DetectionModel)
-		if err != nil {
-			lea.app.Syslog.Errorf("Failed to destroy DetectionModel: %s", err.Error())
-		}
-	})
-
+	lea.app.AddModelCleaner(lea.DetectionModel)
 	return nil
 }
 
@@ -63,7 +56,7 @@ func (lea *larodExampleApplication) getDResult() (*CocoResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	t4, err := lea.DetectionModel.Outputs[3].GetDataAsFloat32(int(TENSOR_4_SIZE))
+	t4, err := lea.DetectionModel.Outputs[3].GetDataAsFloat32()
 	if err != nil {
 		return nil, err
 	}
@@ -75,21 +68,8 @@ func (lea *larodExampleApplication) getDResult() (*CocoResult, error) {
 // Returns a JobResult containing the inference results or an error if the inference process fails.
 func (lea *larodExampleApplication) Inference() (*axlarod.JobResult, error) {
 
-	// Rewind the file position before each job.
-	if err = lea.DetectionModel.Outputs[0].MemMapFile.Rewind(); err != nil {
-		return nil, err
-	}
-
-	// Rewind the file position before each job.
-	if err = lea.DetectionModel.Outputs[1].MemMapFile.Rewind(); err != nil {
-		return nil, err
-	}
-
-	if err = lea.DetectionModel.Outputs[2].MemMapFile.Rewind(); err != nil {
-		return nil, err
-	}
-
-	if err = lea.DetectionModel.Outputs[3].MemMapFile.Rewind(); err != nil {
+	// Rewind all output files position before each job.
+	if err = lea.DetectionModel.RewindAllOutputsMemMapFiles(); err != nil {
 		return nil, err
 	}
 
@@ -140,5 +120,6 @@ func (lea *larodExampleApplication) InferenceOutputRead(result *CocoResult) (*Pr
 			}
 		}
 	}
+	lea.detections = detections
 	return &PredictionResult{Detections: detections}, nil
 }

@@ -84,6 +84,16 @@ func (l *Larod) LoadModelWithDeviceName(file_path *string, dev_name string, acce
 	return l.LoadModel(file_path, device, access, name, params)
 }
 
+// Seek the memory mapped file to the beginning for all output tensors.
+func (m *LarodModel) RewindAllOutputsMemMapFiles() error {
+	for _, tensor_ouput := range m.Outputs {
+		if err := tensor_ouput.MemMapFile.Rewind(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // LoadModelWithDeviceID loads a new model onto a specified device by ID.
 func (m *LarodModel) Destroy() {
 	C.larodDestroyModel(&m.ptr)

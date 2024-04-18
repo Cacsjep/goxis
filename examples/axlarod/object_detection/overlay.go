@@ -1,12 +1,15 @@
 package main
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/Cacsjep/goxis/pkg/acapapp"
 	"github.com/Cacsjep/goxis/pkg/axoverlay"
 )
 
 func (lea *larodExampleApplication) InitOverlay() error {
-	if lea.overlayProvider, err = acapapp.NewOverlayProvider(renderCallback, nil, streamSelectCallback); err != nil {
+	if lea.overlayProvider, err = acapapp.NewOverlayProvider(renderCallback, nil, nil); err != nil {
 		return err
 	}
 	lea.app.AddCloseCleanFunc(lea.overlayProvider.Cleanup)
@@ -16,27 +19,25 @@ func (lea *larodExampleApplication) InitOverlay() error {
 	return nil
 }
 
-// we want all streams
-func streamSelectCallback(streamSelectEvent *axoverlay.OverlayStreamSelectEvent) bool {
-	return true
-}
-
 func renderCallback(renderEvent *axoverlay.OverlayRenderEvent) {
 	lea := renderEvent.Userdata.(*larodExampleApplication)
 	renderEvent.CairoCtx.DrawTransparent(renderEvent.Stream.Width, renderEvent.Stream.Height)
 	for _, obj := range lea.prediction_result.Detections {
 		scaled_box := obj.Box.Scale(renderEvent.Stream.Width, renderEvent.Stream.Height)
 		cords := scaled_box.ToCords64()
-		renderEvent.CairoCtx.DrawText(coco_labels[int(obj.Class)], cords.X+5, cords.Y+5, 24, "sans", axoverlay.ColorMaterialBlue)
-		renderEvent.CairoCtx.DrawRect(
+		renderEvent.CairoCtx.DrawBoundingBox(
 			cords.X,
 			cords.Y,
 			cords.W,
 			cords.H,
 			axoverlay.ColorMaterialBlue,
-			3,
+			fmt.Sprintf("%s %d%%", strings.ToUpper(coco_labels[int(obj.Class)]), int(obj.Score*100)),
+			axoverlay.ColorWite,
+			17,
+			"sans",
+			170,
 		)
-		lea.app.Syslog.Infof("Render overlay for object: %s, score %d%%, cords: %v", coco_labels[int(obj.Class)], int(obj.Score*100), cords)
+		lea.app.Syslog.Infof("Render overlay for object: %s, score %d%%", coco_labels[int(obj.Class)], int(obj.Score*100))
 	}
 
 }

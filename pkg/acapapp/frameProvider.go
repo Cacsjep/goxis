@@ -57,6 +57,7 @@ func (a *AcapApplication) NewFrameProvider(config axvdo.VideoSteamConfiguration)
 		return nil, err
 	}
 	fp.stream = stream
+	a.FrameProvider = fp
 	return fp, nil
 }
 

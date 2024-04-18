@@ -23,13 +23,12 @@ type larodExampleApplication struct {
 	cocoInputHeight   int                            // cocoInptHeight specifies the height of the input tensor for the detection model.
 	fps               int                            // fps represents the frame rate of the video stream.
 	sconfig           *axvdo.VideoSteamConfiguration // sconfig holds the configuration for the video stream.
-	fp                *acapapp.FrameProvider         // fp is the frame provider for capturing video frames.
 	pp_result         *axlarod.JobResult             // pp_result holds the result of the preprocessing model job.
 	infer_result      *axlarod.JobResult             // infer_result holds the result of the detection model job.
 	prediction_result *PredictionResult              // prediction_result stores the output of the inference process.
 	threshold         float32                        // threshold is the minimum score required for an object to be considered detected.
-	overlayProvider   *acapapp.OverlayProvider
-	detections        []Detection
+	overlayProvider   *acapapp.OverlayProvider       // overlayProvider is used to draw overlay on the video stream.
+	detections        []Detection                    // detections stores the detected objects.
 }
 
 // Initialize prepares and initializes all necessary components for the application.
@@ -37,7 +36,7 @@ type larodExampleApplication struct {
 // Returns a configured instance of larodExampleApplication or an error if initialization fails.
 func Initalize() (*larodExampleApplication, error) {
 
-	lea := &larodExampleApplication{fps: 8, threshold: 0.6, cocoInputWidth: 300, cocoInputHeight: 300}
+	lea := &larodExampleApplication{fps: 12, threshold: 0.5, cocoInputWidth: 300, cocoInputHeight: 300, detections: []Detection{}}
 	lea.app = acapapp.NewAcapApplication()
 
 	if err := lea.SetupStreamResolution(); err != nil {
@@ -77,11 +76,15 @@ func main() {
 		panic(err)
 	}
 
+	// For correct singal handling and overlay drawing, the g main loop is required to run in the background.
+	lea.app.RunInBackground()
+
+	// Defer the cleanup of the application to ensure all resources are released when the application exits in the below for loop.
 	defer lea.app.Close()
 
 	for {
 		select {
-		case frame := <-lea.fp.FrameStreamChannel:
+		case frame := <-lea.app.FrameProvider.FrameStreamChannel:
 			if frame.Error != nil {
 				lea.app.Syslog.Errorf("Unexpected Vdo Error: %s", frame.Error.Error())
 				continue
@@ -93,23 +96,24 @@ func main() {
 				return
 			}
 
+			// Execute the detection model job
 			if lea.infer_result, err = lea.Inference(); err != nil {
 				lea.app.Syslog.Errorf("Failed to execute Detection Model: %s", err.Error())
 				return
 			}
 
-			lea.prediction_result, err = lea.InferenceOutputRead(lea.infer_result.OutputData.(*CocoResult))
-			if err != nil {
+			// Retrieve the prediction result
+			if lea.prediction_result, err = lea.InferenceOutputRead(lea.infer_result.OutputData.(*CocoResult)); err != nil {
 				lea.app.Syslog.Errorf("Failed to convert prediction result: %s", err.Error())
 				return
 			}
 
-			lea.detections = lea.prediction_result.Detections
+			// Draw overlay
 			if err = lea.overlayProvider.Redraw(); err != nil {
 				lea.app.Syslog.Errorf("Failed to redraw overlay: %s", err.Error())
 			}
 
-			lea.app.Syslog.Infof("Frame: %d, PP exec time: %.fms, Inference exec time: %.fms, Detections: %d",
+			lea.app.Syslog.Infof("Frame: %d, PP time: %.fms, Infer. exec time: %.fms, Detections: %d",
 				frame.SequenceNbr,
 				lea.pp_result.ExecutionTime,
 				lea.infer_result.ExecutionTime,

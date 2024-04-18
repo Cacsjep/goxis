@@ -8,6 +8,7 @@ package axoverlay
 */
 import "C"
 import (
+	"fmt"
 	"image/color"
 	"unsafe"
 )
@@ -58,6 +59,71 @@ func (ctx *CairoContext) DrawRect(x float64, y float64, width float64, height fl
 	ctx.SetLineWidth(linewidth)
 	ctx.Rectangle(x, y, width, height)
 	ctx.Stroke()
+}
+func (ctx *CairoContext) DrawBoundingBoxRect(x float64, y float64, width float64, height float64, color color.RGBA, linewidth float64, alpha float64) {
+	fillColor := color
+	fillColor.A = uint8(float64(color.A) * alpha)
+
+	ctx.SetSourceRGBA(fillColor)
+	ctx.Rectangle(x, y, width, height)
+	ctx.FillPreserve()
+
+	ctx.SetSourceRGBA(color)
+	ctx.SetLineWidth(linewidth)
+	dashPattern := []float64{4, 4}
+	ctx.SetDash(dashPattern, len(dashPattern), 0)
+	ctx.Stroke()
+}
+
+func (ctx *CairoContext) DrawBoundingBox(x float64, y float64, width float64, height float64, rectColor color.RGBA, label string, labelColor color.RGBA, labelSize float64, labelFont string, minBoxSizeRenderW int) {
+	rectLinewidth := float64(3)
+	ctx.DrawBoundingBoxRect(x, y, width, height, rectColor, rectLinewidth, 0.3)
+	ctx.DrawBoundingBoxLabel(label, x-(rectLinewidth/2), y-(rectLinewidth/2), 7, labelSize, labelFont, labelColor, rectColor)
+	if width > float64(minBoxSizeRenderW) {
+		ctx.DrawBoundingBoxSize(x, y, width, height, 7, labelSize, labelFont, labelColor, rectColor)
+	}
+}
+
+func (ctx *CairoContext) DrawBoundingBoxLabel(text string, x float64, y float64, padding float64, size float64, font_name string, textColor color.RGBA, bgColor color.RGBA) {
+	ctx.SelectFontFace(font_name, FONT_SLANT_NORMAL, FONT_WEIGHT_NORMAL)
+	ctx.SetFontSize(size)
+	e := ctx.TextExtents(text)
+
+	// Drawing rect top left inside the rect
+	rectWidth := e.Width + (padding * 2)
+	rectHeight := size + padding
+
+	rectX := x
+	rectY := y - rectHeight
+
+	ctx.SetSourceRGBA(bgColor)
+	ctx.Rectangle(rectX, rectY+rectHeight, rectWidth, rectHeight)
+	ctx.Fill()
+
+	ctx.SetSourceRGBA(textColor)
+	ctx.MoveTo(x+padding, y-padding+rectHeight)
+	ctx.ShowText(text)
+}
+
+func (ctx *CairoContext) DrawBoundingBoxSize(x float64, y float64, width float64, height float64, padding float64, size float64, font_name string, textColor color.RGBA, bgColor color.RGBA) {
+	ctx.SelectFontFace(font_name, FONT_SLANT_NORMAL, FONT_WEIGHT_NORMAL)
+	ctx.SetFontSize(size)
+	text := fmt.Sprintf("%dx%d", int(width), int(height))
+	e := ctx.TextExtents(text)
+
+	rectWidth := e.Width + (padding * 2)
+	rectHeight := size + padding
+
+	rectX := (x + width) - rectWidth
+	rectY := y - rectHeight
+
+	ctx.SetSourceRGBA(bgColor)
+	ctx.Rectangle(rectX, rectY+rectHeight, rectWidth, rectHeight)
+	ctx.Fill()
+
+	ctx.SetSourceRGBA(textColor)
+	ctx.MoveTo(rectX+padding, y-padding+rectHeight)
+	ctx.ShowText(text)
 }
 
 func (ctx *CairoContext) DrawTransparent(width, height int) {

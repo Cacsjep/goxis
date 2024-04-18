@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/Cacsjep/goxis/pkg/acapapp"
 	"github.com/Cacsjep/goxis/pkg/axlarod"
 	"github.com/Cacsjep/goxis/pkg/axvdo"
@@ -23,18 +21,16 @@ type larodExampleApplication struct {
 	streamHeight      int                            // streamHeight specifies the height of the video stream.
 	fps               int                            // fps represents the frame rate of the video stream.
 	sconfig           *axvdo.VideoSteamConfiguration // sconfig holds the configuration for the video stream.
-	fp                *acapapp.FrameProvider         // fp is the frame provider for capturing video frames.
 	pp_result         *axlarod.JobResult             // pp_result holds the result of the preprocessing model job.
 	infer_result      *axlarod.JobResult             // infer_result holds the result of the detection model job.
 	prediction_result *PredictionResult              // prediction_result stores the output of the inference process.
-	saveJpegs         bool                           // saveJpegs indicates whether to save frames as JPEG files.
 }
 
 // Initialize prepares and initializes all necessary components for the application.
 // It sets up models, video streaming and processing configurations.
 // Returns a configured instance of larodExampleApplication or an error if initialization fails.
 func Initalize() (*larodExampleApplication, error) {
-	lea := &larodExampleApplication{streamWidth: 480, streamHeight: 270, fps: 5, saveJpegs: false}
+	lea := &larodExampleApplication{streamWidth: 480, streamHeight: 270, fps: 5}
 	lea.app = acapapp.NewAcapApplication()
 
 	if err := lea.app.InitalizeLarod(); err != nil {
@@ -70,7 +66,7 @@ func main() {
 
 	for {
 		select {
-		case frame := <-lea.fp.FrameStreamChannel:
+		case frame := <-lea.app.FrameProvider.FrameStreamChannel:
 			if frame.Error != nil {
 				lea.app.Syslog.Errorf("Unexpected Vdo Error: %s", frame.Error.Error())
 				continue
@@ -82,24 +78,19 @@ func main() {
 				return
 			}
 
+			// Execute the detection model job
 			if lea.infer_result, err = lea.Inference(); err != nil {
 				lea.app.Syslog.Errorf("Failed to execute Detection Model: %s", err.Error())
 				return
 			}
 
-			if lea.saveJpegs {
-				err = axlarod.SaveImageAsJPEG(lea.pp_result.OutputData.([]byte), lea.streamWidth, lea.streamHeight, fmt.Sprintf("/tmp/frame-%d.jpg", frame.SequenceNbr))
-				if err != nil {
-					lea.app.Syslog.Errorf("Failed to save jpeg: %s", err.Error())
-				}
-			}
-
-			lea.prediction_result, err = lea.InferenceOutputRead(lea.infer_result.OutputData.([]byte))
-			if err != nil {
+			// Retrieve the prediction result
+			if lea.prediction_result, err = lea.InferenceOutputRead(lea.infer_result.OutputData.(*InferenceResult)); err != nil {
 				lea.app.Syslog.Errorf("Failed to convert prediction result: %s", err.Error())
 				return
 			}
-			lea.app.Syslog.Infof("Frame: %d, PP exec time: %.fms, Inference exec time: %.fms, Persons: %.1f, Car: %.1f",
+
+			lea.app.Syslog.Infof("Frame: %d, PP time: %.fms, Infer time: %.fms, Persons: %.1f%%, Car: %.1f%%",
 				frame.SequenceNbr,
 				lea.pp_result.ExecutionTime,
 				lea.infer_result.ExecutionTime,

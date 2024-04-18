@@ -18,6 +18,10 @@ func (lr *LarodResolution) ToArray() [2]int64 {
 	return [2]int64{int64(lr.Width), int64(lr.Height)}
 }
 
+func (lr *LarodResolution) RgbSize() uint {
+	return uint(lr.Width * lr.Height * 3)
+}
+
 // NewPreProccessModel creates a new pre-processing model with the specified device, input size, output size, and output format.
 func (l *Larod) NewPreProccessModel(device string, inputSize LarodResolution, outputSize LarodResolution, outputFormat PreProccessOutputFormat, job_params *LarodMap) (*LarodModel, error) {
 	var err error
@@ -42,7 +46,7 @@ func (l *Larod) NewPreProccessModel(device string, inputSize LarodResolution, ou
 			0: {UsePitch0Size: true}, // Input Tensor 0
 		},
 		OutputTmpMapFiles: map[int]*MemMapFile{
-			0: {Size: 480 * 270 * 3}, // Output Tensor 0
+			0: {Size: outputSize.RgbSize()}, // Output Tensor 0
 		},
 	}
 
@@ -51,10 +55,8 @@ func (l *Larod) NewPreProccessModel(device string, inputSize LarodResolution, ou
 	}
 
 	rgb_buffer_size := pp_model.OutputPitches.Pitches[0]
-	expectedSize := uint(outputSize.Width * outputSize.Height * 3)
-
-	if rgb_buffer_size != expectedSize {
-		return nil, fmt.Errorf("Expected size of RGB buffer is %d, but got %d", expectedSize, rgb_buffer_size)
+	if rgb_buffer_size != outputSize.RgbSize() {
+		return nil, fmt.Errorf("Expected size of RGB buffer is %d, but got %d", outputSize.RgbSize(), rgb_buffer_size)
 	}
 
 	_, err = pp_model.CreateJobRequest(pp_model.Inputs, pp_model.Outputs, job_params)

@@ -33,6 +33,7 @@ type AcapApplication struct {
 	Syslog              *axsyslog.Syslog
 	ParamHandler        *axparameter.AXParameter
 	EventHandler        *axevent.AXEventHandler
+	FrameProvider       *FrameProvider
 	Mainloop            *glib.GMainLoop
 	OnCloseCleaners     []func()
 	eventDeclarationIds []int
@@ -109,9 +110,22 @@ func (a *AcapApplication) Run() {
 	a.Mainloop.Run()
 }
 
+func (a *AcapApplication) RunInBackground() {
+	go a.Run()
+}
+
 // Add close or clean functions to app so in case of signals these are correct handled
 func (a *AcapApplication) AddCloseCleanFunc(f func()) {
 	a.OnCloseCleaners = append(a.OnCloseCleaners, f)
+}
+
+func (a *AcapApplication) AddModelCleaner(m *axlarod.LarodModel) {
+	a.AddCloseCleanFunc(func() {
+		err := a.Larod.DestroyModel(m)
+		if err != nil {
+			a.Syslog.Errorf("Failed to destroy model: %s, %s", m.Name, err.Error())
+		}
+	})
 }
 
 // Close terminates the application's main event loop and releases resources associated with the syslog, parameter handler,
@@ -126,6 +140,9 @@ func (a *AcapApplication) Close() {
 	}
 	if a.Larod != nil {
 		a.Larod.Disconnect()
+	}
+	if a.FrameProvider != nil {
+		a.FrameProvider.Stop()
 	}
 	a.Mainloop.Quit()     // Terminate the main loop.
 	a.ParamHandler.Free() // Release the parameter handler.
