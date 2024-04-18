@@ -1,3 +1,4 @@
+// Package utils provides utility functions for the goxis project.
 package utils
 
 // StrPtr returns a pointer to the given string value.

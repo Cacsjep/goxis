@@ -1,3 +1,4 @@
+// Package axmanifest provides a Go implementation of the Application Manifest Schema for Axis Camera Application Platform (ACAP) applications.
 package axmanifest
 
 import (

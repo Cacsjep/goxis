@@ -1,3 +1,4 @@
+// Package vapix provides functions to interact with Axis camera VAPIX API.
 package vapix
 
 import (

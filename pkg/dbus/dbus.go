@@ -1,3 +1,4 @@
+// Package dbus provides functions like retrieve VAPIX credentials from an Axis camera using D-Bus.
 package dbus
 
 import (

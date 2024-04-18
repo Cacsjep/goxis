@@ -1,3 +1,4 @@
+// Package axstorage provides a Go wrapper around the Axis ACAP SDK library, specifically the axstorage API.
 package axstorage
 
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axstorage/html/index.html

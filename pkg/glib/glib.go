@@ -1,3 +1,4 @@
+// Package glib provides Go bindings for GLib, only imlementing the necessary functions for the goxis project.
 package glib
 
 /*
