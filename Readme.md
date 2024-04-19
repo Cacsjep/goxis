@@ -91,6 +91,16 @@ func main() {
 ```
 
 Build it with [Goxisbuilder](https://github.com/Cacsjep/goxisbuilder): 
+Your file structure should look like this
+* myproject
+   * go.sum
+   * go.mod
+     * myawesomeacap
+       * *.go (app.go or main.go does not matter) 
+       * manifest.json
+       * LICENSE
+
+Execute in **myproject** folder:
 ```
 .\goxisbuilder.exe -appdir="myawesomeacap"
 ```
