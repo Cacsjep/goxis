@@ -39,7 +39,7 @@ Beyond the core API wrappers, Goxis also provides several additional packages de
 - Docker for building the ACAP applications
 - [goxisbuilder](https://github.com/Cacsjep/goxisbuilder)
 
-## Install
+## Install and usage
 ```
 go mod init yourproject
 go get github.com/Cacsjep/goxis
@@ -100,6 +100,9 @@ Checkout the examples to see more about *AcapApplication*.
 ## Examples
 
 Examples are really close to existing C examples of the [AXIS Native SDK repo](https://github.com/AxisCommunications/acap-native-sdk-examples).
+
+> [!NOTE]  
+> To successfully build a example you have to first init a go project with `go mod init yourproject`
 
 > [!NOTE]  
 > The examples use mainly acapapp package, all examples could also just written using the diffrent
