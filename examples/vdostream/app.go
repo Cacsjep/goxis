@@ -15,6 +15,7 @@ var (
 //
 // Orginal C Example: https://github.com/AxisCommunications/acap-native-sdk-examples/tree/main/vdostream
 func main() {
+
 	// Initialize a new ACAP application instance.
 	// AcapApplication initializes the ACAP application with there name, eventloop, and syslog etc..
 	app := acapapp.NewAcapApplication()

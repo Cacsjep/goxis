@@ -62,6 +62,7 @@ func renderCallback(renderEvent *axoverlay.OverlayRenderEvent) {
 }
 
 func main() {
+
 	// Initialize a new ACAP application instance.
 	// AcapApplication initializes the ACAP application with there name, eventloop, and syslog etc..
 	app = acapapp.NewAcapApplication()

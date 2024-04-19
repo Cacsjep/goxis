@@ -16,6 +16,7 @@ import (
 // Tipp: Use Axis Metadata Monitor to see live which events are produced by camera
 // https://www.axis.com/developer-community/axis-metadata-monitor
 func main() {
+
 	// Initialize a new ACAP application instance.
 	// AcapApplication initializes the ACAP application with there name, eventloop, and syslog etc..
 	app := acapapp.NewAcapApplication()

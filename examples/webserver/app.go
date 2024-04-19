@@ -30,6 +30,8 @@ func main() {
 	var app *acapapp.AcapApplication
 	var baseUri string
 
+	// Initialize a new ACAP application instance.
+	// AcapApplication initializes the ACAP application with there name, eventloop, and syslog etc..
 	app = acapapp.NewAcapApplication()
 
 	// Fiber
