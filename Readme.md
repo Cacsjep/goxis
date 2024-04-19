@@ -98,6 +98,10 @@ Checkout the examples to see more about *AcapApplication*.
 
 Examples are really close to existing C examples of the [AXIS Native SDK repo](https://github.com/AxisCommunications/acap-native-sdk-examples).
 
+> [!NOTE]  
+> The examples use mainly acapapp package, all examples could also just written using the diffrent
+go packages directly without using acapapp package.
+
 | Example         | Description |
 |-----------------|--------------|
 | `axevent/send`	            | Demonstrate how to declare and send an event using acapapp package     |
