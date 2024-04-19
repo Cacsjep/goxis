@@ -11,7 +11,12 @@ var (
 	err        error
 )
 
+// This example demonstrates how to use the axvdo to receive video frames from the camera.
+//
+// Orginal C Example: https://github.com/AxisCommunications/acap-native-sdk-examples/tree/main/vdostream
 func main() {
+	// Initialize a new ACAP application instance.
+	// AcapApplication initializes the ACAP application with there name, eventloop, and syslog etc..
 	app := acapapp.NewAcapApplication()
 
 	// FrameProvider for easy go channeld based frame receiving

@@ -11,52 +11,10 @@ var (
 	lea *larodExampleApplication // lea is an instance of the application handling video processing and model inference.
 )
 
-// larodExampleApplication struct defines the structure for this example.
-// It includes configuration for application, models, video stream, and other operational parameters.
-type larodExampleApplication struct {
-	app               *acapapp.AcapApplication       // app represents the acap application
-	PPModel           *axlarod.LarodModel            // PPModel is the preprocessing model.
-	DetectionModel    *axlarod.LarodModel            // DetectionModel is the model used for detecting objects in video frames.
-	streamWidth       int                            // streamWidth specifies the width of the video stream.
-	streamHeight      int                            // streamHeight specifies the height of the video stream.
-	fps               int                            // fps represents the frame rate of the video stream.
-	sconfig           *axvdo.VideoSteamConfiguration // sconfig holds the configuration for the video stream.
-	pp_result         *axlarod.JobResult             // pp_result holds the result of the preprocessing model job.
-	infer_result      *axlarod.JobResult             // infer_result holds the result of the detection model job.
-	prediction_result *PredictionResult              // prediction_result stores the output of the inference process.
-}
-
-// Initialize prepares and initializes all necessary components for the application.
-// It sets up models, video streaming and processing configurations.
-// Returns a configured instance of larodExampleApplication or an error if initialization fails.
-func Initalize() (*larodExampleApplication, error) {
-	lea := &larodExampleApplication{streamWidth: 480, streamHeight: 270, fps: 5}
-	lea.app = acapapp.NewAcapApplication()
-
-	if err := lea.app.InitalizeLarod(); err != nil {
-		return nil, err
-	}
-
-	if err = lea.InitalizePPModel(axlarod.PreProccessOutputFormatRgbInterleaved); err != nil {
-		return nil, err
-	}
-
-	for _, d := range lea.app.Larod.Devices {
-		lea.app.Syslog.Infof("Device: %s", d.Name)
-	}
-
-	if err = lea.InitalizeDetectionModel("converted_model.tflite", "axis-a8-dlpu-tflite"); err != nil {
-		return nil, err
-	}
-
-	if err = lea.InitalizeAndStartVdo(); err != nil {
-		return nil, err
-	}
-	return lea, nil
-}
-
-// main serves as the entry point of the application. It initializes the application and handles the main loop.
-// In case of failure during initialization, the application will panic.
+// ! Note this example only works on Artpec-8
+// This example demonstrates how to use the larod package to perform video processing and model inference for classification
+//
+// Orginal C Example: https://github.com/AxisCommunications/acap-native-sdk-examples/tree/main/vdo-larod
 func main() {
 	if lea, err = Initalize(); err != nil {
 		panic(err)
@@ -99,4 +57,56 @@ func main() {
 			)
 		}
 	}
+}
+
+// larodExampleApplication struct defines the structure for this example.
+// It includes configuration for application, models, video stream, and other operational parameters.
+type larodExampleApplication struct {
+	app               *acapapp.AcapApplication       // app represents the acap application
+	PPModel           *axlarod.LarodModel            // PPModel is the preprocessing model.
+	DetectionModel    *axlarod.LarodModel            // DetectionModel is the model used for detecting objects in video frames.
+	streamWidth       int                            // streamWidth specifies the width of the video stream.
+	streamHeight      int                            // streamHeight specifies the height of the video stream.
+	fps               int                            // fps represents the frame rate of the video stream.
+	sconfig           *axvdo.VideoSteamConfiguration // sconfig holds the configuration for the video stream.
+	pp_result         *axlarod.JobResult             // pp_result holds the result of the preprocessing model job.
+	infer_result      *axlarod.JobResult             // infer_result holds the result of the detection model job.
+	prediction_result *PredictionResult              // prediction_result stores the output of the inference process.
+}
+
+// Initialize prepares and initializes all necessary components for the application.
+// It sets up models, video streaming and processing configurations.
+// Returns a configured instance of larodExampleApplication or an error if initialization fails.
+func Initalize() (*larodExampleApplication, error) {
+	lea := &larodExampleApplication{streamWidth: 480, streamHeight: 270, fps: 5}
+
+	// Initialize a new ACAP application instance.
+	// AcapApplication initializes the ACAP application with there name, eventloop, and syslog etc..
+	lea.app = acapapp.NewAcapApplication()
+
+	// Initialize/Connecting Larod
+	if err := lea.app.InitalizeLarod(); err != nil {
+		return nil, err
+	}
+
+	// Initialize the preprocessing model
+	if err = lea.InitalizePPModel(axlarod.PreProccessOutputFormatRgbInterleaved); err != nil {
+		return nil, err
+	}
+
+	// Print the available devices
+	for _, d := range lea.app.Larod.Devices {
+		lea.app.Syslog.Infof("Device: %s", d.Name)
+	}
+
+	// Initialize the detection model
+	if err = lea.InitalizeDetectionModel("converted_model.tflite", "axis-a8-dlpu-tflite"); err != nil {
+		return nil, err
+	}
+
+	// Initialize and start the video stream
+	if err = lea.InitalizeAndStartVdo(); err != nil {
+		return nil, err
+	}
+	return lea, nil
 }

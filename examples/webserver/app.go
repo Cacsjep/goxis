@@ -15,15 +15,16 @@ var f embed.FS
 //go:embed static/*
 var embedDirStatic embed.FS
 
-// Webserver with Reverse Proxy
-// https://github.com/AxisCommunications/acap-native-sdk-examples/tree/main/web-server
+// This example demonstrates how to create a reverse proxy webserver with fiber.
 //
 // To use a webserver like fiber we use the reverse proxy support for ACAP,
 // therefrore we need to declare reverseProxy item in Manifest.
 //
 // Currently there is now way to declare a settingsPage directly to the reverseProxy path,
 // so we need a redirect.html that redirects to the correct path.
-// Thats needed because we want serve our own html files
+// Thats needed because we want serve our own html files.
+//
+// Original C Example: https://github.com/AxisCommunications/acap-native-sdk-examples/tree/main/web-server
 func main() {
 	var err error
 	var app *acapapp.AcapApplication
@@ -48,6 +49,9 @@ func main() {
 		PathPrefix: "static",
 		Browse:     true,
 	}))
+
+	// Start the webserver
 	fapp.Listen("127.0.0.1:2001")
-	app.Syslog.Info("Application was stopped")
+
+	app.Close()
 }

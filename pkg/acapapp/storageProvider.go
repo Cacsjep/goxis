@@ -23,8 +23,8 @@ type StorageProvider struct {
 // Whem useChannelEvents is true the DiskItemsEvents channel got events from subscriptions callbacks
 // in form of *axstorage.DiskItem.
 // Its an unbufferd channel with cap 10
-func (a *AcapApplication) NewStorageProvider(useChannelEvents bool) *StorageProvider {
-	return &StorageProvider{
+func (a *AcapApplication) NewStorageProvider(useChannelEvents bool) {
+	a.StorageProvider = &StorageProvider{
 		app:              a,
 		DiskItemsEvents:  make(chan *axstorage.DiskItem, 10),
 		UseChannelEvents: useChannelEvents,

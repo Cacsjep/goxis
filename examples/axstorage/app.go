@@ -7,16 +7,19 @@ import (
 	"github.com/Cacsjep/goxis/pkg/axstorage"
 )
 
-// https://github.com/AxisCommunications/acap-native-sdk-examples/blob/main/axstorage/app/axstorage.c#L200
+// This example demonstrates how to use the storage provider to interact with axstroage.
+//
+// Orginal C Example: https://github.com/AxisCommunications/acap-native-sdk-examples/tree/main/axstorage
 func main() {
+	// Initialize a new ACAP application instance.
+	// AcapApplication initializes the ACAP application with there name, eventloop, and syslog etc..
 	app := acapapp.NewAcapApplication()
 
 	// Storage provider setup
-	sp := app.NewStorageProvider(false)
-	if err := sp.Open(); err != nil {
+	app.NewStorageProvider(false)
+	if err := app.StorageProvider.Open(); err != nil {
 		app.Syslog.Crit(err.Error())
 	}
-	app.AddCloseCleanFunc(sp.Close)
 
 	var networkshare *axstorage.DiskItem
 	var diskFound bool
@@ -27,13 +30,13 @@ func main() {
 			// Wait for internal subscriptions and storage setups, for more control use storage provider with channel -> app.NewStorageProvider(true)
 			time.Sleep(time.Second * 2)
 
-			if networkshare, diskFound = sp.GetDiskItemById("NetworkShare"); !diskFound {
+			if networkshare, diskFound = app.StorageProvider.GetDiskItemById("NetworkShare"); !diskFound {
 				app.Syslog.Crit("NetworkShare not found")
 				continue
 			}
 
 			// Writes a file
-			if w := sp.WriteFile(networkshare, demoFile, []byte("Here is my content....")); w.RwError != acapapp.RWErrorNone {
+			if w := app.StorageProvider.WriteFile(networkshare, demoFile, []byte("Here is my content....")); w.RwError != acapapp.RWErrorNone {
 				app.Syslog.Errorf("Unable to create file because %s", w.Error)
 				continue
 			}
@@ -43,7 +46,7 @@ func main() {
 			time.Sleep(time.Second * 20)
 
 			// Remove a file
-			if r := sp.RemoveFile(networkshare, demoFile); r.RwError != acapapp.RWErrorNone {
+			if r := app.StorageProvider.RemoveFile(networkshare, demoFile); r.RwError != acapapp.RWErrorNone {
 				app.Syslog.Errorf("Unable to remove file because %s", r.Error)
 				continue
 			}
@@ -52,5 +55,8 @@ func main() {
 	}()
 
 	// Run gmain loop with signal handler attached.
+	// This will block the main thread until the application is stopped.
+	// The application can be stopped by sending a signal to the process (e.g. SIGINT).
+	// AxStorage needs a running event loop to handle the callbacks corretly
 	app.Run()
 }

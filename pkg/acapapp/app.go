@@ -34,6 +34,7 @@ type AcapApplication struct {
 	ParamHandler        *axparameter.AXParameter
 	EventHandler        *axevent.AXEventHandler
 	FrameProvider       *FrameProvider
+	StorageProvider     *StorageProvider
 	Mainloop            *glib.GMainLoop
 	OnCloseCleaners     []func()
 	eventDeclarationIds []int
@@ -143,6 +144,9 @@ func (a *AcapApplication) Close() {
 	}
 	if a.FrameProvider != nil {
 		a.FrameProvider.Stop()
+	}
+	if a.StorageProvider != nil {
+		a.StorageProvider.Close()
 	}
 	a.Mainloop.Quit()     // Terminate the main loop.
 	a.ParamHandler.Free() // Release the parameter handler.

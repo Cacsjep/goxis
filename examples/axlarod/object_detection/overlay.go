@@ -8,6 +8,7 @@ import (
 	"github.com/Cacsjep/goxis/pkg/axoverlay"
 )
 
+// Initialize the overlay provider
 func (lea *larodExampleApplication) InitOverlay() error {
 	if lea.overlayProvider, err = acapapp.NewOverlayProvider(renderCallback, nil, nil); err != nil {
 		return err
@@ -19,6 +20,7 @@ func (lea *larodExampleApplication) InitOverlay() error {
 	return nil
 }
 
+// renderCallback is used to draw bounding boxes from the detections via axoverlay
 func renderCallback(renderEvent *axoverlay.OverlayRenderEvent) {
 	lea := renderEvent.Userdata.(*larodExampleApplication)
 	renderEvent.CairoCtx.DrawTransparent(renderEvent.Stream.Width, renderEvent.Stream.Height)

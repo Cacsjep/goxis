@@ -8,9 +8,9 @@ import (
 	"github.com/Cacsjep/goxis/pkg/axoverlay"
 )
 
-// https://github.com/AxisCommunications/acap-native-sdk-examples/tree/main/axoverlay
+// This example demonstrate how to use overlay provider to draw overlays on the camera stream.
 //
-// This example uses axoverlay example to draw a rectangle and a text
+// Orginal C Example: https://github.com/AxisCommunications/acap-native-sdk-examples/tree/main/axoverlay
 // ! Note: Overlay callbacks only invoked when stream is viewed via web ui or rtsp etc..
 var (
 	app             *acapapp.AcapApplication
@@ -62,6 +62,8 @@ func renderCallback(renderEvent *axoverlay.OverlayRenderEvent) {
 }
 
 func main() {
+	// Initialize a new ACAP application instance.
+	// AcapApplication initializes the ACAP application with there name, eventloop, and syslog etc..
 	app = acapapp.NewAcapApplication()
 
 	// Overlayprovider is an highlevel wrapper around AxOvleray to make life easier
@@ -96,6 +98,9 @@ func main() {
 		}
 	}()
 
-	// Enter main loop
+	// Run gmain loop with signal handler attached.
+	// This will block the main thread until the application is stopped.
+	// The application can be stopped by sending a signal to the process (e.g. SIGINT).
+	// Axoverlay needs a running event loop to handle the overlay callbacks corretly
 	app.Run()
 }

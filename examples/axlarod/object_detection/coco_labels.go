@@ -1,5 +1,6 @@
 package main
 
+// coco_labels is a list of labels used in the COCO dataset.
 var coco_labels = []string{
 	"person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat",
 	"traffic light", "fire hydrant", "n/a", "stop sign", "parking meter", "bench",

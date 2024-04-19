@@ -7,7 +7,13 @@ import (
 	"github.com/Cacsjep/goxis/pkg/axparameter"
 )
 
+// This example demonstrate how to use paramHandler to easy interact with parameters.
+//
+// Orginal C Example: https://github.com/AxisCommunications/acap-native-sdk-examples/tree/main/axparameter
 func main() {
+
+	// Initialize a new ACAP application instance.
+	// AcapApplication initializes the ACAP application with there name, eventloop, and syslog etc..
 	app := acapapp.NewAcapApplication()
 
 	if serial_nbr, err := app.ParamHandler.Get("Properties.System.SerialNumber"); err != nil {
@@ -31,5 +37,8 @@ func main() {
 	}
 
 	// Run gmain loop with signal handler attached.
+	// This will block the main thread until the application is stopped.
+	// The application can be stopped by sending a signal to the process (e.g. SIGINT).
+	// Axparameter needs a running event loop to handle the parameter callbacks corretly
 	app.Run()
 }
