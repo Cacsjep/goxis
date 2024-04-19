@@ -41,7 +41,9 @@ Beyond the core API wrappers, Goxis also provides several additional packages de
 
 ## Install
 ```
+go mod init yourproject
 go get github.com/Cacsjep/goxis
+mkdir myawesomeacap
 ```
 
 ### Whats the purpose of goxis AcapApplication?
@@ -68,7 +70,8 @@ However, when leveraging the [goxisbuilder](https://github.com/Cacsjep/goxisbuil
 Each example follow this rule, just check out the examples.
 
 Here's how you can set up your project for success:
-
+- create a new go project with `go mod init yourproject`
+- install goxis via `go get github.com/Cacsjep/goxis`
 - Start by creating a new directory for your project, e.g., `myawesomeacap`. This directory will serve as the container for your application's components.
   - Inside your project directory, create a Go source file (`*.go`). Any copy the code below into it.
   - Add a `LICENSE` file to clearly state the licensing terms under which your application is distributed.
