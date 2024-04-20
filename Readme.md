@@ -39,11 +39,15 @@ Beyond the core API wrappers, Goxis also provides several additional packages de
 - Docker for building the ACAP applications
 - [goxisbuilder](https://github.com/Cacsjep/goxisbuilder)
 
-## Install and usage
+## Quickstart
 ```
-go mod init yourproject
+go install github.com/Cacsjep/goxisbuilder@latest
+goxisbuilder.exe -newapp
+```
+
+## Module Installation
+```
 go get github.com/Cacsjep/goxis
-mkdir myawesomeacap
 ```
 
 ### Whats the purpose of goxis AcapApplication?
@@ -57,52 +61,21 @@ Upon instantiation, `AcapApplication` undertakes several crucial steps::
 
 `AcapApplication` offers access to a variety of powerful functionalities, such as::
 - **FrameProvider:** Facilitates easy interaction with `axvdo`, streamlining video-related operations.
+- **OverlayProvide:** Facilitates easy interaction with `axoverlay` related operations.
 - **StorageProvider:** Offers straightforward access to the camera's storage, enhancing data management capabilities.
 - `app.IsLicenseValid(major_version int, minor_version int)`: Verifies the validity of the application's license for the specified version.
 - `app.Run()`: Activates the GMain loop within the application, allowing for continuous operation.
 - `app.GetSnapshot(video_channel int)`: Captures and retrieves a JPEG snapshot from a given video channel.
 
-### Create a new goxis AcapApplication
+and more ....
+
+### Create a new goxis application
 
 Creating a new ACAP application with Goxis follows a similar project structure to the standard approach recommended in the [AXIS Documentation](https://axiscommunications.github.io/acap-documentation/docs/develop/application-project-structure.html). 
 However, when leveraging the [goxisbuilder](https://github.com/Cacsjep/goxisbuilder) tool for streamlined builds, your application needs to be organized within a specific directory structure.
 
-Each example follow this rule, just check out the examples.
-
-Here's how you can set up your project for success:
-- create a new go project with `go mod init yourproject`
-- install goxis via `go get github.com/Cacsjep/goxis`
-- Start by creating a new directory for your project, e.g., `myawesomeacap`. This directory will serve as the container for your application's components.
-  - Inside your project directory, create a Go source file (`*.go`). Any copy the code below into it.
-  - Add a `LICENSE` file to clearly state the licensing terms under which your application is distributed.
-  - Include a `manifest.json` that should be correctly configured. [AXIS Documentation](https://axiscommunications.github.io/acap-documentation/docs/develop/application-project-structure.html#create-a-manifest-file-from-scratch)
-
-```go
-package main
-
-import (
-	"github.com/Cacsjep/goxis/pkg/acapapp"
-)
-
-func main() {
-	app := acapapp.NewAcapApplication()
-	app.Syslog.Info("Hello from My awesome acap")
-}
 ```
-
-Build it with [Goxisbuilder](https://github.com/Cacsjep/goxisbuilder): 
-Your file structure should look like this
-* myproject
-   * go.sum
-   * go.mod
-     * myawesomeacap
-       * *.go (app.go or main.go does not matter) 
-       * manifest.json
-       * LICENSE
-
-Execute in **myproject** folder:
-```
-.\goxisbuilder.exe -appdir="myawesomeacap"
+.\goxisbuilder.exe -newapp
 ```
 
 Checkout the examples to see more about *AcapApplication*.
