@@ -71,14 +71,11 @@ and more ....
 
 ### Create a new goxis application
 
-Creating a new ACAP application with Goxis follows a similar project structure to the standard approach recommended in the [AXIS Documentation](https://axiscommunications.github.io/acap-documentation/docs/develop/application-project-structure.html). 
-However, when leveraging the [goxisbuilder](https://github.com/Cacsjep/goxisbuilder) tool for streamlined builds, your application needs to be organized within a specific directory structure.
+Just use [goxisbuilder](https://github.com/Cacsjep/goxisbuilder) tool for streamlined builds.
 
 ```
 .\goxisbuilder.exe -newapp
 ```
-
-Checkout the examples to see more about *AcapApplication*.
 
 ## Examples
 
