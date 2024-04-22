@@ -45,6 +45,9 @@ go install github.com/Cacsjep/goxisbuilder@latest
 goxisbuilder.exe -newapp
 ```
 
+## Examples
+Located at this repo [Examples](https://github.com/Cacsjep/goxis_examples)
+
 ## Module Installation
 ```
 go get github.com/Cacsjep/goxis
@@ -76,10 +79,6 @@ Just use [goxisbuilder](https://github.com/Cacsjep/goxisbuilder) tool for stream
 ```
 .\goxisbuilder.exe -newapp
 ```
-
-## Examples
-
-Located at this repo [Examples](https://github.com/Cacsjep/goxis_examples)
 
 ## Useful ACAP Informations
 
