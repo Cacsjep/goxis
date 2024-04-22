@@ -1,0 +1,17 @@
+{
+    "acapPackageConf": {
+        "setup": {
+            "appName": "goxisyoloexample",
+            "embeddedSdkVersion": "3.0",
+            "friendlyName": "Goxis Yolov5 Example",
+            "runMode": "never",
+            "user": {
+                "group": "sdk",
+                "username": "sdk"
+            },
+            "vendor": "Goxis",
+            "version": "1.0.0"
+        }
+    },
+    "schemaVersion": "1.6.0"
+}

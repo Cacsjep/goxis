@@ -60,6 +60,12 @@ func (l *Larod) Connect() error {
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/larod/html/larod_8h.html#ab8f97b4b4d15798384ca25f32ca77bba
 func (l *Larod) Disconnect() error {
 	var cError *C.larodError
+	if l.conn == nil {
+		return nil
+	}
+	if l.conn.ptr == nil {
+		return nil
+	}
 	if C.larodDisconnect(&l.conn.ptr, &cError) == C.bool(false) {
 		return newLarodError(cError)
 	}
@@ -125,5 +131,6 @@ func (l *Larod) DestroyModel(model *LarodModel) error {
 			return err
 		}
 	}
+
 	return nil
 }

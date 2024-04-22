@@ -136,9 +136,10 @@ func CopyDataFromMappedMemory(mappedAddr unsafe.Pointer, size int) ([]byte, erro
 	if size <= 0 {
 		return nil, fmt.Errorf("size must be positive")
 	}
-	data := make([]byte, size)
-	C.memcpy(unsafe.Pointer(&data[0]), mappedAddr, C.size_t(size))
-	return data, nil
+	dataSlice := unsafe.Slice((*byte)(mappedAddr), size)
+	copiedData := make([]byte, size)
+	copy(copiedData, dataSlice)
+	return copiedData, nil
 }
 
 // randomString generates a random string of a specified length using the provided character set.

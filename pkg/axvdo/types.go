@@ -334,6 +334,10 @@ type VdoResolution struct {
 	Height int
 }
 
+func (r VdoResolution) RgbSize() int {
+	return r.Width * r.Height * 3
+}
+
 // VdoRect represents a rectangular area with width, height, and position (x, y).
 type VdoRect struct {
 	Width  uint // Width of the rectangle

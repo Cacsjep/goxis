@@ -78,6 +78,10 @@ type VideoSteamConfiguration struct {
 	AbrRetention_time *uint32 // Retention time in seconds
 }
 
+func (vsc *VideoSteamConfiguration) RgbFrameSize() int {
+	return *vsc.Width * *vsc.Height * 3
+}
+
 // StreamStats holds statistical information about a video stream, including metrics such as bitrate, frame rate, resolution, and more.
 // It provides a detailed view of the stream's current configuration and performance.
 type StreamStats struct {

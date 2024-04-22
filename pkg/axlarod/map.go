@@ -172,5 +172,11 @@ func (m *LarodMap) SetIntArr4(key string, value [4]int64) error {
 
 // Destroy cleans up resources associated with the LarodMap.
 func (m *LarodMap) Destroy() {
+	if m == nil {
+		return
+	}
+	if m.ptr == nil {
+		return
+	}
 	C.larodDestroyMap(&m.ptr)
 }

@@ -1,8 +1,10 @@
 package acapapp
 
 import (
+	"fmt"
 	"time"
 
+	"github.com/Cacsjep/goxis/pkg/axlarod"
 	"github.com/Cacsjep/goxis/pkg/axvdo"
 )
 
@@ -33,6 +35,7 @@ type FrameProvider struct {
 	FrameStreamChannel chan *axvdo.VideoFrame        // Channel for delivering video frames to consumers.
 	restartRetries     int                           // Counter for the number of restart attempts.
 	app                *AcapApplication              // Reference to the application managing this frame provider.
+	PostProcessModel   *axlarod.LarodModel           // Post proccessor for the frame provider, combination of the pp model and the frame provider
 }
 
 // FrameProviderStats provides statistical information about the operation of a FrameProvider.
@@ -72,6 +75,66 @@ func (fp *FrameProvider) createStream() (*axvdo.VdoStream, error) {
 	return axvdo.NewVideoStreamFromConfig(fp.Config)
 }
 
+// SetLarodPostProccessor initializes the post processor for the frame provider.
+// It creates a new preprocessor model based on the given device, output resolution, and RGB mode.
+// The post processor is used to convert the raw video frame data into a format suitable for processing by the detection model.
+func (fp *FrameProvider) SetLarodPostProccessor(device string, rgbMode axlarod.PreProccessOutputFormat, outReso *axvdo.VdoResolution) error {
+	var err error
+	if fp.app == nil {
+		return fmt.Errorf("Application is not initialized")
+	}
+
+	if fp.app.FrameProvider == nil {
+		return fmt.Errorf("FrameProvider is not initialized")
+	}
+
+	if fp.app.Larod == nil {
+		return fmt.Errorf("Larod is not initialized")
+	}
+
+	if fp.app.FrameProvider.Config.Width == nil || fp.app.FrameProvider.Config.Height == nil {
+		var channel *axvdo.VdoResolution
+		if fp.app.FrameProvider.Config.Channel == nil {
+			channel, err = axvdo.GetVdoChannelMaxResolution(1)
+		} else {
+			channel, err = axvdo.GetVdoChannelMaxResolution(*fp.app.FrameProvider.Config.Channel)
+		}
+		if err != nil {
+			return err
+		}
+		fp.app.FrameProvider.Config.Width = &channel.Width
+		fp.app.FrameProvider.Config.Height = &channel.Height
+	}
+
+	cropMap, err := axlarod.CreateCropMap(outReso.Width, outReso.Height, *fp.app.FrameProvider.Config.Width, *fp.app.FrameProvider.Config.Height)
+	if err != nil {
+		return err
+	}
+	if fp.app.FrameProvider.PostProcessModel, err = fp.app.Larod.NewPreProccessModel(
+		device,
+		axlarod.LarodResolution{Width: *fp.app.FrameProvider.Config.Width, Height: *fp.app.FrameProvider.Config.Height},
+		axlarod.LarodResolution{Width: outReso.Width, Height: outReso.Height},
+		rgbMode,
+		cropMap,
+	); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (fp *FrameProvider) frameProviderPostProcess(frame *axvdo.VideoFrame) (*axlarod.JobResult, error) {
+	var result *axlarod.JobResult
+	var err error
+	if result, err = fp.app.Larod.ExecuteJob(fp.app.FrameProvider.PostProcessModel, func() error {
+		return fp.app.FrameProvider.PostProcessModel.Inputs[0].CopyDataInto(frame.Data)
+	}, func() (any, error) {
+		return fp.app.FrameProvider.PostProcessModel.Outputs[0].GetData(fp.app.FrameProvider.Config.RgbFrameSize())
+	}); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
 // Start begins the frame streaming process, marking the FrameProvider as running and initiating the frame fetching loop.
 // If an error occurs while starting the stream, it returns the error without altering the provider's state.
 // Handles automatic restart in case of an expected Vdo error
@@ -109,7 +172,28 @@ func (fp *FrameProvider) Start() error {
 				continue
 			}
 			fp.restartRetries = 0
-			fp.FrameStreamChannel <- video_frame
+			if fp.PostProcessModel != nil {
+				job_r, err := fp.frameProviderPostProcess(video_frame)
+				var job_err error
+				var data []byte
+
+				if err != nil {
+					job_err = err
+				} else {
+					data = job_r.OutputData.([]byte)
+				}
+				fp.FrameStreamChannel <- &axvdo.VideoFrame{
+					Data:        data,
+					Size:        uint(len(data)),
+					SequenceNbr: video_frame.SequenceNbr,
+					Timestamp:   video_frame.Timestamp,
+					Type:        axvdo.VdoFrameTypeRGB,
+					Error:       job_err,
+				}
+
+			} else {
+				fp.FrameStreamChannel <- video_frame
+			}
 		}
 	}()
 	return nil

@@ -132,15 +132,8 @@ func (a *AcapApplication) AddModelCleaner(m *axlarod.LarodModel) {
 // Close terminates the application's main event loop and releases resources associated with the syslog, parameter handler,
 // event handler, and main loop. This should be called to cleanly shut down the application.
 func (a *AcapApplication) Close() {
-	a.Syslog.Info("Stop Application")
-	for _, f := range a.OnCloseCleaners {
-		f()
-	}
 	for _, declaration_id := range a.eventDeclarationIds {
 		a.EventHandler.Undeclare(declaration_id)
-	}
-	if a.Larod != nil {
-		a.Larod.Disconnect()
 	}
 	if a.FrameProvider != nil {
 		a.FrameProvider.Stop()
@@ -148,10 +141,17 @@ func (a *AcapApplication) Close() {
 	if a.StorageProvider != nil {
 		a.StorageProvider.Close()
 	}
+	for _, f := range a.OnCloseCleaners {
+		f()
+	}
+	if a.Larod != nil {
+		a.Larod.Disconnect()
+	}
 	a.Mainloop.Quit()     // Terminate the main loop.
 	a.ParamHandler.Free() // Release the parameter handler.
 	a.EventHandler.Free() // Release the event handler.
 	a.Syslog.Close()      // Close the syslog.
+	a.Syslog.Info("Application closed.")
 }
 
 // GetSnapshot captures a JPEG snapshot from the specified video channel and returns it as a byte slice.

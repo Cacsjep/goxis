@@ -96,5 +96,11 @@ func (m *LarodModel) RewindAllOutputsMemMapFiles() error {
 
 // LoadModelWithDeviceID loads a new model onto a specified device by ID.
 func (m *LarodModel) Destroy() {
+	if m == nil {
+		return
+	}
+	if m.ptr == nil {
+		return
+	}
 	C.larodDestroyModel(&m.ptr)
 }

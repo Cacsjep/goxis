@@ -104,5 +104,8 @@ func (model *LarodModel) CreateJobRequest(inputTensors []*LarodTensor, outputTen
 
 // DestroyJobRequest cleans up resources associated with a JobRequest.
 func (job *JobRequest) Destroy() {
+	if job.ptr == nil {
+		return
+	}
 	C.larodDestroyJobRequest(&job.ptr)
 }
