@@ -129,7 +129,7 @@ It’s recommended to use the latest manifest version available for the minimum 
 
 ### ACAP Native SDK
 
-**ACAP Release vs ACAP Native SDK Image version vs Compatible with AXIS OS version**
+**ACAP Release vs ACAP Native SDK Image version vs. Compatible with AXIS OS version**
 
 | ACAP Release | ACAP Native SDK Image version | Compatible with AXIS OS version |
 |--------------|-------------------------------|---------------------------------|
