@@ -79,29 +79,7 @@ Just use [goxisbuilder](https://github.com/Cacsjep/goxisbuilder) tool for stream
 
 ## Examples
 
-Examples are really close to existing C examples of the [AXIS Native SDK repo](https://github.com/AxisCommunications/acap-native-sdk-examples).
-
-> [!IMPORTANT]
-> To successfully build a example you have to first init a go project with `go mod init yourproject`.
-
-> [!NOTE]  
-> The examples use mainly acapapp package, all examples could also just written using the diffrent
-go packages directly without using acapapp package.
-
-| Example         | Description |
-|-----------------|--------------|
-| `axevent/send`	            | Demonstrate how to declare and send an event using acapapp package     |
-| `axevent/subscribe`	        | Demonstrate how to subscribe to an Virutal Input state change          |
-| `axoverlay`	                | Render rects via axolveray api                                         |
-| `axlarod/classify`	        | Classification example with larod and vdo api  (artpec-8)              |
-| `axlarod/object_detection`	| Object detection example with larod/vdo and overlay api api  (artpec-8)|
-| `axlarod/yolov5           `	| Yolov5 example with larod/vdo and overlay api api  (artpec-8)          |
-| `axparameter`                 | Demonstrate how to get an parameter and listen to changes              |
-| `axstorage`                   | Interact with axstorage api                                            |
-| `license` 	                | Show how to obtain the license state                                   |
-| `vdostream` 	                | High level wrapper demonstration to get video frames (stream)          |
-| `webserver`                   | Reverse proxy webserver with fiber                                     |
-
+Located at this repo [Examples](https://github.com/Cacsjep/goxis_examples)
 
 ## Useful ACAP Informations
 
