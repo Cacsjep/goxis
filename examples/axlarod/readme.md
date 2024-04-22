@@ -1,6 +1,7 @@
 ## Build
-To add the models to the final .eap package run for example **goxisbuilder** from repo root directory
-```
+To add the models to the final .eap package run for example **goxisbuilder** from repo root directory.
+
+```shell
 git clone https://github.com/Cacsjep/goxis
 cd goxis
 goxisbuilder.exe -appdir="examples/axlarod/yolov5" -files yolov5n.tflite
