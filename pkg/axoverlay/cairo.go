@@ -348,6 +348,65 @@ func (ctx *CairoContext) TextExtents(text string) *TextExtents {
 	return te
 }
 
+func (ctx *CairoContext) CreateSurfaceFromPNG(filename string) (*C.cairo_surface_t, error) {
+	cFilename := C.CString(filename)
+	defer C.free(unsafe.Pointer(cFilename))
+
+	surface := C.cairo_image_surface_create_from_png(cFilename)
+	if surfaceStatus := C.cairo_surface_status(surface); surfaceStatus != C.CAIRO_STATUS_SUCCESS {
+		return nil, fmt.Errorf("failed to create surface from PNG: %d", surfaceStatus)
+	}
+	return surface, nil
+}
+
+type CairoSurface struct {
+	surface *C.cairo_surface_t
+}
+
+func NewCairoSurfaceFromPNG(filename string) (*CairoSurface, error) {
+	cFilename := C.CString(filename)
+	defer C.free(unsafe.Pointer(cFilename))
+
+	surface := C.cairo_image_surface_create_from_png(cFilename)
+	if surfaceStatus := C.cairo_surface_status(surface); surfaceStatus != C.CAIRO_STATUS_SUCCESS {
+		return nil, fmt.Errorf("failed to create surface from PNG: %d", surfaceStatus)
+	}
+	return &CairoSurface{surface: surface}, nil
+}
+
+// Method to get the width of the surface
+func (s *CairoSurface) Width() int {
+	return int(C.cairo_image_surface_get_width(s.surface))
+}
+
+// Method to get the height of the surface
+func (s *CairoSurface) Height() int {
+	return int(C.cairo_image_surface_get_height(s.surface))
+}
+
+// Method to destroy the surface
+func (s *CairoSurface) Destroy() {
+	C.cairo_surface_destroy(s.surface)
+}
+
+func (ctx *CairoContext) PaintSurface(s *CairoSurface, x, y float64) {
+	C.cairo_set_source_surface(ctx.ptr, s.surface, C.double(x), C.double(y))
+	C.cairo_paint(ctx.ptr)
+}
+
+func (ctx *CairoContext) DrawPNG(filename string, x, y, xScale, yScale float64) error {
+	surface, err := NewCairoSurfaceFromPNG(filename)
+	if err != nil {
+		return err
+	}
+	defer surface.Destroy()
+
+	ctx.Scale(xScale, yScale)
+	ctx.PaintSurface(surface, x, y)
+
+	return nil
+}
+
 const (
 	FONT_WEIGHT_NORMAL = iota
 	FONT_WEIGHT_BOLD
