@@ -36,6 +36,7 @@ type FrameProvider struct {
 	restartRetries     int                           // Counter for the number of restart attempts.
 	app                *AcapApplication              // Reference to the application managing this frame provider.
 	PostProcessModel   *axlarod.LarodModel           // Post proccessor for the frame provider, combination of the pp model and the frame provider
+	outReso            *axvdo.VdoResolution
 }
 
 // FrameProviderStats provides statistical information about the operation of a FrameProvider.
@@ -100,6 +101,7 @@ func (fp *FrameProvider) SetLarodPostProccessor(device string, rgbMode axlarod.P
 	if err != nil {
 		return err
 	}
+	fp.outReso = outReso
 	if fp.app.FrameProvider.PostProcessModel, err = fp.app.Larod.NewPreProccessModel(
 		device,
 		axlarod.LarodResolution{Width: *fp.app.FrameProvider.Config.Width, Height: *fp.app.FrameProvider.Config.Height},
@@ -118,7 +120,7 @@ func (fp *FrameProvider) frameProviderPostProcess(frame *axvdo.VideoFrame) (*axl
 	if result, err = fp.app.Larod.ExecuteJob(fp.app.FrameProvider.PostProcessModel, func() error {
 		return fp.app.FrameProvider.PostProcessModel.Inputs[0].CopyDataInto(frame.Data)
 	}, func() (any, error) {
-		return fp.app.FrameProvider.PostProcessModel.Outputs[0].GetData(fp.app.FrameProvider.Config.RgbFrameSize())
+		return fp.app.FrameProvider.PostProcessModel.Outputs[0].GetData(fp.outReso.RgbSize())
 	}); err != nil {
 		return nil, err
 	}
