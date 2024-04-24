@@ -93,17 +93,7 @@ func (fp *FrameProvider) SetLarodPostProccessor(device string, rgbMode axlarod.P
 	}
 
 	if fp.app.FrameProvider.Config.Width == nil || fp.app.FrameProvider.Config.Height == nil {
-		var channel *axvdo.VdoResolution
-		if fp.app.FrameProvider.Config.Channel == nil {
-			channel, err = axvdo.GetVdoChannelMaxResolution(1)
-		} else {
-			channel, err = axvdo.GetVdoChannelMaxResolution(*fp.app.FrameProvider.Config.Channel)
-		}
-		if err != nil {
-			return err
-		}
-		fp.app.FrameProvider.Config.Width = &channel.Width
-		fp.app.FrameProvider.Config.Height = &channel.Height
+		return fmt.Errorf("FrameProvider width and height is not initialized")
 	}
 
 	cropMap, err := axlarod.CreateCropMap(outReso.Width, outReso.Height, *fp.app.FrameProvider.Config.Width, *fp.app.FrameProvider.Config.Height)
