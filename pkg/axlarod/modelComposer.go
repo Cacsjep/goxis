@@ -5,9 +5,12 @@ import (
 	"sort"
 )
 
+// ModelComposer is a struct that holds the necessary information to compose a model for inference.
+// It contains the labels, dequantization function, output parser, model, threshold, Larod instance, IoU threshold, and output tensor pitches.
+// Its suppose to be used to compose a model for inference, with the necessary information to do so.
 type ModelComposer struct {
 	Labels              []string
-	DequantizeFunc      func(int8) float32
+	DequantizeFunc      func(byte) float32
 	OutputParser        func(rawModelOuput []float32, mc *ModelComposer) []Detection
 	larodModel          *LarodModel
 	Threshold           float32
@@ -16,6 +19,7 @@ type ModelComposer struct {
 	OutputTensorPitches *LarodTensorPitches
 }
 
+// Detection is a struct that holds the information of a detection.
 type Detection struct {
 	Box        BoundingBox
 	Confidence float32
@@ -23,6 +27,7 @@ type Detection struct {
 	ClassLabel string
 }
 
+// InitializeModelComposer initializes a model composer with the necessary information to compose a model for inference.
 func InizalizeModelComposer(larod *Larod, modelFilePath string, chipString string, modelInput *MemMapFile, modelComposer *ModelComposer) error {
 	var err error
 	model_defs := MemMapConfiguration{
@@ -45,6 +50,7 @@ func InizalizeModelComposer(larod *Larod, modelFilePath string, chipString strin
 	return nil
 }
 
+// getDResult gets the result of the detection model.
 func (mc *ModelComposer) getDResult() ([]Detection, error) {
 	quant_output, err := mc.larodModel.Outputs[0].GetData(int(mc.OutputTensorPitches.Pitches[0]))
 	if err != nil {
@@ -52,11 +58,12 @@ func (mc *ModelComposer) getDResult() ([]Detection, error) {
 	}
 	output := make([]float32, len(quant_output))
 	for i, byteVal := range quant_output {
-		output[i] = mc.DequantizeFunc(int8(byteVal))
+		output[i] = mc.DequantizeFunc(byteVal)
 	}
 	return mc.nonMaximumSuppression(mc.OutputParser(output, mc)), nil
 }
 
+// Inference runs the inference of the model.
 func (mc *ModelComposer) Inference() (*JobResult, error) {
 	var err error
 	if err = mc.larodModel.RewindAllOutputsMemMapFiles(); err != nil {
@@ -73,10 +80,12 @@ func (mc *ModelComposer) Inference() (*JobResult, error) {
 	return result, nil
 }
 
+// Clean cleans the model.
 func (mc *ModelComposer) Clean() error {
 	return mc.larod.DestroyModel(mc.larodModel)
 }
 
+// BoundingBox is a struct that holds the information of a bounding box.
 func (mc *ModelComposer) computeIoU(box1, box2 BoundingBox) float64 {
 	x1, y1 := math.Max(float64(box1.Left), float64(box2.Left)), math.Max(float64(box1.Top), float64(box2.Top))
 	x2, y2 := math.Min(float64(box1.Right), float64(box2.Right)), math.Min(float64(box1.Bottom), float64(box2.Bottom))
@@ -88,6 +97,7 @@ func (mc *ModelComposer) computeIoU(box1, box2 BoundingBox) float64 {
 	return interArea / (float64(box1Area+box2Area) - interArea)
 }
 
+// nonMaximumSuppression performs non-maximum suppression on the detections.
 func (mc *ModelComposer) nonMaximumSuppression(detections []Detection) []Detection {
 	sort.Slice(detections, func(i, j int) bool {
 		return detections[i].Confidence > detections[j].Confidence
