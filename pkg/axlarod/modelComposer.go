@@ -9,7 +9,6 @@ type ModelComposer struct {
 	Labels              []string
 	DequantizeFunc      func(int8) float32
 	OutputParser        func(rawModelOuput []float32, mc *ModelComposer) []Detection
-	OutputSize          int
 	larodModel          *LarodModel
 	Threshold           float32
 	larod               *Larod
@@ -31,7 +30,7 @@ func InizalizeModelComposer(larod *Larod, modelFilePath string, chipString strin
 			0: modelInput, // Using of ppmodel output as input for detection model
 		},
 		OutputTmpMapFiles: map[int]*MemMapFile{
-			0: {Size: uint(modelComposer.OutputSize)},
+			0: {UsePitch0Size: true},
 		},
 	}
 	if modelComposer.larodModel, err = larod.NewInferModel(modelFilePath, chipString, model_defs, nil); err != nil {
@@ -47,7 +46,7 @@ func InizalizeModelComposer(larod *Larod, modelFilePath string, chipString strin
 }
 
 func (mc *ModelComposer) getDResult() ([]Detection, error) {
-	quant_output, err := mc.larodModel.Outputs[0].GetData(mc.OutputSize)
+	quant_output, err := mc.larodModel.Outputs[0].GetData(int(mc.OutputTensorPitches.Pitches[0]))
 	if err != nil {
 		return nil, err
 	}
