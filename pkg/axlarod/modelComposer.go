@@ -77,29 +77,6 @@ func (mc *ModelComposer) Clean() error {
 	return mc.larod.DestroyModel(mc.larodModel)
 }
 
-func (mc *ModelComposer) nonMaximumSuppression(detections []Detection) []Detection {
-	sort.Slice(detections, func(i, j int) bool {
-		return detections[i].Confidence > detections[j].Confidence
-	})
-
-	var keep []Detection
-
-	for i := 0; i < len(detections); i++ {
-		suppressed := false
-		for j := 0; j < len(keep); j++ {
-			if mc.computeIoU(detections[i].Box, keep[j].Box) > mc.IouThreshold {
-				suppressed = true
-				break
-			}
-		}
-		if !suppressed {
-			keep = append(keep, detections[i])
-		}
-	}
-	return keep
-}
-
-// computeIoU calculates the Intersection over Union (IoU) of two bounding boxes.
 func (mc *ModelComposer) computeIoU(box1, box2 BoundingBox) float64 {
 	x1, y1 := math.Max(float64(box1.Left), float64(box2.Left)), math.Max(float64(box1.Top), float64(box2.Top))
 	x2, y2 := math.Min(float64(box1.Right), float64(box2.Right)), math.Min(float64(box1.Bottom), float64(box2.Bottom))
@@ -109,4 +86,26 @@ func (mc *ModelComposer) computeIoU(box1, box2 BoundingBox) float64 {
 	}
 	box1Area, box2Area := (box1.Right-box1.Left)*(box1.Bottom-box1.Top), (box2.Right-box2.Left)*(box2.Bottom-box2.Top)
 	return interArea / (float64(box1Area+box2Area) - interArea)
+}
+
+func (mc *ModelComposer) nonMaximumSuppression(detections []Detection) []Detection {
+	sort.Slice(detections, func(i, j int) bool {
+		return detections[i].Confidence > detections[j].Confidence
+	})
+
+	keep := make([]Detection, 0, len(detections))
+	suppressed := make([]bool, len(detections))
+
+	for i := 0; i < len(detections); i++ {
+		if suppressed[i] {
+			continue
+		}
+		for j := i + 1; j < len(detections); j++ {
+			if !suppressed[j] && mc.computeIoU(detections[i].Box, detections[j].Box) > mc.IouThreshold {
+				suppressed[j] = true
+			}
+		}
+		keep = append(keep, detections[i])
+	}
+	return keep
 }
