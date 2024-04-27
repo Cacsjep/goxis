@@ -37,6 +37,7 @@ type FrameProvider struct {
 	app                *AcapApplication              // Reference to the application managing this frame provider.
 	PostProcessModel   *axlarod.LarodModel           // Post proccessor for the frame provider, combination of the pp model and the frame provider
 	outReso            *axvdo.VdoResolution
+	frameProccessor    func([]byte) []byte
 }
 
 // FrameProviderStats provides statistical information about the operation of a FrameProvider.
@@ -79,7 +80,7 @@ func (fp *FrameProvider) createStream() (*axvdo.VdoStream, error) {
 // SetLarodPostProccessor initializes the post processor for the frame provider.
 // It creates a new preprocessor model based on the given device, output resolution, and RGB mode.
 // The post processor is used to convert the raw video frame data into a format suitable for processing by the detection model.
-func (fp *FrameProvider) SetLarodPostProccessor(device string, rgbMode axlarod.PreProccessOutputFormat, outReso *axvdo.VdoResolution) error {
+func (fp *FrameProvider) SetLarodPostProccessor(device string, rgbMode axlarod.PreProccessOutputFormat, outReso *axvdo.VdoResolution, frameProccessor func([]byte) []byte) error {
 	var err error
 	if fp.app == nil {
 		return fmt.Errorf("Application is not initialized")
@@ -111,6 +112,7 @@ func (fp *FrameProvider) SetLarodPostProccessor(device string, rgbMode axlarod.P
 	); err != nil {
 		return err
 	}
+	fp.frameProccessor = frameProccessor
 	return nil
 }
 
@@ -118,7 +120,7 @@ func (fp *FrameProvider) frameProviderPostProcess(frame *axvdo.VideoFrame) (*axl
 	var result *axlarod.JobResult
 	var err error
 	if result, err = fp.app.Larod.ExecuteJob(fp.app.FrameProvider.PostProcessModel, func() error {
-		return fp.app.FrameProvider.PostProcessModel.Inputs[0].CopyDataInto(frame.Data)
+		return fp.app.FrameProvider.PostProcessModel.Inputs[0].CopyDataInto(fp.frameProccessor(frame.Data))
 	}, func() (any, error) {
 		return fp.app.FrameProvider.PostProcessModel.Outputs[0].GetData(fp.outReso.RgbSize())
 	}); err != nil {
