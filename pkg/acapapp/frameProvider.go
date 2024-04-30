@@ -120,9 +120,10 @@ func (fp *FrameProvider) frameProviderPostProcess(frame *axvdo.VideoFrame) (*axl
 	var result *axlarod.JobResult
 	var err error
 	if result, err = fp.app.Larod.ExecuteJob(fp.app.FrameProvider.PostProcessModel, func() error {
-		return fp.app.FrameProvider.PostProcessModel.Inputs[0].CopyDataInto(fp.frameProccessor(frame.Data))
+		return fp.app.FrameProvider.PostProcessModel.Inputs[0].CopyDataInto(frame.Data)
 	}, func() (any, error) {
-		return fp.app.FrameProvider.PostProcessModel.Outputs[0].GetData(fp.outReso.RgbSize())
+		img, err := fp.app.FrameProvider.PostProcessModel.Outputs[0].GetData(fp.outReso.RgbSize())
+		return fp.frameProccessor(img), err
 	}); err != nil {
 		return nil, err
 	}
