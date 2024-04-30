@@ -13,9 +13,9 @@ type ModelComposer struct {
 	DequantizeFunc      func(byte) float32
 	OutputParser        func(rawModelOuput []float32, mc *ModelComposer) []Detection
 	larodModel          *LarodModel
-	Threshold           float32
+	Threshold           *float32
 	larod               *Larod
-	IouThreshold        float64
+	IouThreshold        *float64
 	OutputTensorPitches *LarodTensorPitches
 }
 
@@ -111,7 +111,7 @@ func (mc *ModelComposer) nonMaximumSuppression(detections []Detection) []Detecti
 			continue
 		}
 		for j := i + 1; j < len(detections); j++ {
-			if !suppressed[j] && mc.computeIoU(detections[i].Box, detections[j].Box) > mc.IouThreshold {
+			if !suppressed[j] && mc.computeIoU(detections[i].Box, detections[j].Box) > *mc.IouThreshold {
 				suppressed[j] = true
 			}
 		}
