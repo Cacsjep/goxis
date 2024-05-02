@@ -147,6 +147,10 @@ func (fp *FrameProvider) Start() error {
 			video_frame := axvdo.GetVideoFrame(fp.stream)
 			if video_frame.Error != nil {
 				if video_frame.ErrorExpected {
+					if fp.state == FrameProviderStateStopped {
+						fp.app.Syslog.Warnf("VDO Channel(%d): exit frame loop", fp.Config.GetChannel())
+						return
+					}
 					fp.app.Syslog.Warnf("VDO Channel(%d): Restarting stream because vdo is in maintanance mode %s", fp.Config.GetChannel(), video_frame.Error.Error())
 					if err := fp.Restart(); err != nil {
 						fp.app.Syslog.Warnf("VDO Channel(%d): Unable to restart stream, try again...: %s", fp.Config.GetChannel(), err.Error())
@@ -206,6 +210,10 @@ func (fp *FrameProvider) Stop() {
 // Restart attempts to restart the video stream, first stopping the current stream and then re-initializing and starting a new stream.
 // It applies a delay before attempting the restart to give the system time to release resources.
 func (fp *FrameProvider) Restart() error {
+	if fp.state == FrameProviderStateStopped {
+		fp.app.Syslog.Warnf("VDO Channel(%d): exit frame loop", fp.Config.GetChannel())
+		return nil
+	}
 	time.Sleep(time.Second * 2)
 	fp.app.Syslog.Infof("VDO Channel(%d): Try to restart stream", fp.Config.GetChannel())
 	var err error
