@@ -96,28 +96,28 @@ const (
 type VdoFrameType int
 
 const (
-	VdoFrameTypeNone    VdoFrameType = C.VDO_FRAME_TYPE_NONE
-	VdoFrameTypeH264SPS VdoFrameType = C.VDO_FRAME_TYPE_H264_SPS
-	VdoFrameTypeH264PPS VdoFrameType = C.VDO_FRAME_TYPE_H264_PPS
-	VdoFrameTypeH264SEI VdoFrameType = C.VDO_FRAME_TYPE_H264_SEI
-	VdoFrameTypeH264IDR VdoFrameType = C.VDO_FRAME_TYPE_H264_IDR
-	VdoFrameTypeH264I   VdoFrameType = C.VDO_FRAME_TYPE_H264_I
-	VdoFrameTypeH264P   VdoFrameType = C.VDO_FRAME_TYPE_H264_P
-	VdoFrameTypeH264B   VdoFrameType = C.VDO_FRAME_TYPE_H264_B
-	VdoFrameTypeH265SPS VdoFrameType = C.VDO_FRAME_TYPE_H265_SPS
-	VdoFrameTypeH265PPS VdoFrameType = C.VDO_FRAME_TYPE_H265_PPS
-	VdoFrameTypeH265VPS VdoFrameType = C.VDO_FRAME_TYPE_H265_VPS
-	VdoFrameTypeH265SEI VdoFrameType = C.VDO_FRAME_TYPE_H265_SEI
-	VdoFrameTypeH265IDR VdoFrameType = C.VDO_FRAME_TYPE_H265_IDR
-	VdoFrameTypeH265I   VdoFrameType = C.VDO_FRAME_TYPE_H265_I
-	VdoFrameTypeH265P   VdoFrameType = C.VDO_FRAME_TYPE_H265_P
-	VdoFrameTypeH265B   VdoFrameType = C.VDO_FRAME_TYPE_H265_B
-	VdoFrameTypeJPEG    VdoFrameType = C.VDO_FRAME_TYPE_JPEG
-	VdoFrameTypeYUV     VdoFrameType = C.VDO_FRAME_TYPE_YUV
-	VdoFrameTypeRAW     VdoFrameType = C.VDO_FRAME_TYPE_RAW
-	VdoFrameTypeRGBA    VdoFrameType = C.VDO_FRAME_TYPE_RGBA
-	VdoFrameTypeRGB     VdoFrameType = C.VDO_FRAME_TYPE_RGB
-	VdoFrameTypePlanar  VdoFrameType = C.VDO_FRAME_TYPE_PLANAR_RGB
+	VdoFrameTypeNone      VdoFrameType = C.VDO_FRAME_TYPE_NONE
+	VdoFrameTypeH264SPS   VdoFrameType = C.VDO_FRAME_TYPE_H264_SPS
+	VdoFrameTypeH264PPS   VdoFrameType = C.VDO_FRAME_TYPE_H264_PPS
+	VdoFrameTypeH264SEI   VdoFrameType = C.VDO_FRAME_TYPE_H264_SEI
+	VdoFrameTypeH264IDR   VdoFrameType = C.VDO_FRAME_TYPE_H264_IDR
+	VdoFrameTypeH264I     VdoFrameType = C.VDO_FRAME_TYPE_H264_I
+	VdoFrameTypeH264P     VdoFrameType = C.VDO_FRAME_TYPE_H264_P
+	VdoFrameTypeH264B     VdoFrameType = C.VDO_FRAME_TYPE_H264_B
+	VdoFrameTypeH265SPS   VdoFrameType = C.VDO_FRAME_TYPE_H265_SPS
+	VdoFrameTypeH265PPS   VdoFrameType = C.VDO_FRAME_TYPE_H265_PPS
+	VdoFrameTypeH265VPS   VdoFrameType = C.VDO_FRAME_TYPE_H265_VPS
+	VdoFrameTypeH265SEI   VdoFrameType = C.VDO_FRAME_TYPE_H265_SEI
+	VdoFrameTypeH265IDR   VdoFrameType = C.VDO_FRAME_TYPE_H265_IDR
+	VdoFrameTypeH265I     VdoFrameType = C.VDO_FRAME_TYPE_H265_I
+	VdoFrameTypeH265P     VdoFrameType = C.VDO_FRAME_TYPE_H265_P
+	VdoFrameTypeH265B     VdoFrameType = C.VDO_FRAME_TYPE_H265_B
+	VdoFrameTypeJPEG      VdoFrameType = C.VDO_FRAME_TYPE_JPEG
+	VdoFrameTypeYUV       VdoFrameType = C.VDO_FRAME_TYPE_YUV
+	VdoFrameTypeRAW       VdoFrameType = C.VDO_FRAME_TYPE_RAW
+	VdoFrameTypeRGBA      VdoFrameType = C.VDO_FRAME_TYPE_RGBA
+	VdoFrameTypeRGB       VdoFrameType = C.VDO_FRAME_TYPE_RGB
+	VdoFrameTypePlanarRGB VdoFrameType = C.VDO_FRAME_TYPE_PLANAR_RGB
 )
 
 func (v VdoFrameType) String() string {
