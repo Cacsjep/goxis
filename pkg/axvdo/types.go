@@ -17,11 +17,11 @@ type VdoWdrMode int
 
 const (
 	VdoWdrModeNone   VdoWdrMode = C.VDO_WDR_MODE_NONE
-	VdoWdrModeLinear VdoWdrMode = C.VDO_WDR_MODE_LINEAR
-	VdoWdrMode2X     VdoWdrMode = C.VDO_WDR_MODE_2X
-	VdoWdrMode3X     VdoWdrMode = C.VDO_WDR_MODE_3X
-	VdoWdrMode4X     VdoWdrMode = C.VDO_WDR_MODE_4X
-	VdoWdrModeSensor VdoWdrMode = C.VDO_WDR_MODE_SENSOR
+	VdoWdrModeLinear            = C.VDO_WDR_MODE_LINEAR
+	VdoWdrMode2X                = C.VDO_WDR_MODE_2X
+	VdoWdrMode3X                = C.VDO_WDR_MODE_3X
+	VdoWdrMode4X                = C.VDO_WDR_MODE_4X
+	VdoWdrModeSensor            = C.VDO_WDR_MODE_SENSOR
 )
 
 // VdoFormat corresponds to the C enum VdoFormat.
@@ -29,16 +29,16 @@ type VdoFormat int
 
 const (
 	VdoFormatNone      VdoFormat = C.VDO_FORMAT_NONE
-	VdoFormatH264      VdoFormat = C.VDO_FORMAT_H264
-	VdoFormatH265      VdoFormat = C.VDO_FORMAT_H265
-	VdoFormatJPEG      VdoFormat = C.VDO_FORMAT_JPEG
-	VdoFormatYUV       VdoFormat = C.VDO_FORMAT_YUV
-	VdoFormatBayer     VdoFormat = C.VDO_FORMAT_BAYER
-	VdoFormatIVS       VdoFormat = C.VDO_FORMAT_IVS
-	VdoFormatRAW       VdoFormat = C.VDO_FORMAT_RAW
-	VdoFormatRGBA      VdoFormat = C.VDO_FORMAT_RGBA
-	VdoFormatRGB       VdoFormat = C.VDO_FORMAT_RGB
-	VdoFormatPlanarRGB VdoFormat = C.VDO_FORMAT_PLANAR_RGB
+	VdoFormatH264                = C.VDO_FORMAT_H264
+	VdoFormatH265                = C.VDO_FORMAT_H265
+	VdoFormatJPEG                = C.VDO_FORMAT_JPEG
+	VdoFormatYUV                 = C.VDO_FORMAT_YUV
+	VdoFormatBayer               = C.VDO_FORMAT_BAYER
+	VdoFormatIVS                 = C.VDO_FORMAT_IVS
+	VdoFormatRAW                 = C.VDO_FORMAT_RAW
+	VdoFormatRGBA                = C.VDO_FORMAT_RGBA
+	VdoFormatRGB                 = C.VDO_FORMAT_RGB
+	VdoFormatPlanarRGB           = C.VDO_FORMAT_PLANAR_RGB
 )
 
 // VdoFormatIsEncoded checks if the given format is one of the encoded formats (H264, H265, or JPEG).
@@ -57,9 +57,9 @@ type VdoH264Profile int
 
 const (
 	VdoH264ProfileNone     VdoH264Profile = C.VDO_H264_PROFILE_NONE
-	VdoH264ProfileBaseline VdoH264Profile = C.VDO_H264_PROFILE_BASELINE
-	VdoH264ProfileMain     VdoH264Profile = C.VDO_H264_PROFILE_MAIN
-	VdoH264ProfileHigh     VdoH264Profile = C.VDO_H264_PROFILE_HIGH
+	VdoH264ProfileBaseline                = C.VDO_H264_PROFILE_BASELINE
+	VdoH264ProfileMain                    = C.VDO_H264_PROFILE_MAIN
+	VdoH264ProfileHigh                    = C.VDO_H264_PROFILE_HIGH
 )
 
 // VdoH265Profile corresponds to the C enum VdoH265Profile.
@@ -67,8 +67,8 @@ type VdoH265Profile int
 
 const (
 	VdoH265ProfileNone   VdoH265Profile = C.VDO_H265_PROFILE_NONE
-	VdoH265ProfileMain   VdoH265Profile = C.VDO_H265_PROFILE_MAIN
-	VdoH265ProfileMain10 VdoH265Profile = C.VDO_H265_PROFILE_MAIN_10
+	VdoH265ProfileMain                  = C.VDO_H265_PROFILE_MAIN
+	VdoH265ProfileMain10                = C.VDO_H265_PROFILE_MAIN_10
 )
 
 // VdoRateControlMode corresponds to the C enum VdoRateControlMode.
@@ -76,10 +76,10 @@ type VdoRateControlMode int
 
 const (
 	VdoRateControlModeNone VdoRateControlMode = C.VDO_RATE_CONTROL_MODE_NONE
-	VdoRateControlModeCBR  VdoRateControlMode = C.VDO_RATE_CONTROL_MODE_CBR
-	VdoRateControlModeVBR  VdoRateControlMode = C.VDO_RATE_CONTROL_MODE_VBR
-	VdoRateControlModeMBR  VdoRateControlMode = C.VDO_RATE_CONTROL_MODE_MBR
-	VdoRateControlModeABR  VdoRateControlMode = C.VDO_RATE_CONTROL_MODE_ABR
+	VdoRateControlModeCBR                     = C.VDO_RATE_CONTROL_MODE_CBR
+	VdoRateControlModeVBR                     = C.VDO_RATE_CONTROL_MODE_VBR
+	VdoRateControlModeMBR                     = C.VDO_RATE_CONTROL_MODE_MBR
+	VdoRateControlModeABR                     = C.VDO_RATE_CONTROL_MODE_ABR
 )
 
 // VdoRateControlPriority corresponds to the C enum VdoRateControlPriority.
@@ -87,37 +87,37 @@ type VdoRateControlPriority int
 
 const (
 	VdoRateControlPriorityNone          VdoRateControlPriority = C.VDO_RATE_CONTROL_PRIORITY_NONE
-	VdoRateControlPriorityFramerate     VdoRateControlPriority = C.VDO_RATE_CONTROL_PRIORITY_FRAMERATE
-	VdoRateControlPriorityQuality       VdoRateControlPriority = C.VDO_RATE_CONTROL_PRIORITY_QUALITY
-	VdoRateControlPriorityFullFramerate VdoRateControlPriority = C.VDO_RATE_CONTROL_PRIORITY_FULL_FRAMERATE
+	VdoRateControlPriorityFramerate                            = C.VDO_RATE_CONTROL_PRIORITY_FRAMERATE
+	VdoRateControlPriorityQuality                              = C.VDO_RATE_CONTROL_PRIORITY_QUALITY
+	VdoRateControlPriorityFullFramerate                        = C.VDO_RATE_CONTROL_PRIORITY_FULL_FRAMERATE
 )
 
 // VdoRateControlPriority corresponds to the C enum VdoRateControlPriority.
 type VdoFrameType int
 
 const (
-	VdoFrameTypeNone VdoFrameType = iota
-	VdoFrameTypeH264SPS
-	VdoFrameTypeH264PPS
-	VdoFrameTypeH264SEI
-	VdoFrameTypeH264IDR
-	VdoFrameTypeH264I
-	VdoFrameTypeH264P
-	VdoFrameTypeH264B
-	VdoFrameTypeH265SPS
-	VdoFrameTypeH265PPS
-	VdoFrameTypeH265VPS
-	VdoFrameTypeH265SEI
-	VdoFrameTypeH265IDR
-	VdoFrameTypeH265I
-	VdoFrameTypeH265P
-	VdoFrameTypeH265B
-	VdoFrameTypeJPEG
-	VdoFrameTypeYUV
-	VdoFrameTypeRAW
-	VdoFrameTypeRGBA
-	VdoFrameTypeRGB
-	VdoFrameTypePlanarRGB
+	VdoFrameTypeNone      VdoFrameType = C.VDO_FRAME_TYPE_NONE
+	VdoFrameTypeH264SPS                = C.VDO_FRAME_TYPE_H264_SPS
+	VdoFrameTypeH264PPS                = C.VDO_FRAME_TYPE_H264_PPS
+	VdoFrameTypeH264SEI                = C.VDO_FRAME_TYPE_H264_SEI
+	VdoFrameTypeH264IDR                = C.VDO_FRAME_TYPE_H264_IDR
+	VdoFrameTypeH264I                  = C.VDO_FRAME_TYPE_H264_I
+	VdoFrameTypeH264P                  = C.VDO_FRAME_TYPE_H264_P
+	VdoFrameTypeH264B                  = C.VDO_FRAME_TYPE_H264_B
+	VdoFrameTypeH265SPS                = C.VDO_FRAME_TYPE_H265_SPS
+	VdoFrameTypeH265PPS                = C.VDO_FRAME_TYPE_H265_PPS
+	VdoFrameTypeH265VPS                = C.VDO_FRAME_TYPE_H265_VPS
+	VdoFrameTypeH265SEI                = C.VDO_FRAME_TYPE_H265_SEI
+	VdoFrameTypeH265IDR                = C.VDO_FRAME_TYPE_H265_IDR
+	VdoFrameTypeH265I                  = C.VDO_FRAME_TYPE_H265_I
+	VdoFrameTypeH265P                  = C.VDO_FRAME_TYPE_H265_P
+	VdoFrameTypeH265B                  = C.VDO_FRAME_TYPE_H265_B
+	VdoFrameTypeJPEG                   = C.VDO_FRAME_TYPE_JPEG
+	VdoFrameTypeYUV                    = C.VDO_FRAME_TYPE_YUV
+	VdoFrameTypeRAW                    = C.VDO_FRAME_TYPE_RAW
+	VdoFrameTypeRGBA                   = C.VDO_FRAME_TYPE_RGBA
+	VdoFrameTypeRGB                    = C.VDO_FRAME_TYPE_RGB
+	VdoFrameTypePlanarRGB              = C.VDO_FRAME_TYPE_PLANAR_RGB
 )
 
 func (v VdoFrameType) String() string {
@@ -175,16 +175,16 @@ type VdoZipStreamProfile int
 
 const (
 	VdoZipStreamProfileNone    VdoZipStreamProfile = -1
-	VdoZipStreamProfileClassic VdoZipStreamProfile = 0
-	VdoZipStreamProfileStorage VdoZipStreamProfile = 1
-	VdoZipStreamProfileLive    VdoZipStreamProfile = 2
+	VdoZipStreamProfileClassic                     = 0
+	VdoZipStreamProfileStorage                     = 1
+	VdoZipStreamProfileLive                        = 2
 )
 
 type VdoChunkType uint
 
 const (
 	VdoChunkNone  VdoChunkType = 0
-	VdoChunkError VdoChunkType = 1 << 31
+	VdoChunkError              = 1 << 31
 )
 
 // VdoChunk represents a chunk of data with a specified type.
@@ -237,89 +237,89 @@ type VdoOverlayAlign int
 
 const (
 	VdoOverlayAlignNone   VdoOverlayAlign = -1
-	VdoOverlayAlignTop    VdoOverlayAlign = 0
-	VdoOverlayAlignBottom VdoOverlayAlign = 1
+	VdoOverlayAlignTop                    = 0
+	VdoOverlayAlignBottom                 = 1
 )
 
 type VdoOverlayColor uint16
 
 const (
 	VdoOverlayColorTransparent VdoOverlayColor = 0x0000
-	VdoOverlayColorBlack       VdoOverlayColor = 0xF000
-	VdoOverlayColorWhite       VdoOverlayColor = 0xFFFF
+	VdoOverlayColorBlack                       = 0xF000
+	VdoOverlayColorWhite                       = 0xFFFF
 )
 
 type VdoOverlayTextSize int
 
 const (
 	VdoOverlayTextSizeSmall  VdoOverlayTextSize = 16
-	VdoOverlayTextSizeMedium VdoOverlayTextSize = 32
-	VdoOverlayTextSizeLarge  VdoOverlayTextSize = 48
+	VdoOverlayTextSizeMedium                    = 32
+	VdoOverlayTextSizeLarge                     = 48
 )
 
 type VdoStreamTimestamp uint
 
 const (
 	VdoTimestampNone                  VdoStreamTimestamp = 0
-	VdoTimestampUTC                   VdoStreamTimestamp = 1
-	VdoTimestampZipstream             VdoStreamTimestamp = 2
-	VdoTimestampDiff                  VdoStreamTimestamp = 4
-	VdoTimestampMonoCapture           VdoStreamTimestamp = 8
-	VdoTimestampMonoServer            VdoStreamTimestamp = 16
-	VdoTimestampMonoClient            VdoStreamTimestamp = 32
-	VdoTimestampMonoClientServerDiff  VdoStreamTimestamp = VdoTimestampDiff | VdoTimestampMonoClient | VdoTimestampMonoServer
-	VdoTimestampMonoClientCaptureDiff VdoStreamTimestamp = VdoTimestampDiff | VdoTimestampMonoClient | VdoTimestampMonoCapture
+	VdoTimestampUTC                                      = 1
+	VdoTimestampZipstream                                = 2
+	VdoTimestampDiff                                     = 4
+	VdoTimestampMonoCapture                              = 8
+	VdoTimestampMonoServer                               = 16
+	VdoTimestampMonoClient                               = 32
+	VdoTimestampMonoClientServerDiff                     = VdoTimestampDiff | VdoTimestampMonoClient | VdoTimestampMonoServer
+	VdoTimestampMonoClientCaptureDiff                    = VdoTimestampDiff | VdoTimestampMonoClient | VdoTimestampMonoCapture
 )
 
 type VdoIntent uint
 
 const (
 	VdoIntentNone     VdoIntent = 0
-	VdoIntentControl  VdoIntent = 1
-	VdoIntentMonitor  VdoIntent = 2
-	VdoIntentConsume  VdoIntent = 4
-	VdoIntentProduce  VdoIntent = 8
-	VdoIntentDefault  VdoIntent = VdoIntentConsume | VdoIntentControl
-	VdoIntentEventFD  VdoIntent = 16
-	VdoIntentUniverse VdoIntent = ^VdoIntent(0)
+	VdoIntentControl            = 1
+	VdoIntentMonitor            = 2
+	VdoIntentConsume            = 4
+	VdoIntentProduce            = 8
+	VdoIntentDefault            = VdoIntentConsume | VdoIntentControl
+	VdoIntentEventFD            = 16
+	VdoIntentUniverse           = ^VdoIntent(0)
 )
 
 type VdoStreamEvent uint
 
 const (
 	VdoStreamEventNone      VdoStreamEvent = 0x00
-	VdoStreamEventStarted   VdoStreamEvent = 0x01
-	VdoStreamEventStopped   VdoStreamEvent = 0x02
-	VdoStreamEventResource  VdoStreamEvent = 0x10
-	VdoStreamEventQuotaSoft VdoStreamEvent = 0x11
-	VdoStreamEventQuotaHard VdoStreamEvent = 0x12
-	VdoStreamEventZipstream VdoStreamEvent = 0x20
-	VdoStreamEventInvalid   VdoStreamEvent = ^VdoStreamEvent(0)
+	VdoStreamEventStarted                  = 0x01
+	VdoStreamEventStopped                  = 0x02
+	VdoStreamEventResource                 = 0x10
+	VdoStreamEventQuotaSoft                = 0x11
+	VdoStreamEventQuotaHard                = 0x12
+	VdoStreamEventZipstream                = 0x20
+	VdoStreamEventInvalid                  = ^VdoStreamEvent(0)
 )
 
 type VdoBufferAccess uint
 
 const (
 	VdoBufferAccessNone  VdoBufferAccess = 0
-	VdoBufferAccessCPURd VdoBufferAccess = 1 << 0
-	VdoBufferAccessDEVRd VdoBufferAccess = 1 << 1
-	VdoBufferAccessAnyRd VdoBufferAccess = VdoBufferAccessCPURd | VdoBufferAccessDEVRd
-	VdoBufferAccessCPUWr VdoBufferAccess = 1 << 8
-	VdoBufferAccessDEVWr VdoBufferAccess = 1 << 9
-	VdoBufferAccessAnyWr VdoBufferAccess = VdoBufferAccessCPUWr | VdoBufferAccessDEVWr
-	VdoBufferAccessCPURW VdoBufferAccess = VdoBufferAccessCPURd | VdoBufferAccessCPUWr
-	VdoBufferAccessDEVRW VdoBufferAccess = VdoBufferAccessDEVRd | VdoBufferAccessDEVWr
-	VdoBufferAccessAnyRW VdoBufferAccess = VdoBufferAccessCPURW | VdoBufferAccessDEVRW
+	VdoBufferAccessCPURd                 = 1 << 0
+	VdoBufferAccessDEVRd                 = 1 << 1
+	VdoBufferAccessAnyRd                 = VdoBufferAccessCPURd | VdoBufferAccessDEVRd
+	VdoBufferAccessCPUWr                 = 1 << 8
+	VdoBufferAccessDEVWr                 = 1 << 9
+	VdoBufferAccessAnyWr                 = VdoBufferAccessCPUWr | VdoBufferAccessDEVWr
+	VdoBufferAccessCPURW                 = VdoBufferAccessCPURd | VdoBufferAccessCPUWr
+	VdoBufferAccessDEVRW                 = VdoBufferAccessDEVRd | VdoBufferAccessDEVWr
+	VdoBufferAccessAnyRW                 = VdoBufferAccessCPURW | VdoBufferAccessDEVRW
 )
 
 type VdoBufferStrategy int
 
 const (
 	VdoBufferStrategyNone     VdoBufferStrategy = 0
-	VdoBufferStrategyInput    VdoBufferStrategy = 1
-	VdoBufferStrategyExternal VdoBufferStrategy = 2
-	VdoBufferStrategyExplicit VdoBufferStrategy = 3
-	VdoBufferStrategyInfinite VdoBufferStrategy = 4
+	VdoBufferStrategyInput                      = 1
+	VdoBufferStrategyExternal                   = 2
+	VdoBufferStrategyExplicit                   = 3
+	VdoBufferStrategyInfinite                   = 4
 )
 
 // VdoMemChunk represents a memory chunk with its data pointer and size.
