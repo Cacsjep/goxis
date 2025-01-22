@@ -424,7 +424,7 @@ func MdbTests(t *testing.T) {
 	con.Destroy()
 
 	fmt.Println("Provider Test MDB")
-	provider, err := axmdb.NewMDBProvider[axmdb.SceneDescription]("source-1")
+	provider, err := axmdb.NewMDBProvider[axmdb.SceneDescription]("1")
 	assert.NoError(t, err)
 
 	closeChan := make(chan bool)
