@@ -8,11 +8,7 @@
             "version": "1.0.1",
             "appId": "414614",
             "runMode": "never",
-            "embeddedSdkVersion": "3.0",
-            "user": {
-                "group": "root",
-                "username": "root"
-            }
+            "embeddedSdkVersion": "3.0"
         },
         "configuration": {
             "paramConfig": [],

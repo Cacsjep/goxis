@@ -151,7 +151,11 @@ func AxOverlayDataInitalze(overlay_data *AxOverlayOverlayData) error {
 }
 
 func (s *AxOverlayOverlayData) Free() {
+	if (s.ptr) == nil {
+		return
+	}
 	C.free(unsafe.Pointer(s.ptr))
+	s.ptr = nil
 }
 
 // axoverlayInitOverlayData initializes an axoverlay_overlay_data struct with default values.
@@ -208,7 +212,11 @@ func NewAxOverlaySettings(render AxOverlayRenderCallback, adjustment AxOverlayAd
 }
 
 func (s *AxOverlaySettings) Free() {
+	if (s.ptr) == nil {
+		return
+	}
 	C.free(unsafe.Pointer(s.ptr))
+	s.ptr = nil
 }
 
 //export GoAxOverlayStreamSelectCallback

@@ -49,6 +49,10 @@ func AXParameterNew(appName string) (*AXParameter, error) {
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axparameter/html/ax__parameter_8h.html#a9069e0a2a3c64cacd7d50f1408a9f5fa
 func (axp *AXParameter) Add(name string, initialValue string, ptype string) error {
+	if axp.Ptr == nil {
+		return fmt.Errorf("AXParameter is nil")
+	}
+
 	var gerr *C.GError
 
 	cName := C.CString(name)
@@ -70,6 +74,10 @@ func (axp *AXParameter) Add(name string, initialValue string, ptype string) erro
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axparameter/html/ax__parameter_8h.html#aa6f49de80979e1f25ea9d98c449ac8c4
 func (axp *AXParameter) Remove(name string) error {
+	if axp.Ptr == nil {
+		return fmt.Errorf("AXParameter is nil")
+	}
+
 	cName := C.CString(name)
 	defer C.free(unsafe.Pointer(cName))
 	var gerr *C.GError
@@ -83,6 +91,10 @@ func (axp *AXParameter) Remove(name string) error {
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axparameter/html/ax__parameter_8h.html#a3b767bcb3c99edf38b9fab3f38b7f2d7
 func (axp *AXParameter) Set(name string, value string, doSync bool) error {
+	if axp.Ptr == nil {
+		return fmt.Errorf("AXParameter is nil")
+	}
+
 	cName := C.CString(name)
 	defer C.free(unsafe.Pointer(cName))
 
@@ -101,6 +113,10 @@ func (axp *AXParameter) Set(name string, value string, doSync bool) error {
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axparameter/html/ax__parameter_8h.html#aa7979d96d425189cfbf5fac6539bbc68
 func (axp *AXParameter) Get(name string) (string, error) {
+	if axp.Ptr == nil {
+		return "", fmt.Errorf("AXParameter is nil")
+	}
+
 	cName := C.CString(name)
 	defer C.free(unsafe.Pointer(cName))
 
@@ -142,6 +158,9 @@ func (axp *AXParameter) GetAsInt(name string) (int, error) {
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axparameter/html/ax__parameter_8h.html#ace7b30d51c85d90509de80086b00d655
 func (axp *AXParameter) List() ([]string, error) {
+	if axp.Ptr == nil {
+		return nil, fmt.Errorf("AXParameter is nil")
+	}
 	var params []string
 	var gerr *C.GError
 
@@ -235,6 +254,9 @@ func (axp *AXParameter) UnregisterCallback(name string) error {
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axparameter/html/ax__parameter_8h.html#a78ff4b5a312a1d9aab120436c116a5a2
 func (axp *AXParameter) Free() {
+	if (axp.Ptr) == nil {
+		return
+	}
 	C.ax_parameter_free(axp.Ptr)
 }
 

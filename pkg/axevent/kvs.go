@@ -448,7 +448,10 @@ func valueConverter(value interface{}, value_type AXEventValueType) (C.gconstpoi
 
 // Frees an AXEventKeyValueSet.
 func (axEventKeyValueSet *AXEventKeyValueSet) Free() {
-	C.ax_event_key_value_set_free(axEventKeyValueSet.Ptr)
+	if (axEventKeyValueSet.Ptr) != nil {
+		C.ax_event_key_value_set_free(axEventKeyValueSet.Ptr)
+		axEventKeyValueSet.Ptr = nil
+	}
 }
 
 // nilOrCString safely converts a Go string pointer to a C string.

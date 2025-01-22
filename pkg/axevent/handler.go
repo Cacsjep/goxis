@@ -203,7 +203,11 @@ func (eh *AXEventHandler) Unsubscribe(subscription int) error {
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axevent/html/ax__event__handler_8h.html#ac8fa0ee5cba77fffffad4153833b040d
 func (eh *AXEventHandler) Free() {
+	if (eh.Ptr) == nil {
+		return
+	}
 	C.ax_event_handler_free(eh.Ptr)
+	eh.Ptr = nil
 }
 
 type Event struct {

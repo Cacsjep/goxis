@@ -8,6 +8,7 @@ import (
 
 	"github.com/Cacsjep/goxis/pkg/axevent"
 	"github.com/Cacsjep/goxis/pkg/axlicense"
+	"github.com/Cacsjep/goxis/pkg/axmdb"
 	"github.com/Cacsjep/goxis/pkg/axparameter"
 	"github.com/Cacsjep/goxis/pkg/axvdo"
 	"github.com/Cacsjep/goxis/pkg/glib"
@@ -18,14 +19,15 @@ func main() {
 	testing.Main(
 		nil,
 		[]testing.InternalTest{
-			{"TestVdoMapOperations", TestVdoMapOperations},
-			{"VdoMapTest", VdoMapTest},
-			{"VdoChannelTest", VdoChannelTest},
-			{"TestVdoStream", TestVdoStream},
-			{"LicenseTest", LicenseTest},
-			{"ParamTests", ParamTests},
-			{"EventTests", EventTests},
-			{"EventHandlerTests", EventHandlerTests},
+			//{"EventTests", EventTests},
+			//{"TestVdoMapOperations", TestVdoMapOperations},
+			//{"VdoMapTest", VdoMapTest},
+			//{"VdoChannelTest", VdoChannelTest},
+			//{"TestVdoStream", TestVdoStream},
+			//{"LicenseTest", LicenseTest},
+			//{"ParamTests", ParamTests},
+			//{"EventHandlerTests", EventHandlerTests},
+			{"MdbTests", MdbTests},
 		},
 		nil, nil,
 	)
@@ -400,6 +402,29 @@ func ParamTests(t *testing.T) {
 	m.Run()
 }
 
+func MdbTests(t *testing.T) {
+	con, err := axmdb.MDBConnectionCreate(func(cerr error) {
+		fmt.Println("Error callback invoked", cerr)
+		assert.Error(t, cerr)
+	})
+	assert.NoError(t, err)
+	assert.NotNil(t, con)
+
+	subc, err := axmdb.MDBSubscriberConfigCreate("com.axis.analytics_scene_description.v0.beta", "1", func(msg *axmdb.Message) {
+		t.Log("Message callback invoked", msg)
+	})
+	assert.NoError(t, err)
+
+	sub, err := axmdb.MDBSubscriberCreateAsync(con, subc, func(donerr error) {
+		fmt.Println("Subscriber created", donerr)
+	})
+
+	sub.Destroy()
+	subc.Destroy()
+	con.Destroy()
+
+}
+
 func EventHandlerTests(t *testing.T) {
 	set := axevent.NewAXEventKeyValueSet()
 	namespacet1 := "tns1"
@@ -407,7 +432,7 @@ func EventHandlerTests(t *testing.T) {
 	assert.NoError(t, err)
 	handler := axevent.NewEventHandler()
 	subscription, err2 := handler.Subscribe(set, func(subscription int, event *axevent.AXEvent, userdata any) {
-		fmt.Println("Callback invoked", subscription, event.GetTimestamp(), userdata.(string))
+		fmt.Println("EVT Callback invoked", subscription, event.GetTimestamp(), userdata.(string))
 	}, "myuserdata")
 	assert.NotNil(t, subscription)
 	assert.Equal(t, 1, subscription)

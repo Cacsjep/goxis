@@ -60,5 +60,9 @@ func (axEvent *AXEvent) GetTimestamp() time.Time {
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axevent/html/ax__event_8h.html#a011c2d3b82c8e9cbcf0fab02610a5020
 func (axEvent *AXEvent) Free() {
+	if axEvent.Ptr == nil {
+		return
+	}
 	C.ax_event_free(axEvent.Ptr)
+	axEvent.Ptr = nil
 }
