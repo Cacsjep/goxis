@@ -423,6 +423,34 @@ func MdbTests(t *testing.T) {
 	subc.Destroy()
 	con.Destroy()
 
+	fmt.Println("Provider Test MDB")
+	provider, err := axmdb.NewMDBProvider[axmdb.SceneDescription]("source-1")
+	assert.NoError(t, err)
+
+	closeChan := make(chan bool)
+
+	go func() {
+		for {
+			select {
+			case <-closeChan:
+				provider.Disconnect()
+				return
+			case err := <-provider.ErrorChan:
+				if err != nil {
+					fmt.Println("Error received: %v\n", err)
+				} else {
+					fmt.Println("Received nil error", err)
+				}
+			case msg := <-provider.MessageChan:
+				fmt.Println(msg.String())
+			}
+		}
+	}()
+
+	provider.Connect()
+	time.Sleep(time.Second * 10)
+	closeChan <- true
+
 }
 
 func EventHandlerTests(t *testing.T) {
