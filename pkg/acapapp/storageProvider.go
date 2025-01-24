@@ -148,8 +148,8 @@ func (sp *StorageProvider) Open() error {
 	return nil
 }
 
-// Get DiskItem with storage id SD_DISK
-func (sp *StorageProvider) GetDiskItemById(storageId string) (sdCardDiskItem *axstorage.DiskItem, found bool) {
+// Get DiskItem by its storageId
+func (sp *StorageProvider) GetDiskItemById(storageId string) (*axstorage.DiskItem, bool) {
 	for _, d := range sp.DiskItems {
 		if string(d.StorageId) == storageId {
 			return d, true
