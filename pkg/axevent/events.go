@@ -1,9 +1,5 @@
 package axevent
 
-import (
-	"fmt"
-)
-
 // KeyValueEntrie is a key-value pair for an AXEventKeyValueSet.
 type KeyValueEntrie struct {
 	Key       string
@@ -45,62 +41,18 @@ type AxEventKeyValueSetNiceNames struct {
 	ValueNiceName *string
 }
 
-// NewTns1AxisEvent creates a new AXEventKeyValueSet with the given topics and key-value pairs.
-func NewTns1AxisEvent(topic0 string, topic1 string, topic2 *string, topic3 *string, keyvalues []*KeyValueEntrie) (*AXEventKeyValueSet, error) {
-	kvs := NewAXEventKeyValueSet()
-	if err := kvs.AddKeyValue("topic0", &OnfivNameSpaceTns1, topic0, AXValueTypeString); err != nil {
-		return nil, fmt.Errorf("failed to add key-value for topic0: %w", err)
-	}
-	if err := kvs.AddKeyValue("topic1", &OnfivNameSpaceTnsAxis, topic1, AXValueTypeString); err != nil {
-		return nil, fmt.Errorf("failed to add key-value for topic1: %w", err)
-	}
-	if topic2 != nil {
-		if err := kvs.AddKeyValue("topic2", &OnfivNameSpaceTnsAxis, *topic2, AXValueTypeString); err != nil {
-			return nil, fmt.Errorf("failed to add key-value for topic2: %w", err)
-		}
-	}
-	if topic3 != nil {
-		if err := kvs.AddKeyValue("topic3", &OnfivNameSpaceTnsAxis, *topic3, AXValueTypeString); err != nil {
-			return nil, fmt.Errorf("failed to add key-value for topic2: %w", err)
-		}
-	}
-	if keyvalues != nil {
-		for _, kv := range keyvalues {
-			if err := kvs.AddKeyValue(kv.Key, kv.Namespace, kv.Value, kv.ValueType); err != nil {
-				return nil, fmt.Errorf("failed to add key-value for %s: %w", kv.Key, err)
-			}
-		}
-
-	}
-	return kvs, nil
+func NewIntKeyValueEntrie(key string, value *int) KeyValueEntrie {
+	return KeyValueEntrie{Key: key, Value: value, ValueType: AXValueTypeInt}
 }
 
-// TnsAxisEvent creates a new AXEventKeyValueSet with the given topics and key-value pairs.
-func NewTnsAxisEvent(topic0 string, topic1 string, topic2 *string, topic3 *string, keyvalues []*KeyValueEntrie) (*AXEventKeyValueSet, error) {
-	kvs := NewAXEventKeyValueSet()
-	if err := kvs.AddKeyValue("topic0", &OnfivNameSpaceTnsAxis, topic0, AXValueTypeString); err != nil {
-		return nil, fmt.Errorf("failed to add key-value for topic0: %w", err)
-	}
-	if err := kvs.AddKeyValue("topic1", &OnfivNameSpaceTnsAxis, topic1, AXValueTypeString); err != nil {
-		return nil, fmt.Errorf("failed to add key-value for topic1: %w", err)
-	}
-	if topic2 != nil {
-		if err := kvs.AddKeyValue("topic2", &OnfivNameSpaceTnsAxis, *topic2, AXValueTypeString); err != nil {
-			return nil, fmt.Errorf("failed to add key-value for topic2: %w", err)
-		}
-	}
-	if topic3 != nil {
-		if err := kvs.AddKeyValue("topic3", &OnfivNameSpaceTnsAxis, *topic3, AXValueTypeString); err != nil {
-			return nil, fmt.Errorf("failed to add key-value for topic3: %w", err)
-		}
-	}
-	if keyvalues != nil {
-		for _, kv := range keyvalues {
-			if err := kvs.AddKeyValue(kv.Key, kv.Namespace, kv.Value, kv.ValueType); err != nil {
-				return nil, fmt.Errorf("failed to add key-value for %s: %w", kv.Key, err)
-			}
-		}
+func NewBoolKeyValueEntrie(key string, value *bool) KeyValueEntrie {
+	return KeyValueEntrie{Key: key, Value: value, ValueType: AXValueTypeBool}
+}
 
-	}
-	return kvs, nil
+func NewStringKeyValueEntrie(key string, value *string) KeyValueEntrie {
+	return KeyValueEntrie{Key: key, Value: value, ValueType: AXValueTypeString}
+}
+
+func NewTopicKeyValueEntrie(topicIndex string, namespace *string, name string) KeyValueEntrie {
+	return KeyValueEntrie{Key: topicIndex, Namespace: &OnfivNameSpaceTns1, Value: name, ValueType: AXValueTypeString}
 }

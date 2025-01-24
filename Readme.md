@@ -50,7 +50,7 @@ Located at this repo [Examples](https://github.com/Cacsjep/goxis_examples)
 
 ## Module Installation
 ```
-go get github.com/Cacsjep/goxis
+go get -u github.com/Cacsjep/goxis@latest
 ```
 
 ### Whats the purpose of goxis AcapApplication?
@@ -78,6 +78,64 @@ Just use [goxisbuilder](https://github.com/Cacsjep/goxisbuilder) tool for stream
 
 ```
 .\goxisbuilder.exe -newapp
+```
+
+## Events
+
+Most events are already declared in `axevent`. If you miss something, you can manually craft it, create a PR, or just ask! 😊
+You can use the AXIS `get_eventlist.py` script (Native SDK Repo - AXIS) to get the XML list to see events that your device supports.
+
+> [!TIP]
+> Use AXIS Meta Data Monitor to validate and determine if the desired event is triggered.
+
+#### Namespace Considerations
+
+It is crucial to set the correct namespace for each topic. Incorrect namespaces can cause issues in `axevent` C API mapping. Check carefully if multiple namespaces are involved, and ensure the correct setup.
+
+##### Single Namespace Example: `tnsaxis:CameraApplicationPlatform/ObjectAnalytics/xinternal_data`
+
+When there is only one namespace for all entries, ensure consistency across all topics. In this example, all entries use `OnfivNameSpaceTnsAxis`:
+  ```go
+    NewTopicKeyValueEntrie("topic0", &OnfivNameSpaceTnsAxis, "CameraApplicationPlatform"),
+    NewTopicKeyValueEntrie("topic1", &OnfivNameSpaceTnsAxis, "ObjectAnalytics"),
+    NewTopicKeyValueEntrie("topic2", &OnfivNameSpaceTnsAxis, "xinternal_data"),
+```
+
+##### Multiple Namespace Example: `tns1:Device/tnsaxis:IO/VirtualPort`
+
+When there are multiple namespaces, ensure subsequent entries after a path change use the correct namespace. For instance, `VirtualPort` uses the `tnsaxis` namespace:
+
+ ```go
+    NewTopicKeyValueEntrie("topic0", &OnfivNameSpaceTns1, "Device"),
+    NewTopicKeyValueEntrie("topic1", &OnfivNameSpaceTnsAxis, "IO"),
+    NewTopicKeyValueEntrie("topic2", &OnfivNameSpaceTnsAxis, "VirtualPort"),
+```
+
+##### When creating new events, follow these patterns for namespace and topic consistency
+```go
+// <tnsaxis:CameraApplicationPlatform>
+// 	<ObjectAnalytics>
+// 		<xinternal_data wstop:topic="true">
+// 			<tt:MessageDescription IsProperty="false">
+// 				<tt:Data>
+// 					<tt:SimpleItemDescription Name="svgframe" Type="xsd:string"></tt:SimpleItemDescription>
+// 				</tt:Data>
+// 			</tt:MessageDescription>
+// 		</xinternal_data>
+// 	</ObjectAnalytics>
+// </tnsaxis:CameraApplicationPlatform>
+func CameraApplicationPlatformXInternalDataEventKvs(svgFrame *string) *AXEventKeyValueSet {
+	return NewAXEventKeyValueSetFromEntries([]KeyValueEntrie{
+		NewTopicKeyValueEntrie("topic0", &OnfivNameSpaceTnsAxis, "CameraApplicationPlatform"),
+		NewTopicKeyValueEntrie("topic1", &OnfivNameSpaceTnsAxis, "ObjectAnalytics"),
+		NewTopicKeyValueEntrie("topic2", &OnfivNameSpaceTnsAxis, "xinternal_data"),
+		NewStringKeyValueEntrie("svgframe", svgFrame),
+	})
+}
+
+type CameraApplicationPlatformXInternalDataEvent struct {
+	SvgFrame string `eventKey:"svgframe"`
+}
 ```
 
 ## Useful ACAP Informations
