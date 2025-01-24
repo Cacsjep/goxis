@@ -338,24 +338,16 @@ func (cpe *CameraPlatformEvent) NewEvent(valuesMap KeyValueMap) (*axevent.AXEven
 // Returns:
 //   - A pointer to an AXEventKeyValueSet instance.
 //   - An error, which will be non-nil if any part of the event creation process fails.
-//
-// The function utilizes the NewTnsAxisEvent helper function to initialize the AXEventKeyValueSet, specifying a structured
-// set of topics ('topic0' to 'topic3').
-// Specifically, the topics are assigned as follows:
-//   - 'topic0' is set to "CameraApplicationPlatform", identifying the event as part of the Camera Application Platform.
-//     This serves as the primary categorization layer, indicating the event's general domain.
-//   - 'topic1' is derived from the `app_setup.AppName`, tying the event to a specific application by its name. This
-//     further refines the event's context within the platform, associating it with a particular application's events.
-//   - 'topic2' is optionally set to a user-provided string via `event_name` or `event_nice_name`, if provided. This allows
-//     for a more descriptive labeling of the event, enhancing the readability and interpretability of the event data.
-//     If `event_nice_name` is not null, it prefixes the nice name with the app's friendly name for clearer identification.
-//     If both are null, `topic2` effectively utilizes the raw `event_name` for technical identification.
-//   - 'topic3' is intentionally left as nil/null.
 func NewCameraApplicationPlatformEvent(app_setup axmanifest.Setup, event_name string, event_nice_name *string, event_entries []*EventEntry) (*axevent.AXEventKeyValueSet, error) {
 
-	var kvs_entries []*axevent.KeyValueEntrie
+	kvs_entries := []axevent.KeyValueEntrie{
+		axevent.NewTopicKeyValueEntrie("topic0", &axevent.OnfivNameSpaceTnsAxis, "CameraApplicationPlatform"),
+		axevent.NewTopicKeyValueEntrie("topic1", &axevent.OnfivNameSpaceTnsAxis, "app_setup.AppName"),
+		axevent.NewTopicKeyValueEntrie("topic2", &axevent.OnfivNameSpaceTnsAxis, event_name),
+	}
+
 	for _, entry := range event_entries {
-		kvs_entries = append(kvs_entries, &axevent.KeyValueEntrie{
+		kvs_entries = append(kvs_entries, axevent.KeyValueEntrie{
 			Key:       entry.Key,
 			Namespace: entry.Namespace,
 			Value:     entry.Value,
@@ -363,17 +355,7 @@ func NewCameraApplicationPlatformEvent(app_setup axmanifest.Setup, event_name st
 		})
 	}
 
-	kvs, err := axevent.NewTnsAxisEvent(
-		"CameraApplicationPlatform",
-		app_setup.AppName,
-		utils.StrPtr(event_name),
-		nil,
-		kvs_entries,
-	)
-
-	if err != nil {
-		return nil, err
-	}
+	kvs := axevent.NewAXEventKeyValueSetFromEntries(kvs_entries)
 
 	for _, entry := range event_entries {
 		if entry.IsData != nil && *entry.IsData {
