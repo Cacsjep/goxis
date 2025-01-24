@@ -3,3 +3,6 @@ cmd
 *.log
 todo
 /.vscode
+get_eventlist.py
+onviflist.xml
+Untitled-1.txt
