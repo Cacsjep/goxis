@@ -83,16 +83,16 @@ Just use [goxisbuilder](https://github.com/Cacsjep/goxisbuilder) tool for stream
 ## Events
 
 Most events are already declared in `axevent`. If you miss something, you can manually craft it, create a PR, or just ask! 😊
-You can use the AXIS get_eventlist.py (Native SDK Repo - AXIS) to get the XML list to see events that your device supports.
+You can use the AXIS `get_eventlist.py` script (Native SDK Repo - AXIS) to get the XML list to see events that your device supports.
 
 > [!TIP]
 > Use AXIS Meta Data Monitor to validate and determine if the desired event is triggered.
 
-### Namespace Considerations
+#### Namespace Considerations
 
 It is crucial to set the correct namespace for each topic. Incorrect namespaces can cause issues in `axevent` C API mapping. Check carefully if multiple namespaces are involved, and ensure the correct setup.
 
-#### Single Namespace Example: `tnsaxis:CameraApplicationPlatform/ObjectAnalytics/xinternal_data`
+##### Single Namespace Example: `tnsaxis:CameraApplicationPlatform/ObjectAnalytics/xinternal_data`
 
 When there is only one namespace for all entries, ensure consistency across all topics. In this example, all entries use `OnfivNameSpaceTnsAxis`:
 
@@ -109,7 +109,7 @@ When there is only one namespace for all entries, ensure consistency across all 
     NewTopicKeyValueEntrie("topic2", &OnfivNameSpaceTnsAxis, "xinternal_data"),
     ```
 
-#### Multiple Namespace Example: `tns1:Device/tnsaxis:IO/VirtualPort`
+##### Multiple Namespace Example: `tns1:Device/tnsaxis:IO/VirtualPort`
 
 When there are multiple namespaces, ensure subsequent entries after a path change use the correct namespace. For instance, `VirtualPort` uses the `tnsaxis` namespace:
 
@@ -126,7 +126,7 @@ When there are multiple namespaces, ensure subsequent entries after a path chang
     NewTopicKeyValueEntrie("topic2", &OnfivNameSpaceTnsAxis, "VirtualPort"),
     ```
 
-### When creating new events, follow these patterns for namespace and topic consistency
+##### When creating new events, follow these patterns for namespace and topic consistency
 ```go
 // <tnsaxis:CameraApplicationPlatform>
 // 	<ObjectAnalytics>
