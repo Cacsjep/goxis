@@ -418,30 +418,36 @@ func UnmarshalEvent(e *axevent.Event, v interface{}) error {
 			key = strings.ToLower(fieldType.Name)
 		}
 
+		valueType, err := e.Kvs.GetValueType(key, nil)
+
+		if err != nil {
+			return fmt.Errorf("error getting value type for key %s: %v", key, err)
+		}
+
 		switch field.Kind() {
 		case reflect.Int:
 			if intValue, err := e.Kvs.GetInteger(key, nil); err == nil {
 				field.SetInt(int64(intValue))
 			} else {
-				return fmt.Errorf("error getting integer for key %s: %v", key, err)
+				return fmt.Errorf("error getting integer for key %s: %v, Value Type: ", key, err, valueType)
 			}
 		case reflect.Float64:
 			if fValue, err := e.Kvs.GetDouble(key, nil); err == nil {
 				field.SetFloat(fValue)
 			} else {
-				return fmt.Errorf("error getting double for key %s: %v", key, err)
+				return fmt.Errorf("error getting double for key %s: %v, Value Type: ", key, err, valueType)
 			}
 		case reflect.String:
 			if sValue, err := e.Kvs.GetString(key, nil); err == nil {
 				field.SetString(sValue)
 			} else {
-				return fmt.Errorf("error getting string for key %s: %v", key, err)
+				return fmt.Errorf("error getting string for key %s: %v, Value Type: ", key, err, valueType)
 			}
 		case reflect.Bool:
 			if boolValue, err := e.Kvs.GetBoolean(key, nil); err == nil {
 				field.SetBool(boolValue)
 			} else {
-				return fmt.Errorf("error getting boolean for key %s: %v", key, err)
+				return fmt.Errorf("error getting boolean for key %s: %v, Value Type: ", key, err, valueType)
 			}
 		}
 	}
