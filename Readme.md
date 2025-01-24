@@ -95,36 +95,21 @@ It is crucial to set the correct namespace for each topic. Incorrect namespaces 
 ##### Single Namespace Example: `tnsaxis:CameraApplicationPlatform/ObjectAnalytics/xinternal_data`
 
 When there is only one namespace for all entries, ensure consistency across all topics. In this example, all entries use `OnfivNameSpaceTnsAxis`:
-
-- **topic0 namespace**: `OnfivNameSpaceTnsAxis`
   ```go
     NewTopicKeyValueEntrie("topic0", &OnfivNameSpaceTnsAxis, "CameraApplicationPlatform"),
-    ```
-- **topic1 namespace**: `OnfivNameSpaceTnsAxis`
-  ```go
     NewTopicKeyValueEntrie("topic1", &OnfivNameSpaceTnsAxis, "ObjectAnalytics"),
-    ```
-- **topic2 namespace**: `OnfivNameSpaceTnsAxis`
-  ```go
     NewTopicKeyValueEntrie("topic2", &OnfivNameSpaceTnsAxis, "xinternal_data"),
-    ```
+```
 
 ##### Multiple Namespace Example: `tns1:Device/tnsaxis:IO/VirtualPort`
 
 When there are multiple namespaces, ensure subsequent entries after a path change use the correct namespace. For instance, `VirtualPort` uses the `tnsaxis` namespace:
 
-- **topic0 namespace**: `OnfivNameSpaceTns1`
-  ```go
+ ```go
     NewTopicKeyValueEntrie("topic0", &OnfivNameSpaceTns1, "Device"),
-    ```
-- **topic1 namespace**: `OnfivNameSpaceTnsAxis`
-  ```go
     NewTopicKeyValueEntrie("topic1", &OnfivNameSpaceTnsAxis, "IO"),
-    ```
-- **topic2 namespace**: `OnfivNameSpaceTnsAxis`
-  ```go
     NewTopicKeyValueEntrie("topic2", &OnfivNameSpaceTnsAxis, "VirtualPort"),
-    ```
+```
 
 ##### When creating new events, follow these patterns for namespace and topic consistency
 ```go
