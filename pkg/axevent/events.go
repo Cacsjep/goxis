@@ -54,5 +54,5 @@ func NewStringKeyValueEntrie(key string, value *string) KeyValueEntrie {
 }
 
 func NewTopicKeyValueEntrie(topicIndex string, namespace *string, name string) KeyValueEntrie {
-	return KeyValueEntrie{Key: topicIndex, Namespace: &OnfivNameSpaceTns1, Value: name, ValueType: AXValueTypeString}
+	return KeyValueEntrie{Key: topicIndex, Namespace: namespace, Value: name, ValueType: AXValueTypeString}
 }
