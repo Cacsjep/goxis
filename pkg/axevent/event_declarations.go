@@ -354,20 +354,20 @@ type DeviceStatusTemperatureBelowEvent struct {
 //		</PowerSupplyFailure>
 //	</HardwareFailure>
 // </tns1:Device>
-func DeviceHardwareFailurePowerSupplyFailurePTZPowerFailureEventKvs(token *string, failed *bool) *AXEventKeyValueSet {
+func DeviceHardwareFailurePowerSupplyFailurePTZPowerFailureEventKvs(token *int, failed *bool) *AXEventKeyValueSet {
 	return NewAXEventKeyValueSetFromEntries([]KeyValueEntrie{
 		NewTopicKeyValueEntrie("topic0", &OnfivNameSpaceTns1, "Device"),
 		NewTopicKeyValueEntrie("topic1", &OnfivNameSpaceTns1, "HardwareFailure"),
 		NewTopicKeyValueEntrie("topic2", &OnfivNameSpaceTns1, "PowerSupplyFailure"),
 		NewTopicKeyValueEntrie("topic3", &OnfivNameSpaceTnsAxis, "PTZPowerFailure"),
-		NewStringKeyValueEntrie("Token", token),
+		NewIntKeyValueEntrie("Token", token),
 		NewBoolKeyValueEntrie("Failed", failed),
 	})
 }
 
 type DeviceHardwareFailurePowerSupplyFailurePTZPowerFailureEvent struct {
-	Token  string `eventKey:"Token"`
-	Failed bool   `eventKey:"Failed"`
+	Token  int  `eventKey:"Token"`
+	Failed bool `eventKey:"Failed"`
 }
 
 // <tns1:Device>
@@ -384,19 +384,19 @@ type DeviceHardwareFailurePowerSupplyFailurePTZPowerFailureEvent struct {
 //		</DigitalInput>
 //	</Trigger>
 // </tns1:Device>
-func DeviceTriggerDigitalInputEventKvs(inputToken *string, logicalState *bool) *AXEventKeyValueSet {
+func DeviceTriggerDigitalInputEventKvs(inputToken *int, logicalState *bool) *AXEventKeyValueSet {
 	return NewAXEventKeyValueSetFromEntries([]KeyValueEntrie{
 		NewTopicKeyValueEntrie("topic0", &OnfivNameSpaceTns1, "Device"),
 		NewTopicKeyValueEntrie("topic1", &OnfivNameSpaceTns1, "Trigger"),
 		NewTopicKeyValueEntrie("topic2", &OnfivNameSpaceTns1, "DigitalInput"),
-		NewStringKeyValueEntrie("InputToken", inputToken),
+		NewIntKeyValueEntrie("InputToken", inputToken),
 		NewBoolKeyValueEntrie("LogicalState", logicalState),
 	})
 }
 
 type DeviceTriggerDigitalInputEvent struct {
-	InputToken   string `eventKey:"InputToken"`
-	LogicalState bool   `eventKey:"LogicalState"`
+	InputToken   int  `eventKey:"InputToken"`
+	LogicalState bool `eventKey:"LogicalState"`
 }
 
 // <tns1:Device>
@@ -413,19 +413,19 @@ type DeviceTriggerDigitalInputEvent struct {
 //		</Relay>
 //	</Trigger>
 // </tns1:Device>
-func DeviceTriggerRelayEventKvs(relayToken *string, logicalState *bool) *AXEventKeyValueSet {
+func DeviceTriggerRelayEventKvs(relayToken *int, logicalState *bool) *AXEventKeyValueSet {
 	return NewAXEventKeyValueSetFromEntries([]KeyValueEntrie{
 		NewTopicKeyValueEntrie("topic0", &OnfivNameSpaceTns1, "Device"),
 		NewTopicKeyValueEntrie("topic1", &OnfivNameSpaceTns1, "Trigger"),
 		NewTopicKeyValueEntrie("topic2", &OnfivNameSpaceTns1, "Relay"),
-		NewStringKeyValueEntrie("RelayToken", relayToken),
+		NewIntKeyValueEntrie("RelayToken", relayToken),
 		NewBoolKeyValueEntrie("LogicalState", logicalState),
 	})
 }
 
 type DeviceTriggerRelayEvent struct {
-	RelayToken   string `eventKey:"RelayToken"`
-	LogicalState bool   `eventKey:"LogicalState"`
+	RelayToken   int  `eventKey:"RelayToken"`
+	LogicalState bool `eventKey:"LogicalState"`
 }
 
 // <tns1:Device>
@@ -590,19 +590,19 @@ type VideoSourceABREvent struct {
 // 		</ImagingService>
 // 	</GlobalSceneChange>
 // </tns1:VideoSource>
-func VideoSourceGlobalSceneChangeEventKvs(source *string, state *bool) *AXEventKeyValueSet {
+func VideoSourceGlobalSceneChangeEventKvs(source *int, state *bool) *AXEventKeyValueSet {
 	return NewAXEventKeyValueSetFromEntries([]KeyValueEntrie{
 		NewTopicKeyValueEntrie("topic0", &OnfivNameSpaceTns1, "VideoSource"),
 		NewTopicKeyValueEntrie("topic1", &OnfivNameSpaceTns1, "GlobalSceneChange"),
 		NewTopicKeyValueEntrie("topic2", &OnfivNameSpaceTns1, "ImagingService"),
-		NewStringKeyValueEntrie("Source", source),
+		NewIntKeyValueEntrie("Source", source),
 		NewBoolKeyValueEntrie("State", state),
 	})
 }
 
 type VideoSourceGlobalSceneChangeEvent struct {
-	Source string `eventKey:"Source"`
-	State  bool   `eventKey:"State"`
+	Source int  `eventKey:"Source"`
+	State  bool `eventKey:"State"`
 }
 
 // <tns1:VideoSource>
@@ -617,18 +617,18 @@ type VideoSourceGlobalSceneChangeEvent struct {
 // 		</tt:MessageDescription>
 // 	</MotionAlarm>
 // </tns1:VideoSource>
-func VideoSourceMotionAlarmEventKvs(source *string, state *bool) *AXEventKeyValueSet {
+func VideoSourceMotionAlarmEventKvs(source *int, state *bool) *AXEventKeyValueSet {
 	return NewAXEventKeyValueSetFromEntries([]KeyValueEntrie{
 		NewTopicKeyValueEntrie("topic0", &OnfivNameSpaceTns1, "VideoSource"),
 		NewTopicKeyValueEntrie("topic1", &OnfivNameSpaceTns1, "MotionAlarm"),
-		NewStringKeyValueEntrie("Source", source),
+		NewIntKeyValueEntrie("Source", source),
 		NewBoolKeyValueEntrie("State", state),
 	})
 }
 
 type VideoSourceMotionAlarmEvent struct {
-	Source string `eventKey:"Source"`
-	State  bool   `eventKey:"State"`
+	Source int  `eventKey:"Source"`
+	State  bool `eventKey:"State"`
 }
 
 // <tns1:PTZController>
