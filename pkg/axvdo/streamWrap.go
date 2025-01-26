@@ -258,7 +258,7 @@ func VideoStreamConfigToVdoMap(cfg VideoSteamConfiguration) *VdoMap {
 	}
 	setIntIfNotNil := func(key string, value *int) {
 		if value != nil {
-			m.SetInt16(key, int16(*value))
+			m.SetUint32(key, uint32(*value))
 		}
 	}
 	setBoolIfNotNil := func(key string, value *bool) {
