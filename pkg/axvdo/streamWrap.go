@@ -256,7 +256,7 @@ func VideoStreamConfigToVdoMap(cfg VideoSteamConfiguration) *VdoMap {
 			m.SetUint32(key, *value)
 		}
 	}
-	setIntIfNotNil := func(key string, value *int) {
+	setIntToUint32IfNotNil := func(key string, value *int) {
 		if value != nil {
 			m.SetUint32(key, uint32(*value))
 		}
@@ -268,18 +268,18 @@ func VideoStreamConfigToVdoMap(cfg VideoSteamConfiguration) *VdoMap {
 	}
 
 	if cfg.Format != nil {
-		m.SetInt16("format", int16(*cfg.Format))
+		m.SetUint32("format", uint32(*cfg.Format))
 	}
-	setIntIfNotNil("buffer.count", cfg.BufferCount)
+	setIntToUint32IfNotNil("buffer.count", cfg.BufferCount)
 	if cfg.BufferStrategy != nil {
 		m.SetUint32("buffer.strategy", uint32(*cfg.BufferStrategy))
 	}
-	setIntIfNotNil("input", cfg.Input)
-	setIntIfNotNil("channel", cfg.Channel)
-	setIntIfNotNil("width", cfg.Width)
-	setIntIfNotNil("height", cfg.Height)
-	setIntIfNotNil("framerate", cfg.Framerate)
-	setIntIfNotNil("compression", cfg.Compression)
+	setIntToUint32IfNotNil("input", cfg.Input)
+	setIntToUint32IfNotNil("channel", cfg.Channel)
+	setIntToUint32IfNotNil("width", cfg.Width)
+	setIntToUint32IfNotNil("height", cfg.Height)
+	setIntToUint32IfNotNil("framerate", cfg.Framerate)
+	setIntToUint32IfNotNil("compression", cfg.Compression)
 	if cfg.Rotation != nil {
 		m.SetUint32("rotation", uint32(*cfg.Rotation))
 	}
@@ -294,17 +294,17 @@ func VideoStreamConfigToVdoMap(cfg VideoSteamConfiguration) *VdoMap {
 	setUint32IfNotNil("qp.p", cfg.Qpp)
 	setUint32IfNotNil("bitrate", cfg.Bitrate)
 	if cfg.RateControlMode != nil {
-		m.SetInt16("rc.mode", int16(*cfg.RateControlMode))
+		m.SetUint32("rc.mode", uint32(*cfg.RateControlMode))
 	}
 	if cfg.RateControlPriority != nil {
-		m.SetInt16("rc.prio", int16(*cfg.RateControlPriority))
+		m.SetUint32("rc.prio", uint32(*cfg.RateControlPriority))
 	}
 	setUint32IfNotNil("gop_length", cfg.GOPLength)
 	if cfg.H264Profile != nil {
-		m.SetInt16("h264.profile", int16(*cfg.H264Profile))
+		m.SetUint32("h264.profile", uint32(*cfg.H264Profile))
 	}
 	if cfg.H265Profile != nil {
-		m.SetInt16("h265.profile", int16(*cfg.H265Profile))
+		m.SetUint32("h265.profile", uint32(*cfg.H265Profile))
 	}
 	setUint32IfNotNil("zip.strength", cfg.ZipStrength)
 	setUint32IfNotNil("zip.max_gop_length", cfg.ZipMaxGOPLength)
@@ -320,7 +320,7 @@ func VideoStreamConfigToVdoMap(cfg VideoSteamConfiguration) *VdoMap {
 	setUint32IfNotNil("zip.min_fps_num", cfg.ZipMinFPSNum)
 	setUint32IfNotNil("zip.min_fps_den", cfg.ZipMinFPSDen)
 	if cfg.ZipProfile != nil {
-		m.SetInt16("zip.profile", int16(*cfg.ZipProfile))
+		m.SetUint32("zip.profile", uint32(*cfg.ZipProfile))
 	}
 	setUint32IfNotNil("abr.target_bitrate", cfg.AbrTarget_bitrate)
 	setUint32IfNotNil("abr.retention_time", cfg.AbrRetention_time)
