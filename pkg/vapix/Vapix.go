@@ -1,4 +1,4 @@
-// Package vapix provides functions to interact with Axis camera VAPIX API.
+// Package vapix provides functions to interact with Axis camera VAPIX API, including the VAPIX WebSocket metadata stream.
 package vapix
 
 import (
