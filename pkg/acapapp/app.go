@@ -342,7 +342,7 @@ func NewCameraApplicationPlatformEvent(app_setup axmanifest.Setup, event_name st
 
 	kvs_entries := []axevent.KeyValueEntrie{
 		axevent.NewTopicKeyValueEntrie("topic0", &axevent.OnfivNameSpaceTnsAxis, "CameraApplicationPlatform"),
-		axevent.NewTopicKeyValueEntrie("topic1", &axevent.OnfivNameSpaceTnsAxis, "app_setup.AppName"),
+		axevent.NewTopicKeyValueEntrie("topic1", &axevent.OnfivNameSpaceTnsAxis, app_setup.AppName),
 		axevent.NewTopicKeyValueEntrie("topic2", &axevent.OnfivNameSpaceTnsAxis, event_name),
 	}
 
