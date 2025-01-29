@@ -139,8 +139,8 @@ func AxOverlayDataInitalze(overlay_data *AxOverlayOverlayData) error {
 		return errors.New("Failed to allocate memory for axoverlay_overlay_data")
 	}
 	AxOverlayInitOverlayData(overlay_data)
-	overlay_data.ptr.postype = C.enum_axoverlay_anchor_point(overlay_data.PositionType)
-	overlay_data.ptr.anchor_point = C.enum_axoverlay_position_type(overlay_data.AnchorPoint)
+	overlay_data.ptr.postype = C.enum_axoverlay_position_type(overlay_data.PositionType)
+	overlay_data.ptr.anchor_point = C.enum_axoverlay_anchor_point(overlay_data.AnchorPoint)
 	overlay_data.ptr.colorspace = C.enum_axoverlay_colorspace(overlay_data.Colorspace)
 	overlay_data.ptr.x = C.gfloat(overlay_data.X)
 	overlay_data.ptr.y = C.gfloat(overlay_data.Y)
