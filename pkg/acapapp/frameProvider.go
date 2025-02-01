@@ -148,7 +148,7 @@ func (fp *FrameProvider) Start() error {
 			if video_frame.Error != nil {
 				if video_frame.ErrorExpected {
 					if fp.state == FrameProviderStateStopped {
-						fp.app.Syslog.Warnf("VDO Channel(%d): exit frame loop", fp.Config.GetChannel())
+						fp.app.Syslog.Infof("VDO Channel(%d): exit frame loop", fp.Config.GetChannel())
 						return
 					}
 					fp.app.Syslog.Warnf("VDO Channel(%d): Restarting stream because vdo is in maintanance mode %s", fp.Config.GetChannel(), video_frame.Error.Error())
@@ -211,7 +211,7 @@ func (fp *FrameProvider) Stop() {
 // It applies a delay before attempting the restart to give the system time to release resources.
 func (fp *FrameProvider) Restart() error {
 	if fp.state == FrameProviderStateStopped {
-		fp.app.Syslog.Warnf("VDO Channel(%d): exit frame loop", fp.Config.GetChannel())
+		fp.app.Syslog.Infof("VDO Channel(%d): exit frame loop", fp.Config.GetChannel())
 		return nil
 	}
 	time.Sleep(time.Second * 2)
