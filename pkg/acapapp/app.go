@@ -150,8 +150,8 @@ func (a *AcapApplication) Close() {
 	a.Mainloop.Quit()     // Terminate the main loop.
 	a.ParamHandler.Free() // Release the parameter handler.
 	a.EventHandler.Free() // Release the event handler.
-	a.Syslog.Close()      // Close the syslog.
-	a.Syslog.Info("Application closed.")
+	a.Syslog.Info(fmt.Sprintf("%s has shut down gracefully.", a.Manifest.ACAPPackageConf.Setup.AppName))
+	a.Syslog.Close() // Close the syslog.
 }
 
 // GetSnapshot captures a JPEG snapshot from the specified video channel and returns it as a byte slice.

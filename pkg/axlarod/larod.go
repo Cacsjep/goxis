@@ -27,7 +27,9 @@ type LarodConnection struct {
 
 // NewLarod creates a new Larod instance with uninitialized connection and device list.
 func NewLarod() *Larod {
-	return &Larod{}
+	return &Larod{
+		Devices: make([]*LarodDevice, 0),
+	}
 }
 
 // Initialize establishes a connection to the Larod service and retrieves a list of available devices.
