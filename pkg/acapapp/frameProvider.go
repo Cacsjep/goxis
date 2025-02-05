@@ -29,7 +29,7 @@ const (
 // FrameProvider encapsulates the management of video frame streaming, including starting, stopping, and restarting the stream.
 type FrameProvider struct {
 	Config             axvdo.VideoSteamConfiguration // Configuration for the video stream.
-	stream             *axvdo.VdoStream              // Internal video stream reference.
+	Stream             *axvdo.VdoStream              // Internal video stream reference.
 	state              FrameProviderState            // Current state of the frame provider.
 	running            bool                          // Flag indicating whether the frame provider is actively running.
 	FrameStreamChannel chan *axvdo.VideoFrame        // Channel for delivering video frames to consumers.
@@ -61,7 +61,7 @@ func NewFrameProvider(a *AcapApplication, config axvdo.VideoSteamConfiguration) 
 	if err != nil {
 		return nil, err
 	}
-	fp.stream = stream
+	fp.Stream = stream
 	return fp, nil
 }
 
@@ -124,7 +124,7 @@ func (fp *FrameProvider) frameProviderPostProcess(frame *axvdo.VideoFrame) (*axl
 // If an error occurs while starting the stream, it returns the error without altering the provider's state.
 // Handles automatic restart in case of an expected Vdo error
 func (fp *FrameProvider) Start() error {
-	if err := fp.stream.Start(); err != nil {
+	if err := fp.Stream.Start(); err != nil {
 		return err
 	}
 
@@ -134,7 +134,7 @@ func (fp *FrameProvider) Start() error {
 
 	go func() {
 		for fp.running {
-			video_frame := axvdo.GetVideoFrame(fp.stream)
+			video_frame := axvdo.GetVideoFrame(fp.Stream)
 			if video_frame.Error != nil {
 				if video_frame.ErrorExpected {
 					if fp.state == FrameProviderStateStopped {
@@ -192,8 +192,8 @@ func (fp *FrameProvider) Start() error {
 func (fp *FrameProvider) Stop() {
 	fp.running = false
 	fp.state = FrameProviderStateStopped
-	fp.stream.Stop()
-	fp.stream.Unref()
+	fp.Stream.Stop()
+	fp.Stream.Unref()
 	fp.app.Syslog.Infof("VDO Channel(%d): Stream is stopped", fp.Config.GetChannel())
 }
 
@@ -209,10 +209,10 @@ func (fp *FrameProvider) Restart() error {
 	var err error
 	fp.state = FrameProviderStateRestarting
 	fp.Stop()
-	if fp.stream, err = fp.createStream(); err != nil {
+	if fp.Stream, err = fp.createStream(); err != nil {
 		return err
 	}
-	return fp.stream.Start()
+	return fp.Stream.Start()
 }
 
 // State returns the current state of the FrameProvider, providing insight into whether it's running, stopped, or in an error state.
@@ -227,7 +227,7 @@ func (fp *FrameProvider) IsRunning() bool {
 
 // Stats gathers and returns statistical information about the frame provider's operation, including internal buffer lengths and stream statistics.
 func (fp *FrameProvider) Stats() (*FrameProviderStats, error) {
-	m, err := fp.stream.GetInfo()
+	m, err := fp.Stream.GetInfo()
 	if err != nil {
 		return nil, err
 	}
