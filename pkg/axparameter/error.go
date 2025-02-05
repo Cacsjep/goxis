@@ -9,7 +9,7 @@ import "fmt"
 
 type GError struct {
 	Ptr      *C.GError
-	Code     int
+	Code     AXParameterErrorCode
 	Message  string
 	Expected bool
 }
@@ -18,7 +18,7 @@ func newGError(gerr *C.GError) error {
 	if gerr == nil {
 		return nil
 	}
-	err := &GError{Message: C.GoString(gerr.message), Code: int(gerr.code), Ptr: gerr}
+	err := &GError{Message: C.GoString(gerr.message), Code: AXParameterErrorCode(gerr.code), Ptr: gerr}
 	defer C.g_error_free(gerr)
 	return err
 }

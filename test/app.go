@@ -25,9 +25,9 @@ func main() {
 			//{"VdoChannelTest", VdoChannelTest},
 			//{"TestVdoStream", TestVdoStream},
 			//{"LicenseTest", LicenseTest},
-			//{"ParamTests", ParamTests},
+			{"ParamTests", ParamTests},
 			//{"EventHandlerTests", EventHandlerTests},
-			{"MdbTests", MdbTests},
+			//{"MdbTests", MdbTests},
 		},
 		nil, nil,
 	)

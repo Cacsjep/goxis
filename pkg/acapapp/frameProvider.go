@@ -49,12 +49,7 @@ type FrameProviderStats struct {
 
 // NewFrameProvider initializes a new FrameProvider with the given configuration and application context.
 // It prepares the frame provider for operation but does not start streaming frames until Start is called.
-//
-// Note:
-//
-//	Currently this supports only one FrameProvider per application. If you need more then one dont use frameProvider in AcapApplication.
-//	Create a new FrameProvider for each stream, and manage them separately, dont forget to call Stop() when you are done.
-func (a *AcapApplication) NewFrameProvider(config axvdo.VideoSteamConfiguration) error {
+func NewFrameProvider(a *AcapApplication, config axvdo.VideoSteamConfiguration) error {
 	fp := &FrameProvider{
 		Config:             config,
 		state:              FrameProviderStateInit,
@@ -67,7 +62,6 @@ func (a *AcapApplication) NewFrameProvider(config axvdo.VideoSteamConfiguration)
 		return err
 	}
 	fp.stream = stream
-	a.FrameProvider = fp
 	return nil
 }
 
@@ -86,26 +80,22 @@ func (fp *FrameProvider) SetLarodPostProccessor(device string, rgbMode axlarod.P
 		return fmt.Errorf("Application is not initialized")
 	}
 
-	if fp.app.FrameProvider == nil {
-		return fmt.Errorf("FrameProvider is not initialized")
-	}
-
 	if fp.app.Larod == nil {
 		return fmt.Errorf("Larod is not initialized")
 	}
 
-	if fp.app.FrameProvider.Config.Width == nil || fp.app.FrameProvider.Config.Height == nil {
+	if fp.Config.Width == nil || fp.Config.Height == nil {
 		return fmt.Errorf("FrameProvider width and height is not initialized")
 	}
 
-	cropMap, err := axlarod.CreateCropMap(outReso.Width, outReso.Height, *fp.app.FrameProvider.Config.Width, *fp.app.FrameProvider.Config.Height)
+	cropMap, err := axlarod.CreateCropMap(outReso.Width, outReso.Height, *fp.Config.Width, *fp.Config.Height)
 	if err != nil {
 		return err
 	}
 	fp.outReso = outReso
-	if fp.app.FrameProvider.PostProcessModel, err = fp.app.Larod.NewPreProccessModel(
+	if fp.PostProcessModel, err = fp.app.Larod.NewPreProccessModel(
 		device,
-		axlarod.LarodResolution{Width: *fp.app.FrameProvider.Config.Width, Height: *fp.app.FrameProvider.Config.Height},
+		axlarod.LarodResolution{Width: *fp.Config.Width, Height: *fp.Config.Height},
 		axlarod.LarodResolution{Width: outReso.Width, Height: outReso.Height},
 		rgbMode,
 		cropMap,
@@ -119,10 +109,10 @@ func (fp *FrameProvider) SetLarodPostProccessor(device string, rgbMode axlarod.P
 func (fp *FrameProvider) frameProviderPostProcess(frame *axvdo.VideoFrame) (*axlarod.JobResult, error) {
 	var result *axlarod.JobResult
 	var err error
-	if result, err = fp.app.Larod.ExecuteJob(fp.app.FrameProvider.PostProcessModel, func() error {
-		return fp.app.FrameProvider.PostProcessModel.Inputs[0].CopyDataInto(frame.Data)
+	if result, err = fp.app.Larod.ExecuteJob(fp.PostProcessModel, func() error {
+		return fp.PostProcessModel.Inputs[0].CopyDataInto(frame.Data)
 	}, func() (any, error) {
-		img, err := fp.app.FrameProvider.PostProcessModel.Outputs[0].GetData(fp.outReso.RgbSize())
+		img, err := fp.PostProcessModel.Outputs[0].GetData(fp.outReso.RgbSize())
 		return fp.frameProccessor(img), err
 	}); err != nil {
 		return nil, err

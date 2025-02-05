@@ -33,7 +33,6 @@ type AcapApplication struct {
 	Syslog              *axsyslog.Syslog
 	ParamHandler        *axparameter.AXParameter
 	EventHandler        *axevent.AXEventHandler
-	FrameProvider       *FrameProvider
 	StorageProvider     *StorageProvider
 	Mainloop            *glib.GMainLoop
 	OnCloseCleaners     []func()
@@ -134,9 +133,6 @@ func (a *AcapApplication) AddModelCleaner(m *axlarod.LarodModel) {
 func (a *AcapApplication) Close() {
 	for _, declaration_id := range a.eventDeclarationIds {
 		a.EventHandler.Undeclare(declaration_id)
-	}
-	if a.FrameProvider != nil {
-		a.FrameProvider.Stop()
 	}
 	if a.StorageProvider != nil {
 		a.StorageProvider.Close()
