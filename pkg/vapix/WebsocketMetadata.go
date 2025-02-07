@@ -22,6 +22,7 @@ type VapixWsMetadataStreamRequest struct {
 // VapixWsMetadataStreamRequestEventParams defines the parameters for a metadata stream request.
 type VapixWsMetadataStreamRequestEventParams struct {
 	EventFilterList []VapixWsMetadataStreamRequestEventFilter `json:"eventFilterList"` // List of filters to apply to the events stream.
+	ChannelFilter   []string                                  `json:"channelFilter"`
 }
 
 // VapixWsMetadataStreamRequestEventFilter represents an event filter for the metadata stream.
