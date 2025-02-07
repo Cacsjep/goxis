@@ -12,7 +12,7 @@ import (
 )
 
 const INTERNAL_VAPIX_ENDPOINT = "http://127.0.0.12"
-const INTERNAL_VAPIX_WS_METADATA_STREAM_ENDPOINT = "ws://127.0.0.12/vapix/ws-data-stream?sources=events"
+const INTERNAL_VAPIX_WS_METADATA_STREAM_ENDPOINT = "ws://127.0.0.12/vapix/ws-data-stream?sources="
 
 type RequestResult struct {
 	IsOk           bool

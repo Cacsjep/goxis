@@ -86,7 +86,7 @@ func NewVapixWsMetadataConsumer(eventFilters *[]VapixWsMetadataStreamRequestEven
 }
 
 // Connect establishes a WebSocket connection to the VAPIX metadata stream and sends the configuration request.
-func (vwmc *VapixWsMetadataConsumer) Connect() (*websocket.Conn, error) {
+func (vwmc *VapixWsMetadataConsumer) Connect(sources string) (*websocket.Conn, error) {
 
 	// Retrieve credentials (assumes dbus.RetrieveVapixCredentials is implemented).
 	username, password, err := dbus.RetrieveVapixCredentials("root")
@@ -101,7 +101,7 @@ func (vwmc *VapixWsMetadataConsumer) Connect() (*websocket.Conn, error) {
 	headers.Set("Authorization", utils.BasicAuthHeader(username, password))
 
 	dialer := websocket.DefaultDialer
-	conn, _, err := dialer.Dial(INTERNAL_VAPIX_WS_METADATA_STREAM_ENDPOINT, headers)
+	conn, _, err := dialer.Dial(INTERNAL_VAPIX_WS_METADATA_STREAM_ENDPOINT+sources, headers)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to WebSocket: %v", err)
 	}
