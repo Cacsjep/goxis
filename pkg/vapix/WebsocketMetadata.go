@@ -60,18 +60,19 @@ type VapixWsMetadataConsumer struct {
 }
 
 // NewVapixWsMetadataStreamRequest creates a new VAPIX WebSocket metadata stream request with the provided filters.
-func NewVapixWsMetadataStreamReqeust(eventsFilter []VapixWsMetadataStreamRequestEventFilter) *VapixWsMetadataStreamRequest {
+func NewVapixWsMetadataStreamReqeust(eventsFilter []VapixWsMetadataStreamRequestEventFilter, channelFilters []string) *VapixWsMetadataStreamRequest {
 	return &VapixWsMetadataStreamRequest{
 		APIVersion: "1.0",
 		Method:     "events:configure",
 		Params: VapixWsMetadataStreamRequestEventParams{
 			EventFilterList: eventsFilter,
+			ChannelFilter:   channelFilters,
 		},
 	}
 }
 
 // NewVapixWsMetadataConsumer creates a new VAPIX WebSocket metadata consumer with optional event filters.
-func NewVapixWsMetadataConsumer(eventFilters *[]VapixWsMetadataStreamRequestEventFilter) *VapixWsMetadataConsumer {
+func NewVapixWsMetadataConsumer(eventFilters *[]VapixWsMetadataStreamRequestEventFilter, channelFilters []string) *VapixWsMetadataConsumer {
 	vwmc := &VapixWsMetadataConsumer{
 		EventFilters: []VapixWsMetadataStreamRequestEventFilter{},
 	}
@@ -82,7 +83,7 @@ func NewVapixWsMetadataConsumer(eventFilters *[]VapixWsMetadataStreamRequestEven
 		vwmc.EventFilters = *eventFilters
 	}
 	// Create the metadata stream request configuration.
-	vwmc.RequestConfig = NewVapixWsMetadataStreamReqeust(vwmc.EventFilters)
+	vwmc.RequestConfig = NewVapixWsMetadataStreamReqeust(vwmc.EventFilters, channelFilters)
 	return vwmc
 }
 
