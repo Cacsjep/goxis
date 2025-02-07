@@ -64,7 +64,7 @@ type Observation struct {
 	Timestamp   time.Time `json:"timestamp,omitempty"` // For consolidated tracks
 	TrackID     string    `json:"track_id,omitempty"`  // For scene description
 	Class       *Class    `json:"class,omitempty"`     // Optional class information
-	Image       *Image    `json:"image,omitempty"`     // Optional image information
+	Image       *Image    `json:"-"`                   // Optional image information
 }
 
 // Operation represents operations in `analytics_scene_description`.
