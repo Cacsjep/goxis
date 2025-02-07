@@ -81,10 +81,10 @@ func (mdb *MDBProvider[T]) Connect() {
 	}
 	mdb.con = con
 
-	subConfig, err := MDBSubscriberConfigCreate(mdb.Topic, mdb.Source, func(msg *Message) {
+	subConfig, config_create_err := MDBSubscriberConfigCreate(mdb.Topic, mdb.Source, func(msg *Message) {
 		if msg.Payload == "" {
 			mdb.ErrorChan <- &MDBProviderError{
-				Err:     err,
+				Err:     fmt.Errorf("empty payload received"),
 				ErrType: MDBProviderErrorTypeEmptyPayload,
 			}
 			return
@@ -93,9 +93,8 @@ func (mdb *MDBProvider[T]) Connect() {
 		var t T
 		parsed, parseErr := t.TransformMessage(msg.Payload)
 		if parseErr != nil {
-			fmt.Println("failed to parse message:", parseErr)
 			mdb.ErrorChan <- &MDBProviderError{
-				Err:     err,
+				Err:     parseErr,
 				ErrType: MDBProviderErrorTypeInvalidMessage,
 			}
 			return
@@ -114,7 +113,7 @@ func (mdb *MDBProvider[T]) Connect() {
 		// Send the parsed message to the channel
 		mdb.MessageChan <- typedMessage
 	})
-	if err != nil {
+	if config_create_err != nil {
 		mdb.ErrorChan <- &MDBProviderError{
 			Err:     err,
 			ErrType: MDBProviderErrorTypeSubscriberConfigCreate,
@@ -124,15 +123,15 @@ func (mdb *MDBProvider[T]) Connect() {
 	}
 	mdb.subConfig = subConfig
 
-	subscriber, err := MDBSubscriberCreateAsync(con, subConfig, func(onDone error) {
+	subscriber, create_async_err := MDBSubscriberCreateAsync(con, subConfig, func(onDone error) {
 		if onDone != nil {
 			mdb.ErrorChan <- &MDBProviderError{
-				Err:     err,
+				Err:     onDone,
 				ErrType: MDBProviderErrorSubscribeDone,
 			}
 		}
 	})
-	if err != nil {
+	if create_async_err != nil {
 		mdb.ErrorChan <- &MDBProviderError{
 			Err:     err,
 			ErrType: MDBProviderErrorSubscribe,
