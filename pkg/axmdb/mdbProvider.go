@@ -116,7 +116,8 @@ func (mdb *MDBProvider[T]) Connect() {
 	mdb.subscriber = subscriber
 }
 
-func (mdb *MDBProvider[T]) safeToProcced(err error, errType MDBProviderErrorType) bool {
+// safeToProceed is a helper that sends an error to the error channel and disconnects if err is non-nil.
+func (mdb *MDBProvider[T]) safeToProceed(err error, errType MDBProviderErrorType) bool {
 	if err != nil {
 		mdb.ErrorChan <- &MDBProviderError{
 			Err:     err,
