@@ -45,7 +45,7 @@ type AcapApplication struct {
 //
 // ! Note: Since this is the entry point, it panic in case of an error,
 // this could happen if manifest could not loaded or parameter instance could not be created
-func NewAcapApplication(loglevel int) *AcapApplication {
+func NewAcapApplication() *AcapApplication {
 	m, err := axmanifest.LoadManifest("manifest.json")
 	if err != nil {
 		panic(err)
@@ -58,7 +58,7 @@ func NewAcapApplication(loglevel int) *AcapApplication {
 
 	app := AcapApplication{
 		Manifest:        m,
-		Syslog:          axsyslog.NewSyslog(m.ACAPPackageConf.Setup.AppName, axsyslog.LOG_PID|axsyslog.LOG_CONS, loglevel),
+		Syslog:          axsyslog.NewSyslog(m.ACAPPackageConf.Setup.AppName, axsyslog.LOG_PID|axsyslog.LOG_CONS, axsyslog.LOG_USER),
 		ParamHandler:    pApp,
 		EventHandler:    axevent.NewEventHandler(),
 		Mainloop:        glib.NewMainLoop(),
