@@ -114,7 +114,7 @@ func (s *Syslog) Debug(message string) {
 // and optionally to the console.
 func (s *Syslog) Debugf(format string, a ...interface{}) {
 	message := fmt.Sprintf(format, a...)
-	s.Error(message)
+	s.Debug(message)
 }
 
 // Crit logs a critical message to the syslog and panics. The message is also logged to the console
