@@ -21,10 +21,11 @@ const (
 	LOG_CONS = 0x02
 	LOG_USER = (1 << 3)
 
-	LOG_INFO = 6
-	LOG_CRIT = 2
-	LOG_WARN = 4
-	LOG_ERR  = 3
+	LOG_INFO  = 6
+	LOG_CRIT  = 2
+	LOG_WARN  = 4
+	LOG_ERR   = 3
+	LOG_DEBUG = 7
 )
 
 // Syslog struct holds the identifier pointer for syslog entries and a flag to enable
@@ -100,6 +101,18 @@ func (s *Syslog) Error(message string) {
 // Errorf logs an error message, formatted according to a format specifier, to the syslog,
 // and optionally to the console.
 func (s *Syslog) Errorf(format string, a ...interface{}) {
+	message := fmt.Sprintf(format, a...)
+	s.Error(message)
+}
+
+// Debug logs an debug message to the syslog, and optionally to the console.
+func (s *Syslog) Debug(message string) {
+	s.Log(LOG_DEBUG, message)
+}
+
+// Debugf logs an debug message, formatted according to a format specifier, to the syslog,
+// and optionally to the console.
+func (s *Syslog) Debugf(format string, a ...interface{}) {
 	message := fmt.Sprintf(format, a...)
 	s.Error(message)
 }
