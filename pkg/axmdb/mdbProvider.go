@@ -64,48 +64,35 @@ func resolveTopic[T MessageType]() (string, error) {
 
 // Connect initializes the MDBProvider and processes JSON strings dynamically.
 func (mdb *MDBProvider[T]) Connect() {
-	con, err := MDBConnectionCreate(func(err error) {
-		if err != nil {
-			mdb.ErrorChan <- &MDBProviderError{
-				Err:     err,
-				ErrType: MDBProviderErrorTypeConnection,
-			}
+	con, err := MDBConnectionCreate(func(conerr error) {
+		if !mdb.safeToProcced(conerr, MDBProviderErrorTypeConnection) {
+			return
 		}
 	})
-	if err != nil {
-		mdb.ErrorChan <- &MDBProviderError{
-			Err:     err,
-			ErrType: MDBProviderErrorTypeConnection,
-		}
+	if !mdb.safeToProcced(err, MDBProviderErrorTypeConnection) {
 		return
 	}
 	mdb.con = con
 
 	subConfig, config_create_err := MDBSubscriberConfigCreate(mdb.Topic, mdb.Source, func(msg *Message) {
 		if msg.Payload == "" {
-			mdb.ErrorChan <- &MDBProviderError{
-				Err:     fmt.Errorf("empty payload received"),
-				ErrType: MDBProviderErrorTypeEmptyPayload,
+			if !mdb.safeToProcced(fmt.Errorf("empty payload received"), MDBProviderErrorTypeEmptyPayload) {
+				return
 			}
 			return
 		}
 		// Parse JSON into the appropriate type
 		var t T
 		parsed, parseErr := t.TransformMessage(msg.Payload)
-		if parseErr != nil {
-			mdb.ErrorChan <- &MDBProviderError{
-				Err:     parseErr,
-				ErrType: MDBProviderErrorTypeInvalidMessage,
-			}
+		if !mdb.safeToProcced(parseErr, MDBProviderErrorTypeInvalidMessage) {
 			return
 		}
 
 		// Type assertion safety
 		typedMessage, ok := parsed.(T)
 		if !ok {
-			mdb.ErrorChan <- &MDBProviderError{
-				Err:     errors.New("failed to cast parsed message to the expected type"),
-				ErrType: MDBProviderErrorTypeParseMessage,
+			if !mdb.safeToProcced(errors.New("failed to cast parsed message to the expected type"), MDBProviderErrorTypeParseMessage) {
+				return
 			}
 			return
 		}
@@ -113,33 +100,32 @@ func (mdb *MDBProvider[T]) Connect() {
 		// Send the parsed message to the channel
 		mdb.MessageChan <- typedMessage
 	})
-	if config_create_err != nil {
-		mdb.ErrorChan <- &MDBProviderError{
-			Err:     err,
-			ErrType: MDBProviderErrorTypeSubscriberConfigCreate,
-		}
-		mdb.cleanup()
+	if !mdb.safeToProcced(config_create_err, MDBProviderErrorSubscribe) {
 		return
 	}
 	mdb.subConfig = subConfig
 
 	subscriber, create_async_err := MDBSubscriberCreateAsync(con, subConfig, func(onDone error) {
-		if onDone != nil {
-			mdb.ErrorChan <- &MDBProviderError{
-				Err:     onDone,
-				ErrType: MDBProviderErrorSubscribeDone,
-			}
+		if !mdb.safeToProcced(onDone, MDBProviderErrorSubscribe) {
+			return
 		}
 	})
-	if create_async_err != nil {
-		mdb.ErrorChan <- &MDBProviderError{
-			Err:     err,
-			ErrType: MDBProviderErrorSubscribe,
-		}
-		mdb.cleanup()
+	if !mdb.safeToProcced(create_async_err, MDBProviderErrorSubscribe) {
 		return
 	}
 	mdb.subscriber = subscriber
+}
+
+func (mdb *MDBProvider[T]) safeToProcced(err error, errType MDBProviderErrorType) bool {
+	if err != nil {
+		mdb.ErrorChan <- &MDBProviderError{
+			Err:     err,
+			ErrType: errType,
+		}
+		mdb.Disconnect()
+		return false
+	}
+	return true
 }
 
 // Disconnect cleans up resources.
@@ -157,9 +143,4 @@ func (mdb *MDBProvider[T]) Disconnect() {
 		close(mdb.MessageChan)
 		close(mdb.ErrorChan)
 	})
-}
-
-// cleanup handles errors and cleans up resources.
-func (mdb *MDBProvider[T]) cleanup() {
-	mdb.Disconnect()
 }
