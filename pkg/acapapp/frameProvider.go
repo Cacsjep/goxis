@@ -38,6 +38,7 @@ type FrameProvider struct {
 	PostProcessModel   *axlarod.LarodModel           // Post proccessor for the frame provider, combination of the pp model and the frame provider
 	outReso            *axvdo.VdoResolution
 	frameProccessor    func([]byte) []byte
+	RestartCallback    func() error // Callback function to be called when the frame provider is restarted
 }
 
 // FrameProviderStats provides statistical information about the operation of a FrameProvider.
@@ -212,6 +213,13 @@ func (fp *FrameProvider) Restart() error {
 	if fp.Stream, err = fp.createStream(); err != nil {
 		return err
 	}
+
+	defer func() {
+		if fp.RestartCallback != nil {
+			fp.RestartCallback()
+		}
+	}()
+
 	return fp.Stream.Start()
 }
 
