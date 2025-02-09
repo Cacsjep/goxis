@@ -45,8 +45,8 @@ func NewMDBProvider[T MessageType](source string) (*MDBProvider[T], error) {
 	return &MDBProvider[T]{
 		Topic:       topic,
 		Source:      source,
-		ErrorChan:   make(chan *MDBProviderError, 10),
-		MessageChan: make(chan T, 100),
+		ErrorChan:   make(chan *MDBProviderError, 5),
+		MessageChan: make(chan T, 10),
 	}, nil
 }
 

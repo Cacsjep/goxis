@@ -1,9 +1,10 @@
 package axmdb
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
+
+	"github.com/goccy/go-json"
 )
 
 // MessageType defines the interface for all message types.
