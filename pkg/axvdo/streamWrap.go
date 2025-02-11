@@ -334,13 +334,13 @@ func VideoStreamConfigToVdoMap(cfg VideoSteamConfiguration) *VdoMap {
 	setUint32IfNotNil("abr.retention_time", cfg.AbrRetention_time)
 
 	if cfg.CropEnabled != nil && *cfg.CropEnabled {
-		m.SetBoolean("crop.enabled", *cfg.CropEnabled)
-		m.SetUint32("crop.height", uint32(*cfg.CropHeight))
-		m.SetUint32("crop.max_height", uint32(*cfg.CropMaxHeight))
-		m.SetUint32("crop.max_width", uint32(*cfg.CropMaxWidth))
-		m.SetUint32("crop.width", uint32(*cfg.CropWidth))
-		m.SetUint32("crop.x", uint32(*cfg.CropX))
-		m.SetUint32("crop.y", uint32(*cfg.CropY))
+		setBoolIfNotNil("crop.enabled", cfg.CropEnabled)
+		setUint32IfNotNil("crop.height", cfg.CropHeight)
+		setUint32IfNotNil("crop.max_height", cfg.CropMaxHeight)
+		setUint32IfNotNil("crop.max_width", cfg.CropMaxWidth)
+		setUint32IfNotNil("crop.width", cfg.CropWidth)
+		setUint32IfNotNil("crop.x", cfg.CropX)
+		setUint32IfNotNil("crop.y", cfg.CropY)
 	}
 
 	return m
