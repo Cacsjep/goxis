@@ -76,6 +76,14 @@ type VideoSteamConfiguration struct {
 	// The following ABR specific settings are supported with VDO_RATE_CONTROL_MODE_ABR.
 	AbrTarget_bitrate *uint32 // Stream target bitrate (bps)
 	AbrRetention_time *uint32 // Retention time in seconds
+
+	CropEnabled   *bool   // Enable cropping
+	CropHeight    *uint32 // Cropped height
+	CropMaxHeight *uint32 // Cropped max height
+	CropMaxWidth  *uint32 // Cropped max width
+	CropWidth     *uint32 // Cropped width
+	CropX         *uint32 // Cropped X
+	CropY         *uint32 // Cropped Y
 }
 
 func (vsc *VideoSteamConfiguration) RgbFrameSize() int {
@@ -324,6 +332,16 @@ func VideoStreamConfigToVdoMap(cfg VideoSteamConfiguration) *VdoMap {
 	}
 	setUint32IfNotNil("abr.target_bitrate", cfg.AbrTarget_bitrate)
 	setUint32IfNotNil("abr.retention_time", cfg.AbrRetention_time)
+
+	if cfg.CropEnabled != nil && *cfg.CropEnabled {
+		m.SetBoolean("crop.enabled", *cfg.CropEnabled)
+		m.SetUint32("crop.height", uint32(*cfg.CropHeight))
+		m.SetUint32("crop.max_height", uint32(*cfg.CropMaxHeight))
+		m.SetUint32("crop.max_width", uint32(*cfg.CropMaxWidth))
+		m.SetUint32("crop.width", uint32(*cfg.CropWidth))
+		m.SetUint32("crop.x", uint32(*cfg.CropX))
+		m.SetUint32("crop.y", uint32(*cfg.CropY))
+	}
 
 	return m
 }
