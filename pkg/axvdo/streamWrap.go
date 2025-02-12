@@ -100,7 +100,7 @@ type StreamStats struct {
 	// Channel represents the specific channel or stream identifier.
 	Channel uint32
 	// Format specifies the video format used in the stream.
-	Format int16
+	Format uint32
 	// Framerate is the number of frames per second in the video stream.
 	Framerate uint32
 	// GOPLength represents the length of a Group of Pictures in frames.

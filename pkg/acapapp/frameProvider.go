@@ -243,7 +243,7 @@ func (fp *FrameProvider) Stats() (*FrameProviderStats, error) {
 		Bitrate:                       m.GetUint32("bitrate", 0),
 		BufferType:                    m.GetString("buffer.type", ""),
 		Channel:                       m.GetUint32("channel", 0),
-		Format:                        m.GetInt16("format", 0),
+		Format:                        m.GetUint32("format", 0),
 		Framerate:                     m.GetUint32("framerate", 0),
 		GOPLength:                     m.GetUint32("gop_length", 0),
 		H26xIntraRefresh:              m.GetUint32("h26x.intra_refresh", 0),
