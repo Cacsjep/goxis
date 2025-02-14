@@ -17,33 +17,42 @@ import (
 )
 
 const (
+	// Options for openlog.
 	LOG_PID  = 0x01
 	LOG_CONS = 0x02
+	// Facilities.
 	LOG_USER = (1 << 3)
 
-	LOG_INFO  = 6
-	LOG_CRIT  = 2
-	LOG_WARN  = 4
-	LOG_ERR   = 3
-	LOG_DEBUG = 7
+	// Syslog priorities.
+	LOG_EMERG  = 0
+	LOG_ALERT  = 1
+	LOG_CRIT   = 2
+	LOG_ERR    = 3
+	LOG_WARN   = 4
+	LOG_NOTICE = 5
+	LOG_INFO   = 6
+	LOG_DEBUG  = 7
 )
 
-// Syslog struct holds the identifier pointer for syslog entries and a flag to enable
-// or disable console logging.
+// Syslog holds the identifier pointer for syslog entries, a flag to enable
+// or disable console logging, and the minimum priority for messages to be logged.
 type Syslog struct {
 	ident_p        unsafe.Pointer
 	consoleLogging bool
+	minPriority    int
 }
 
-// NewSyslog initializes a new syslog handler with the specified identifier, option,
-// and facility. Console logging is disabled by default.
-// - `ident` is a string that identifies the messages in the log.
-// - `option` is an integer specifying logging options (e.g., LOG_PID, LOG_CONS).
-// - `facility` is an integer specifying the syslog facility.
-func NewSyslog(ident string, option int, facility int) *Syslog {
+// NewSyslog initializes a new syslog handler.
+//   - `ident` is a string that identifies the messages in the log.
+//   - `option` is an integer specifying logging options (e.g., LOG_PID, LOG_CONS).
+//   - `facility` is an integer specifying the syslog facility (e.g., LOG_USER).
+//   - `minPriority` is the minimum priority (severity) that will be logged.
+//     Messages with a numerical value higher than minPriority (less critical)
+//     will be ignored.
+func NewSyslog(ident string, option int, facility int, minPriority int) *Syslog {
 	c_ident := C.CString(ident)
 	C.openlog(c_ident, C.int(option), C.int(facility))
-	return &Syslog{ident_p: unsafe.Pointer(c_ident), consoleLogging: false}
+	return &Syslog{ident_p: unsafe.Pointer(c_ident), consoleLogging: false, minPriority: minPriority}
 }
 
 // EnableConsole enables logging to the console for this syslog instance.
@@ -56,11 +65,18 @@ func (s *Syslog) DisableConsole() {
 	s.consoleLogging = false
 }
 
-// Log sends a log message with the specified priority to the syslog, and optionally
-// to the console if console logging is enabled.
+// Log sends a log message with the specified priority to syslog, and optionally
+// to the console if enabled. If the message's priority is lower (less critical)
+// than the configured minimum, the message is skipped.
 // - `priority` is an integer specifying the message's priority (e.g., LOG_INFO, LOG_ERR).
 // - `message` is the string message to log.
 func (s *Syslog) Log(priority int, message string) {
+	// Filter out messages that don't meet the minimum priority.
+	// (Remember: lower numerical values are more critical.)
+	if priority > s.minPriority {
+		return
+	}
+
 	if s.consoleLogging {
 		fmt.Printf("%s: %s\n", priorityToString(priority), message)
 	}
@@ -69,69 +85,58 @@ func (s *Syslog) Log(priority int, message string) {
 	C.syslog_helper(C.int(priority), cMessage)
 }
 
-// Info logs an informational message to the syslog, and optionally to the console.
+// Info logs an informational message.
 func (s *Syslog) Info(message string) {
 	s.Log(LOG_INFO, message)
 }
 
-// Infof logs an informational message, formatted according to a format specifier, to the syslog,
-// and optionally to the console.
+// Infof logs a formatted informational message.
 func (s *Syslog) Infof(format string, a ...interface{}) {
-	message := fmt.Sprintf(format, a...)
-	s.Info(message)
+	s.Info(fmt.Sprintf(format, a...))
 }
 
-// Warn logs a warning message to the syslog, and optionally to the console.
+// Warn logs a warning message.
 func (s *Syslog) Warn(message string) {
 	s.Log(LOG_WARN, message)
 }
 
-// Warnf logs a warning message, formatted according to a format specifier, to the syslog,
-// and optionally to the console.
+// Warnf logs a formatted warning message.
 func (s *Syslog) Warnf(format string, a ...interface{}) {
-	message := fmt.Sprintf(format, a...)
-	s.Warn(message)
+	s.Warn(fmt.Sprintf(format, a...))
 }
 
-// Error logs an error message to the syslog, and optionally to the console.
+// Error logs an error message.
 func (s *Syslog) Error(message string) {
 	s.Log(LOG_ERR, message)
 }
 
-// Errorf logs an error message, formatted according to a format specifier, to the syslog,
-// and optionally to the console.
+// Errorf logs a formatted error message.
 func (s *Syslog) Errorf(format string, a ...interface{}) {
-	message := fmt.Sprintf(format, a...)
-	s.Error(message)
+	s.Error(fmt.Sprintf(format, a...))
 }
 
-// Debug logs an debug message to the syslog, and optionally to the console.
+// Debug logs a debug message.
 func (s *Syslog) Debug(message string) {
 	s.Log(LOG_DEBUG, message)
 }
 
-// Debugf logs an debug message, formatted according to a format specifier, to the syslog,
-// and optionally to the console.
+// Debugf logs a formatted debug message.
 func (s *Syslog) Debugf(format string, a ...interface{}) {
-	message := fmt.Sprintf(format, a...)
-	s.Debug(message)
+	s.Debug(fmt.Sprintf(format, a...))
 }
 
-// Crit logs a critical message to the syslog and panics. The message is also logged to the console
-// if console logging is enabled.
+// Crit logs a critical message and panics.
 func (s *Syslog) Crit(message string) {
 	s.Log(LOG_CRIT, message)
 	panic(message)
 }
 
-// Critf logs a critical message, formatted according to a format specifier, to the syslog and panics.
-// The message is also logged to the console if console logging is enabled.
+// Critf logs a formatted critical message and panics.
 func (s *Syslog) Critf(format string, a ...interface{}) {
-	message := fmt.Sprintf(format, a...)
-	s.Crit(message) // Note that s.Crit will log the message and then panic.
+	s.Crit(fmt.Sprintf(format, a...))
 }
 
-// Close releases resources associated with the syslog, specifically freeing the identifier.
+// Close releases resources associated with the syslog.
 func (s *Syslog) Close() {
 	C.free(s.ident_p)
 	C.closelog()
