@@ -45,13 +45,12 @@ type Syslog struct {
 // NewSyslog initializes a new syslog handler.
 //   - `ident` is a string that identifies the messages in the log.
 //   - `option` is an integer specifying logging options (e.g., LOG_PID, LOG_CONS).
-//   - `facility` is an integer specifying the syslog facility (e.g., LOG_USER).
 //   - `minPriority` is the minimum priority (severity) that will be logged.
 //     Messages with a numerical value higher than minPriority (less critical)
 //     will be ignored.
-func NewSyslog(ident string, option int, facility int, minPriority int) *Syslog {
+func NewSyslog(ident string, option int, minPriority int) *Syslog {
 	c_ident := C.CString(ident)
-	C.openlog(c_ident, C.int(option), C.int(facility))
+	C.openlog(c_ident, C.int(option), C.int(LOG_USER))
 	return &Syslog{ident_p: unsafe.Pointer(c_ident), consoleLogging: false, minPriority: minPriority}
 }
 
