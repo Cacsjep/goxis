@@ -54,7 +54,7 @@ func NewFrameProvider(a *AcapApplication, config axvdo.VideoSteamConfiguration) 
 	fp := &FrameProvider{
 		Config:             config,
 		state:              FrameProviderStateInit,
-		FrameStreamChannel: make(chan *axvdo.VideoFrame, 30),
+		FrameStreamChannel: make(chan *axvdo.VideoFrame, 1),
 		running:            false,
 		app:                a,
 	}
