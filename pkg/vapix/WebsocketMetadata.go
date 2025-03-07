@@ -14,9 +14,9 @@ import (
 
 // VapixWsMetadataStreamRequest represents a request to configure the VAPIX WebSocket metadata stream.
 type VapixWsMetadataStreamRequest struct {
-	APIVersion string                                  `json:"apiVersion"` // API version of the request, e.g., "1.0".
-	Method     string                                  `json:"method"`     // Method to execute, e.g., "events:configure".
-	Params     VapixWsMetadataStreamRequestEventParams `json:"params"`     // Request parameters containing event filters.
+	APIVersion string                                   `json:"apiVersion"` // API version of the request, e.g., "1.0".
+	Method     string                                   `json:"method"`     // Method to execute, e.g., "events:configure".
+	Params     *VapixWsMetadataStreamRequestEventParams `json:"params"`     // Request parameters containing event filters.
 }
 
 // VapixWsMetadataStreamRequestEventParams defines the parameters for a metadata stream request.
@@ -55,16 +55,14 @@ type VapixWsMetadataStreamResponseNotification struct {
 type VapixWsMetadataConsumer struct {
 	Username      string
 	Password      string
-	EventFilters  []VapixWsMetadataStreamRequestEventFilter
 	RequestConfig *VapixWsMetadataStreamRequest
 	Sources       string
 }
 
 // NewVapixWsMetadataConsumer creates a new VAPIX WebSocket metadata consumer with optional event filters.
-func NewVapixWsMetadataConsumer(sources string, params VapixWsMetadataStreamRequestEventParams) *VapixWsMetadataConsumer {
+func NewVapixWsMetadataConsumer(sources string, params *VapixWsMetadataStreamRequestEventParams) *VapixWsMetadataConsumer {
 	vwmc := &VapixWsMetadataConsumer{
-		EventFilters: []VapixWsMetadataStreamRequestEventFilter{},
-		Sources:      sources,
+		Sources: sources,
 		RequestConfig: &VapixWsMetadataStreamRequest{
 			APIVersion: "1.0",
 			Method:     sources + ":configure",
@@ -93,6 +91,12 @@ func (vwmc *VapixWsMetadataConsumer) Connect() (*websocket.Conn, error) {
 	conn, _, err := dialer.Dial(INTERNAL_VAPIX_WS_METADATA_STREAM_ENDPOINT+vwmc.Sources, headers)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to WebSocket: %v", err)
+	}
+
+	if vwmc.RequestConfig.Params == nil {
+		vwmc.RequestConfig.Params = &VapixWsMetadataStreamRequestEventParams{EventFilterList: []VapixWsMetadataStreamRequestEventFilter{
+			{TopicFilter: ""},
+		}}
 	}
 
 	// Send the configuration request.
