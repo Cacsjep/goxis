@@ -183,8 +183,10 @@ func (sp *StorageProvider) Release(diskItem *axstorage.DiskItem) error {
 // UnsubscribeAll Stop subscribing to all storages events.
 func (sp *StorageProvider) ReleaseAll() {
 	for _, d := range sp.DiskItems {
-		if err := d.Storage.AxStorageReleaseAsync(releaseCallback, &storageUserData{storageProvider: sp, diskItem: d}); err != nil {
-			sp.app.Syslog.Warnf("Failed to unsubscribe event of %s. Error: %s", d.StorageId, err.Error())
+		if d != nil && d.Setup {
+			if err := d.Storage.AxStorageReleaseAsync(releaseCallback, &storageUserData{storageProvider: sp, diskItem: d}); err != nil {
+				sp.app.Syslog.Warnf("Failed to unsubscribe event of %s. Error: %s", d.StorageId, err.Error())
+			}
 		}
 	}
 }

@@ -298,6 +298,11 @@ func (s *AXStorage) AxStorageReleaseAsync(callback StorageReleaseCallback, userd
 		Userdata: userdata,
 	}
 	handle := cgo.NewHandle(data)
+
+	if s.Ptr == nil {
+		return errors.New("AXStorage pointer is nil, cannot release storage")
+	}
+
 	success := C.ax_storage_release_async(s.Ptr, (C.AXStorageReleaseCallback)(C.GoStorageReleaseCallback), C.gpointer(handle), &gerr)
 	if success == C.FALSE {
 		return newStorageError(gerr)
