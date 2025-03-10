@@ -328,9 +328,7 @@ func storageSubscribeCallback(storageID axstorage.StorageId, userdata any, subsc
 	}
 
 	sp.ReleaseOnExiting(diskItem)
-	if err := sp.Setup(diskItem); err != nil {
-		sp.app.Syslog.Warnf("Unable to setup storage %s because: %s", diskItem.StorageId, err.Error())
-	}
+	sp.Setup(diskItem)
 
 	if sp.UseChannelEvents {
 		sp.DiskItemsEvents <- diskItem
