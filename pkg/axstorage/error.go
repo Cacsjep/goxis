@@ -37,7 +37,7 @@ func newStorageError(gerr *C.GError) error {
 }
 
 func (e *StorageError) Error() string {
-	return fmt.Sprintf("%s, AxStorageError: %d", e.Message, e.Code.ErrorName())
+	return fmt.Sprintf("%s, AxStorageError: %s", e.Message, e.Code.ErrorName())
 }
 
 // ErrorName returns the string representation of the AXStorageStatusEventId.
