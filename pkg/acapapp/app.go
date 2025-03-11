@@ -106,7 +106,7 @@ func (a *AcapApplication) IsLicenseValid(major_version int, minor_version int) (
 
 // Start initiates the main event loop of the application, beginning its execution.
 func (a *AcapApplication) Run() {
-	SignalHandler(a.Close)
+	SignalHandler(a.close)
 	a.Mainloop.Run()
 }
 
@@ -128,9 +128,9 @@ func (a *AcapApplication) AddModelCleaner(m *axlarod.LarodModel) {
 	})
 }
 
-// Close terminates the application's main event loop and releases resources associated with the syslog, parameter handler,
-// event handler, and main loop. This should be called to cleanly shut down the application.
-func (a *AcapApplication) Close() {
+// close terminates the application's main event loop and releases resources associated with the syslog, parameter handler,
+// event handler, and main loop. This should be called automatically when the application is shutting down or in response to exit signals.
+func (a *AcapApplication) close() {
 	for _, declaration_id := range a.eventDeclarationIds {
 		a.EventHandler.Undeclare(declaration_id)
 	}
