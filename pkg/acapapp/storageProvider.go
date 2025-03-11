@@ -141,7 +141,6 @@ func (sp *StorageProvider) Open(diskNotToUse *[]string) error {
 
 		if diskNotToUse != nil {
 			if slices.Contains(*diskNotToUse, string(storageId)) {
-				sp.app.Syslog.Infof("Skip storage: %s", storageId)
 				continue
 			}
 		}

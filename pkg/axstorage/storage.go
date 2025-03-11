@@ -218,12 +218,27 @@ func GoStorageSetupCallback(storage *C.AXStorage, user_data unsafe.Pointer, gErr
 //export GoStorageReleaseCallback
 func GoStorageReleaseCallback(user_data unsafe.Pointer, gError *C.GError) {
 	var err error
+	if user_data == nil {
+		fmt.Println("GoStorageReleaseCallback: received nil user_data")
+		return
+	}
 	handle := cgo.Handle(user_data)
-	callbackData := handle.Value().(*StorageReleaseCallbackData)
+	callbackDataValue := handle.Value()
+	callbackData, ok := callbackDataValue.(*StorageReleaseCallbackData)
+	if !ok || callbackData == nil {
+		fmt.Println("GoStorageReleaseCallback: invalid callbackData type or nil value")
+		handle.Delete()
+		return
+	}
 	if gError != nil {
 		err = newStorageError(gError)
 	}
-	callbackData.Callback(callbackData.Userdata, err)
+	// Ensure the callback function is not nil before calling it.
+	if callbackData.Callback == nil {
+		fmt.Println("GoStorageReleaseCallback: callback is nil")
+	} else {
+		callbackData.Callback(callbackData.Userdata, err)
+	}
 	handle.Delete()
 }
 
@@ -292,6 +307,16 @@ func AxStorageSetupAsync(storageID StorageId, callback StorageSetupCallback, use
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/axstorage/html/ax__storage_8h.html#a27909ecc692b78af43ce23bf0369fe95
 func (s *AXStorage) AxStorageReleaseAsync(callback StorageReleaseCallback, userdata any) error {
+
+	if callback == nil {
+		return errors.New("callback is nil, cannot release storage")
+	}
+
+	// Check that the storage pointer is valid.
+	if s.Ptr == nil {
+		return errors.New("AXStorage pointer is nil, cannot release storage")
+	}
+
 	var gerr *C.GError
 	data := &StorageReleaseCallbackData{
 		Callback: callback,
@@ -299,12 +324,9 @@ func (s *AXStorage) AxStorageReleaseAsync(callback StorageReleaseCallback, userd
 	}
 	handle := cgo.NewHandle(data)
 
-	if s.Ptr == nil {
-		return errors.New("AXStorage pointer is nil, cannot release storage")
-	}
-
 	success := C.ax_storage_release_async(s.Ptr, (C.AXStorageReleaseCallback)(C.GoStorageReleaseCallback), C.gpointer(handle), &gerr)
 	if success == C.FALSE {
+		handle.Delete()
 		return newStorageError(gerr)
 	}
 	return nil
