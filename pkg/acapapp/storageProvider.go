@@ -178,7 +178,7 @@ func (sp *StorageProvider) Unsubscribe(d *axstorage.DiskItem) error {
 func (sp *StorageProvider) UnsubscribeAll() {
 	for _, d := range sp.DiskItems {
 		if err := sp.Unsubscribe(d); err != nil {
-			sp.app.Syslog.Warnf("Failed to unsubscribe event of %s. Error: %s", d.StorageId, err.Error())
+			sp.app.Syslog.Warnf("Failed to unsubscribe event of %s, SubId: %d. Error: %s", d.StorageId, d.SubscriptionId, err.Error())
 		}
 	}
 }
