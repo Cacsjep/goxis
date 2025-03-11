@@ -239,7 +239,7 @@ func GoStorageReleaseCallback(user_data unsafe.Pointer, gError *C.GError) {
 	} else {
 		callbackData.Callback(callbackData.Userdata, err)
 	}
-	handle.Delete()
+	//handle.Delete()
 }
 
 // Subscribe subscribes to storage events for the provided storage ID.
