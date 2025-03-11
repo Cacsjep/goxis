@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 
 	"github.com/Cacsjep/goxis/pkg/axstorage"
 )
@@ -123,7 +124,8 @@ func (sp *StorageProvider) ReadFile(di *axstorage.DiskItem, filePath string) *Rw
 // and manages them. This method attempts to establish
 // communication with all available storages and subscribes to their respective events for monitoring
 // changes in their state or attributes.
-func (sp *StorageProvider) Open() error {
+// diskNotToUse is a list of storageIds that should be skipped
+func (sp *StorageProvider) Open(diskNotToUse *[]string) error {
 	var err error
 	var storageIds []axstorage.StorageId
 
@@ -136,6 +138,14 @@ func (sp *StorageProvider) Open() error {
 	}
 
 	for _, storageId := range storageIds {
+
+		if diskNotToUse != nil {
+			if slices.Contains(*diskNotToUse, string(storageId)) {
+				sp.app.Syslog.Infof("Skip storage: %s", storageId)
+				continue
+			}
+		}
+
 		subscriptionId, err := axstorage.AxStorageSubscribe(storageId, storageSubscribeCallback, sp)
 		if err != nil {
 			sp.app.Syslog.Warnf("Unable to create storage subscription callback: %s for storage: %s", err.Error(), storageId)
@@ -183,9 +193,9 @@ func (sp *StorageProvider) Release(diskItem *axstorage.DiskItem) error {
 // UnsubscribeAll Stop subscribing to all storages events.
 func (sp *StorageProvider) ReleaseAll() {
 	for _, d := range sp.DiskItems {
-		if d != nil && d.Setup {
-			if err := d.Storage.AxStorageReleaseAsync(releaseCallback, &storageUserData{storageProvider: sp, diskItem: d}); err != nil {
-				sp.app.Syslog.Warnf("Failed to unsubscribe event of %s. Error: %s", d.StorageId, err.Error())
+		if d != nil {
+			if err := sp.Release(d); err != nil {
+				sp.app.Syslog.Warnf("Failed to release %s. Error: %s", d.StorageId, err.Error())
 			}
 		}
 	}
@@ -193,8 +203,8 @@ func (sp *StorageProvider) ReleaseAll() {
 
 // Close unsubscribes and release all storages/disks
 func (sp *StorageProvider) Close() {
-	sp.UnsubscribeAll()
 	sp.ReleaseAll()
+	sp.UnsubscribeAll()
 }
 
 // GetDiskItem searches for a DiskItem by its storageId among the managed storage devices.
