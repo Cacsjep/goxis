@@ -217,29 +217,29 @@ func GoStorageSetupCallback(storage *C.AXStorage, user_data unsafe.Pointer, gErr
 
 //export GoStorageReleaseCallback
 func GoStorageReleaseCallback(user_data unsafe.Pointer, gError *C.GError) {
-	var err error
 	if user_data == nil {
 		fmt.Println("GoStorageReleaseCallback: received nil user_data")
 		return
 	}
 	handle := cgo.Handle(user_data)
-	callbackDataValue := handle.Value()
-	callbackData, ok := callbackDataValue.(*StorageReleaseCallbackData)
+	// Ensure the handle is deleted exactly once.
+	defer handle.Delete()
+
+	value := handle.Value()
+	callbackData, ok := value.(*StorageReleaseCallbackData)
 	if !ok || callbackData == nil {
 		fmt.Println("GoStorageReleaseCallback: invalid callbackData type or nil value")
-		handle.Delete()
 		return
 	}
+	var err error
 	if gError != nil {
 		err = newStorageError(gError)
 	}
-	// Ensure the callback function is not nil before calling it.
 	if callbackData.Callback == nil {
 		fmt.Println("GoStorageReleaseCallback: callback is nil")
-	} else {
-		callbackData.Callback(callbackData.Userdata, err)
+		return
 	}
-	//handle.Delete()
+	callbackData.Callback(callbackData.Userdata, err)
 }
 
 // Subscribe subscribes to storage events for the provided storage ID.

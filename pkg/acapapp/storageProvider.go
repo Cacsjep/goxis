@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"sync"
 
 	"github.com/Cacsjep/goxis/pkg/axstorage"
 )
@@ -18,6 +19,7 @@ type StorageProvider struct {
 	subscribtions    []int                 // Subscription list for unsubscribe
 	DiskItemsEvents  chan *axstorage.DiskItem
 	UseChannelEvents bool
+	wg               sync.WaitGroup // WaitGroup to track asynchronous operations
 }
 
 // NewStorageProvider initializes and returns a new StorageProvider associated with a given AcapApplication.
@@ -184,6 +186,7 @@ func (sp *StorageProvider) UnsubscribeAll() {
 // Release async release a disk/storage
 func (sp *StorageProvider) Release(diskItem *axstorage.DiskItem) error {
 	if diskItem.Setup {
+		sp.wg.Add(1)
 		return diskItem.Storage.AxStorageReleaseAsync(releaseCallback, &storageUserData{storageProvider: sp, diskItem: diskItem})
 	}
 	return nil
@@ -203,6 +206,7 @@ func (sp *StorageProvider) ReleaseAll() {
 // Close unsubscribes and release all storages/disks
 func (sp *StorageProvider) Close() {
 	sp.ReleaseAll()
+	sp.wg.Wait()
 	sp.UnsubscribeAll()
 }
 
@@ -301,6 +305,7 @@ func (sp *StorageProvider) ReleaseOnExiting(diskItem *axstorage.DiskItem) {
 // It logs the outcome of the release operation, indicating success or detailing any errors.
 func releaseCallback(userdata any, err error) {
 	sup := userdata.(*storageUserData)
+	defer sup.storageProvider.wg.Done()
 	if err != nil {
 		sup.storageProvider.app.Syslog.Warnf("Failed to release %s. Error %s.", sup.diskItem.StorageId, err.Error())
 	} else {
