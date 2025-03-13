@@ -106,6 +106,7 @@ func (op *OverlayProvider) Cleanup() {
 	}
 	AxOvlerayDeleteHandle()
 	AxOverlayCleanup()
+	onlyOnce = false
 }
 
 func (ov *Overlay) SetMaxResolution(camera int) (err error) {
