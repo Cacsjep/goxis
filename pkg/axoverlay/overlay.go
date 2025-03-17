@@ -326,8 +326,9 @@ func AxOverlayCreateOverlay(data *AxOverlayOverlayData, user_data any) (int, err
 }
 
 func AxOvlerayDeleteHandle() {
-	if overlayUserDataHandle.Value() != nil {
+	if overlayUserDataHandle != 0 {
 		overlayUserDataHandle.Delete()
+		overlayUserDataHandle = 0
 	}
 }
 
