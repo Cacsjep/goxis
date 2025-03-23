@@ -5,9 +5,31 @@ package axoverlay
 #cgo pkg-config: gio-2.0 glib-2.0 cairo axoverlay
 #include <axoverlay.h>
 #include <cairo/cairo.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct {
+	const unsigned char* data;
+	size_t length;
+	size_t offset;
+} png_reader_t;
+
+cairo_status_t go_png_read_callback(void *closure, unsigned char *data, unsigned int length) {
+	png_reader_t* reader = (png_reader_t*)closure;
+
+	if (reader->offset + length > reader->length) {
+		return CAIRO_STATUS_READ_ERROR;
+	}
+
+	memcpy(data, reader->data + reader->offset, length);
+	reader->offset += length;
+	return CAIRO_STATUS_SUCCESS;
+}
+
 */
 import "C"
 import (
+	"errors"
 	"fmt"
 	"image/color"
 	"unsafe"
@@ -371,6 +393,30 @@ func NewCairoSurfaceFromPNG(filename string) (*CairoSurface, error) {
 	if surfaceStatus := C.cairo_surface_status(surface); surfaceStatus != C.CAIRO_STATUS_SUCCESS {
 		return nil, fmt.Errorf("failed to create surface from PNG: %d", surfaceStatus)
 	}
+	return &CairoSurface{surface: surface}, nil
+}
+
+func NewCairoSurfaceFromPNGData(data []byte) (*CairoSurface, error) {
+	if len(data) == 0 {
+		return nil, errors.New("empty PNG data")
+	}
+
+	reader := C.png_reader_t{
+		data:   (*C.uchar)(C.CBytes(data)),
+		length: C.size_t(len(data)),
+		offset: 0,
+	}
+	defer C.free(unsafe.Pointer(reader.data))
+
+	surface := C.cairo_image_surface_create_from_png_stream(
+		(*[0]byte)(C.go_png_read_callback),
+		unsafe.Pointer(&reader),
+	)
+
+	if status := C.cairo_surface_status(surface); status != C.CAIRO_STATUS_SUCCESS {
+		return nil, fmt.Errorf("cairo surface status error: %d", status)
+	}
+
 	return &CairoSurface{surface: surface}, nil
 }
 
