@@ -354,6 +354,10 @@ func (ctx *CairoContext) SetFontSize(size float64) {
 	C.cairo_set_font_size(ctx.ptr, C.double(size))
 }
 
+func (ctx *CairoContext) Clip() {
+	C.cairo_clip(ctx.ptr)
+}
+
 func (ctx *CairoContext) ShowText(text string) {
 	cs := C.CString(text)
 	C.cairo_show_text(ctx.ptr, cs)
