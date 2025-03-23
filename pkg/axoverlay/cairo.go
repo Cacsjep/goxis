@@ -26,6 +26,10 @@ cairo_status_t go_png_read_callback(void *closure, unsigned char *data, unsigned
 	return CAIRO_STATUS_SUCCESS;
 }
 
+cairo_read_func_t get_go_png_reader() {
+    return &go_png_read_callback;
+}
+
 */
 import "C"
 import (
@@ -411,7 +415,7 @@ func NewCairoSurfaceFromPNGData(data []byte) (*CairoSurface, error) {
 	}
 
 	surface := C.cairo_image_surface_create_from_png_stream(
-		(*[0]byte)(C.go_png_read_callback),
+		C.get_go_png_reader(),
 		unsafe.Pointer(&reader),
 	)
 
