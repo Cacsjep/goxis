@@ -70,6 +70,14 @@ func (ctx *CairoContext) DrawArrow(x, y, length, angle float64, color color.RGBA
 	C.cairo_restore(ctx.ptr)
 }
 
+func (ctx *CairoContext) Restore() {
+	C.cairo_restore(ctx.ptr)
+}
+
+func (ctx *CairoContext) Save() {
+	C.cairo_save(ctx.ptr)
+}
+
 func (ctx *CairoContext) DrawText(text string, x float64, y float64, size float64, font_name string, color color.RGBA) {
 	ctx.SetSourceRGB(color)
 	ctx.SelectFontFace(font_name, FONT_SLANT_NORMAL, FONT_WEIGHT_NORMAL)
