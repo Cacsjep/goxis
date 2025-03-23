@@ -360,6 +360,14 @@ func (ctx *CairoContext) ShowText(text string) {
 	C.free(unsafe.Pointer(cs))
 }
 
+func (ctx *CairoContext) PushGroup() {
+	C.cairo_push_group(ctx.ptr)
+}
+
+func (ctx *CairoContext) PopGroup() {
+	C.cairo_pop_group(ctx.ptr)
+}
+
 func (ctx *CairoContext) TextPath(text string) {
 	cs := C.CString(text)
 	C.cairo_text_path(ctx.ptr, cs)
