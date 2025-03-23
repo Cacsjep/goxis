@@ -400,36 +400,35 @@ func NewCairoSurfaceFromPNG(filename string) (*CairoSurface, error) {
 	return &CairoSurface{surface: surface}, nil
 }
 
+type pngStreamHolder struct {
+	dataPtr unsafe.Pointer
+	reader  C.png_reader_t
+}
+
 func NewCairoSurfaceFromPNGData(data []byte) (*CairoSurface, error) {
 	if len(data) == 0 {
 		return nil, errors.New("empty PNG data")
 	}
 
-	// Allocate data and keep it alive until surface is fully done
-	cData := C.CBytes(data)
-
-	reader := &C.png_reader_t{
-		data:   (*C.uchar)(cData),
-		length: C.size_t(len(data)),
-		offset: 0,
+	holder := &pngStreamHolder{
+		dataPtr: C.CBytes(data),
 	}
+	holder.reader.data = (*C.uchar)(holder.dataPtr)
+	holder.reader.length = C.size_t(len(data))
+	holder.reader.offset = 0
 
-	// cairo reads data through callback, don't free yet!
 	surface := C.cairo_image_surface_create_from_png_stream(
 		(*[0]byte)(C.go_png_read_callback),
-		unsafe.Pointer(reader),
+		unsafe.Pointer(&holder.reader),
 	)
 
+	C.free(holder.dataPtr) // Free AFTER surface creation
+
 	if surfaceStatus := C.cairo_surface_status(surface); surfaceStatus != C.CAIRO_STATUS_SUCCESS {
-		C.free(cData) // free manually if cairo fails
 		return nil, fmt.Errorf("failed to create surface from PNG: %d", surfaceStatus)
 	}
 
-	// Keep a reference to free later
-	return &CairoSurface{
-		surface: surface,
-		// keep pointer alive via finalizer or store for later destruction
-	}, nil
+	return &CairoSurface{surface: surface}, nil
 }
 
 // Method to get the width of the surface
