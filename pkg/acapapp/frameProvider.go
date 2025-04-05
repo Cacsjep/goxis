@@ -1,10 +1,8 @@
 package acapapp
 
 import (
-	"fmt"
 	"time"
 
-	"github.com/Cacsjep/goxis/pkg/axlarod"
 	"github.com/Cacsjep/goxis/pkg/axvdo"
 )
 
@@ -35,7 +33,6 @@ type FrameProvider struct {
 	FrameStreamChannel chan *axvdo.VideoFrame        // Channel for delivering video frames to consumers.
 	restartRetries     int                           // Counter for the number of restart attempts.
 	app                *AcapApplication              // Reference to the application managing this frame provider.
-	PostProcessModel   *axlarod.LarodModel           // Post proccessor for the frame provider, combination of the pp model and the frame provider
 	outReso            *axvdo.VdoResolution
 	frameProccessor    func([]byte) []byte
 	RestartCallback    func() // Callback function to be called when the frame provider is restarted
@@ -70,55 +67,6 @@ func NewFrameProvider(a *AcapApplication, config axvdo.VideoSteamConfiguration) 
 // This is a helper method used internally by the FrameProvider.
 func (fp *FrameProvider) createStream() (*axvdo.VdoStream, error) {
 	return axvdo.NewVideoStreamFromConfig(fp.Config)
-}
-
-// SetLarodPostProccessor initializes the post processor for the frame provider.
-// It creates a new preprocessor model based on the given device, output resolution, and RGB mode.
-// The post processor is used to convert the raw video frame data into a format suitable for processing by the detection model.
-func (fp *FrameProvider) SetLarodPostProccessor(device string, rgbMode axlarod.PreProccessOutputFormat, outReso *axvdo.VdoResolution, frameProccessor func([]byte) []byte) error {
-	var err error
-	if fp.app == nil {
-		return fmt.Errorf("Application is not initialized")
-	}
-
-	if fp.app.Larod == nil {
-		return fmt.Errorf("Larod is not initialized")
-	}
-
-	if fp.Config.Width == nil || fp.Config.Height == nil {
-		return fmt.Errorf("FrameProvider width and height is not initialized")
-	}
-
-	cropMap, err := axlarod.CreateCropMap(outReso.Width, outReso.Height, *fp.Config.Width, *fp.Config.Height)
-	if err != nil {
-		return err
-	}
-	fp.outReso = outReso
-	if fp.PostProcessModel, err = fp.app.Larod.NewPreProccessModel(
-		device,
-		axlarod.LarodResolution{Width: *fp.Config.Width, Height: *fp.Config.Height},
-		axlarod.LarodResolution{Width: outReso.Width, Height: outReso.Height},
-		rgbMode,
-		cropMap,
-	); err != nil {
-		return err
-	}
-	fp.frameProccessor = frameProccessor
-	return nil
-}
-
-func (fp *FrameProvider) frameProviderPostProcess(frame *axvdo.VideoFrame) (*axlarod.JobResult, error) {
-	var result *axlarod.JobResult
-	var err error
-	if result, err = fp.app.Larod.ExecuteJob(fp.PostProcessModel, func() error {
-		return fp.PostProcessModel.Inputs[0].CopyDataInto(frame.Data)
-	}, func() (any, error) {
-		img, err := fp.PostProcessModel.Outputs[0].GetData(fp.outReso.RgbSize())
-		return fp.frameProccessor(img), err
-	}); err != nil {
-		return nil, err
-	}
-	return result, nil
 }
 
 // Start begins the frame streaming process, marking the FrameProvider as running and initiating the frame fetching loop.
@@ -162,28 +110,7 @@ func (fp *FrameProvider) Start() error {
 				continue
 			}
 			fp.restartRetries = 0
-			if fp.PostProcessModel != nil {
-				job_r, err := fp.frameProviderPostProcess(video_frame)
-				var job_err error
-				var data []byte
-
-				if err != nil {
-					job_err = err
-				} else {
-					data = job_r.OutputData.([]byte)
-				}
-				fp.FrameStreamChannel <- &axvdo.VideoFrame{
-					Data:        data,
-					Size:        uint(len(data)),
-					SequenceNbr: video_frame.SequenceNbr,
-					Timestamp:   video_frame.Timestamp,
-					Type:        axvdo.VdoFrameTypeRGB,
-					Error:       job_err,
-				}
-
-			} else {
-				fp.FrameStreamChannel <- video_frame
-			}
+			fp.FrameStreamChannel <- video_frame
 		}
 	}()
 	return nil

@@ -14,7 +14,6 @@ import (
 	"strings"
 
 	"github.com/Cacsjep/goxis/pkg/axevent"
-	"github.com/Cacsjep/goxis/pkg/axlarod"
 	"github.com/Cacsjep/goxis/pkg/axlicense"
 	"github.com/Cacsjep/goxis/pkg/axmanifest"
 	"github.com/Cacsjep/goxis/pkg/axparameter"
@@ -37,7 +36,6 @@ type AcapApplication struct {
 	Mainloop            *glib.GMainLoop
 	OnCloseCleaners     []func()
 	eventDeclarationIds []int
-	Larod               *axlarod.Larod
 }
 
 // NewAcapApplication initializes a new AcapApplication instance, loading the application's manifest,
@@ -81,14 +79,6 @@ func NewAcapApplication() *AcapApplication {
 	return &app
 }
 
-func (a *AcapApplication) InitalizeLarod() error {
-	a.Larod = axlarod.NewLarod()
-	if err := a.Larod.Initalize(); err != nil {
-		return err
-	}
-	return nil
-}
-
 // IsLicenseValid checks the validity of the application's license for a given major and minor version.
 // It returns true if the license is valid, or false along with an error if the check fails.
 func (a *AcapApplication) IsLicenseValid(major_version int, minor_version int) (bool, error) {
@@ -119,15 +109,6 @@ func (a *AcapApplication) AddCloseCleanFunc(f func()) {
 	a.OnCloseCleaners = append(a.OnCloseCleaners, f)
 }
 
-func (a *AcapApplication) AddModelCleaner(m *axlarod.LarodModel) {
-	a.AddCloseCleanFunc(func() {
-		err := a.Larod.DestroyModel(m)
-		if err != nil {
-			a.Syslog.Errorf("Failed to destroy model: %s, %s", m.Name, err.Error())
-		}
-	})
-}
-
 // close terminates the application's main event loop and releases resources associated with the syslog, parameter handler,
 // event handler, and main loop. This should be called automatically when the application is shutting down or in response to exit signals.
 func (a *AcapApplication) close() {
@@ -140,9 +121,7 @@ func (a *AcapApplication) close() {
 	for _, f := range a.OnCloseCleaners {
 		f()
 	}
-	if a.Larod != nil {
-		a.Larod.Disconnect()
-	}
+
 	a.Mainloop.Quit()     // Terminate the main loop.
 	a.ParamHandler.Free() // Release the parameter handler.
 	a.EventHandler.Free() // Release the event handler.
