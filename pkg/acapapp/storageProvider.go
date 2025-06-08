@@ -187,7 +187,7 @@ func (sp *StorageProvider) UnsubscribeAll() {
 func (sp *StorageProvider) Release(diskItem *axstorage.DiskItem) error {
 	if diskItem.Setup {
 		sp.wg.Add(1)
-		return diskItem.Storage.AxStorageReleaseAsync(releaseCallback, &storageUserData{storageProvider: sp, diskItem: diskItem})
+		return diskItem.Storage.AxStorageReleaseAsync(releaseCallback, &storageUserData{storageProvider: sp, diskItem: diskItem, tracksWg: true})
 	}
 	return nil
 }
@@ -286,6 +286,7 @@ func setupCallback(storage *axstorage.AXStorage, userdata any, setupErr error) {
 type storageUserData struct {
 	storageProvider *StorageProvider
 	diskItem        *axstorage.DiskItem
+	tracksWg        bool // Indicates if the WaitGroup should be tracked
 }
 
 // ReleaseOnExiting releases a DiskItem if it is exiting and has been previously set up.
@@ -305,7 +306,9 @@ func (sp *StorageProvider) ReleaseOnExiting(diskItem *axstorage.DiskItem) {
 // It logs the outcome of the release operation, indicating success or detailing any errors.
 func releaseCallback(userdata any, err error) {
 	sup := userdata.(*storageUserData)
-	defer sup.storageProvider.wg.Done()
+	if sup.tracksWg {
+		defer sup.storageProvider.wg.Done()
+	}
 	if err != nil {
 		sup.storageProvider.app.Syslog.Warnf("Failed to release %s. Error %s.", sup.diskItem.StorageId, err.Error())
 	} else {
