@@ -217,6 +217,7 @@ func (sp *StorageProvider) UnsubscribeAll() {
 func (sp *StorageProvider) Release(diskItem *axstorage.DiskItem) error {
 	if diskItem.Setup {
 		sp.wg.Add(1)
+		sp.app.Syslog.Infof("Awaiting pending rw opteraions for release: %s", diskItem.StorageId)
 		sp.WaitPendingRW()
 		return diskItem.Storage.AxStorageReleaseAsync(releaseCallback, &storageUserData{storageProvider: sp, diskItem: diskItem, tracksWg: true})
 	}
@@ -325,6 +326,7 @@ type storageUserData struct {
 // becomes unavailable. It should be invoked as part of the storage management lifecycle,
 // especially when handling storage removal or disconnection events.
 func (sp *StorageProvider) ReleaseOnExiting(diskItem *axstorage.DiskItem) {
+	sp.app.Syslog.Infof("Awaiting pending rw opteraions on exit release: %s", diskItem.StorageId)
 	sp.WaitPendingRW()
 	if diskItem.Exiting && diskItem.Setup {
 		if err := diskItem.Storage.AxStorageReleaseAsync(releaseCallback, &storageUserData{storageProvider: sp, diskItem: diskItem}); err != nil {
