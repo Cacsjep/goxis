@@ -115,13 +115,13 @@ func (a *AcapApplication) close() {
 	for _, declaration_id := range a.eventDeclarationIds {
 		a.EventHandler.Undeclare(declaration_id)
 	}
-	if a.StorageProvider != nil {
-		a.StorageProvider.Close()
-	}
+
 	for _, f := range a.OnCloseCleaners {
 		f()
 	}
-
+	if a.StorageProvider != nil {
+		a.StorageProvider.Close()
+	}
 	a.Mainloop.Quit()     // Terminate the main loop.
 	a.ParamHandler.Free() // Release the parameter handler.
 	a.EventHandler.Free() // Release the event handler.
