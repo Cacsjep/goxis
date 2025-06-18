@@ -14,14 +14,15 @@ import (
 // StorageProvider represents a handler for managing storage devices, enabling operations
 // such as file writing, removal, and subscriptions to storage events.
 type StorageProvider struct {
-	app              *AcapApplication      // Reference to the main application.
-	DiskItems        []*axstorage.DiskItem // List of disk items representing storage devices.
-	subscribtions    []int                 // Subscription list for unsubscribe
-	DiskItemsEvents  chan *axstorage.DiskItem
-	UseChannelEvents bool
-	wg               sync.WaitGroup              // WaitGroup to track asynchronous operations
-	prw              PendingRW                   // Pending read/write operations tracker
-	onExitCallbacks  []func(*axstorage.DiskItem) // Callbacks to be executed on exit for each disk item
+	app               *AcapApplication      // Reference to the main application.
+	DiskItems         []*axstorage.DiskItem // List of disk items representing storage devices.
+	subscribtions     []int                 // Subscription list for unsubscribe
+	DiskItemsEvents   chan *axstorage.DiskItem
+	UseChannelEvents  bool
+	wg                sync.WaitGroup          // WaitGroup to track asynchronous operations
+	prw               PendingRW               // Pending read/write operations tracker
+	onOnlineCallbacks map[string]func() error // Callbacks for when a disk comes online
+	onExitCallbacks   map[string]func() error // Callbacks for when a disk is exiting
 }
 
 type PendingRW struct {
@@ -35,11 +36,12 @@ type PendingRW struct {
 // Its an unbufferd channel with cap 10
 func (a *AcapApplication) NewStorageProvider(useChannelEvents bool) {
 	a.StorageProvider = &StorageProvider{
-		app:              a,
-		DiskItemsEvents:  make(chan *axstorage.DiskItem, 10),
-		UseChannelEvents: useChannelEvents,
-		prw:              PendingRW{},
-		onExitCallbacks:  []func(*axstorage.DiskItem){},
+		app:               a,
+		DiskItemsEvents:   make(chan *axstorage.DiskItem, 10),
+		UseChannelEvents:  useChannelEvents,
+		prw:               PendingRW{},
+		onOnlineCallbacks: make(map[string]func() error),
+		onExitCallbacks:   make(map[string]func() error),
 	}
 }
 
@@ -105,9 +107,14 @@ func (sp *StorageProvider) WriteFile(di *axstorage.DiskItem, filePath string, co
 	return rwPossible
 }
 
-func (sp *StorageProvider) AddExitCallback(diskItem *axstorage.DiskItem, callback func(*axstorage.DiskItem)) {
-	sp.onExitCallbacks = append(sp.onExitCallbacks, callback)
-	sp.app.Syslog.Infof("Exit callback set for disk item: %s", diskItem.StorageId)
+func (sp *StorageProvider) UseCallbacks(storageId string, onOnlineCallback, onExitCallback func() error) {
+	if onOnlineCallback != nil {
+		sp.onOnlineCallbacks[storageId] = onOnlineCallback
+	}
+
+	if onExitCallback != nil {
+		sp.onExitCallbacks[storageId] = onExitCallback
+	}
 }
 
 // If the disk item is exiting, immediately call the callback
@@ -226,6 +233,12 @@ func (sp *StorageProvider) UnsubscribeAll() {
 func (sp *StorageProvider) Release(diskItem *axstorage.DiskItem) error {
 	if diskItem.Setup {
 		sp.wg.Add(1)
+		for _, callback := range sp.onExitCallbacks {
+			sp.app.Syslog.Infof("Executing exit callback (release) for disk item: %s", diskItem.StorageId)
+			if err := callback(); err != nil {
+				sp.app.Syslog.Warnf("Exit callback (release) for disk %s failed: %s", diskItem.StorageId, err.Error())
+			}
+		}
 		sp.app.Syslog.Infof("Awaiting pending rw opteraions for release: %s", diskItem.StorageId)
 		sp.WaitPendingRW()
 		sp.app.Syslog.Infof("Releasing disk %s", diskItem.StorageId)
@@ -284,6 +297,7 @@ func (sp *StorageProvider) Setup(diskItem *axstorage.DiskItem) error {
 	if diskItem.Exiting {
 		return fmt.Errorf("Storage %s is exiting", diskItem.StorageId)
 	}
+
 	return nil
 }
 
@@ -322,6 +336,13 @@ func setupCallback(storage *axstorage.AXStorage, userdata any, setupErr error) {
 	if sup.storageProvider.UseChannelEvents {
 		sup.storageProvider.DiskItemsEvents <- sup.diskItem
 	}
+
+	for _, callback := range sup.storageProvider.onOnlineCallbacks {
+		sup.storageProvider.app.Syslog.Infof("Executing online callback for disk item: %s", sup.diskItem.StorageId)
+		if err := callback(); err != nil {
+			sup.storageProvider.app.Syslog.Warnf("Online callback for disk %s failed: %s", sup.diskItem.StorageId, err.Error())
+		}
+	}
 }
 
 // storageUserData is a helper struct used to pass additional data to callbacks.
@@ -343,7 +364,9 @@ func (sp *StorageProvider) ReleaseOnExiting(diskItem *axstorage.DiskItem) {
 	if diskItem.Exiting && diskItem.Setup {
 		for _, callback := range sp.onExitCallbacks {
 			sp.app.Syslog.Infof("Executing exit callback for disk item: %s", diskItem.StorageId)
-			callback(diskItem)
+			if err := callback(); err != nil {
+				sp.app.Syslog.Warnf("Exit callback for disk %s failed: %s", diskItem.StorageId, err.Error())
+			}
 		}
 		if err := diskItem.Storage.AxStorageReleaseAsync(releaseCallback, &storageUserData{storageProvider: sp, diskItem: diskItem}); err != nil {
 			sp.app.Syslog.Warn(err.Error())
