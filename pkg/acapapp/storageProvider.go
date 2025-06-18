@@ -334,7 +334,6 @@ func (sp *StorageProvider) ReleaseOnExiting(diskItem *axstorage.DiskItem) {
 		if err := diskItem.Storage.AxStorageReleaseAsync(releaseCallback, &storageUserData{storageProvider: sp, diskItem: diskItem}); err != nil {
 			sp.app.Syslog.Warn(err.Error())
 		}
-
 	}
 }
 
@@ -384,6 +383,9 @@ func storageSubscribeCallback(storageID axstorage.StorageId, userdata any, subsc
 		sp.DiskItemsEvents <- diskItem
 	}
 
-	sp.ReleaseOnExiting(diskItem)
-	sp.Setup(diskItem)
+	if diskItem.Exiting {
+		sp.ReleaseOnExiting(diskItem)
+	} else {
+		sp.Setup(diskItem)
+	}
 }
