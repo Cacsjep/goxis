@@ -20,6 +20,12 @@ type StorageProvider struct {
 	DiskItemsEvents  chan *axstorage.DiskItem
 	UseChannelEvents bool
 	wg               sync.WaitGroup // WaitGroup to track asynchronous operations
+	prw              PendingRW      // Pending read/write operations tracker
+}
+
+type PendingRW struct {
+	sync.WaitGroup
+	anyAdded bool // Indicates if any read/write operations have been added to the WaitGroup.
 }
 
 // NewStorageProvider initializes and returns a new StorageProvider associated with a given AcapApplication.
@@ -31,6 +37,7 @@ func (a *AcapApplication) NewStorageProvider(useChannelEvents bool) {
 		app:              a,
 		DiskItemsEvents:  make(chan *axstorage.DiskItem, 10),
 		UseChannelEvents: useChannelEvents,
+		prw:              PendingRW{},
 	}
 }
 
@@ -84,6 +91,8 @@ func checkRwPossibility(di *axstorage.DiskItem) *RwResult {
 // WriteFile writes the given content to a file at the specified path on the disk item.
 // It returns an RwResult indicating the outcome of the write operation.
 func (sp *StorageProvider) WriteFile(di *axstorage.DiskItem, filePath string, content []byte) *RwResult {
+	sp.AddPendingRW()
+	defer sp.DonePendingRW()
 	var rwPossible *RwResult
 	if rwPossible = checkRwPossibility(di); rwPossible.RwError == RWErrorNone {
 		if err := os.WriteFile(filepath.Join(di.StoragePath, filePath), content, 0644); err != nil {
@@ -97,6 +106,8 @@ func (sp *StorageProvider) WriteFile(di *axstorage.DiskItem, filePath string, co
 // RemoveFile deletes the specified file from the disk item.
 // It returns an RwResult indicating the outcome of the remove operation.
 func (sp *StorageProvider) RemoveFile(di *axstorage.DiskItem, filePath string) *RwResult {
+	sp.AddPendingRW()
+	defer sp.DonePendingRW()
 	var rwPossible *RwResult
 	if rwPossible = checkRwPossibility(di); rwPossible.RwError == RWErrorNone {
 		if err := os.Remove(filepath.Join(di.StoragePath, filePath)); err != nil {
@@ -107,9 +118,28 @@ func (sp *StorageProvider) RemoveFile(di *axstorage.DiskItem, filePath string) *
 	return rwPossible
 }
 
+func (sp *StorageProvider) AddPendingRW() {
+	sp.prw.Add(1)
+	sp.prw.anyAdded = true
+}
+
+// DonePendingRW marks a pending read/write operation as completed.
+func (sp *StorageProvider) DonePendingRW() {
+	sp.prw.Done()
+}
+
+func (sp *StorageProvider) WaitPendingRW() {
+	if sp.prw.anyAdded {
+		sp.prw.Wait()
+		sp.prw.anyAdded = false // Reset the flag after waiting
+	}
+}
+
 // ReadFile reads the content of a specified file from the disk item.
 // It returns an RwResult containing the read data and any errors that occurred.
 func (sp *StorageProvider) ReadFile(di *axstorage.DiskItem, filePath string) *RwResult {
+	sp.AddPendingRW()
+	defer sp.DonePendingRW()
 	var rwPossible *RwResult
 	var err error
 	var dat []byte
@@ -187,6 +217,7 @@ func (sp *StorageProvider) UnsubscribeAll() {
 func (sp *StorageProvider) Release(diskItem *axstorage.DiskItem) error {
 	if diskItem.Setup {
 		sp.wg.Add(1)
+		sp.WaitPendingRW()
 		return diskItem.Storage.AxStorageReleaseAsync(releaseCallback, &storageUserData{storageProvider: sp, diskItem: diskItem, tracksWg: true})
 	}
 	return nil
@@ -294,6 +325,7 @@ type storageUserData struct {
 // becomes unavailable. It should be invoked as part of the storage management lifecycle,
 // especially when handling storage removal or disconnection events.
 func (sp *StorageProvider) ReleaseOnExiting(diskItem *axstorage.DiskItem) {
+	sp.WaitPendingRW()
 	if diskItem.Exiting && diskItem.Setup {
 		if err := diskItem.Storage.AxStorageReleaseAsync(releaseCallback, &storageUserData{storageProvider: sp, diskItem: diskItem}); err != nil {
 			sp.app.Syslog.Warn(err.Error())
@@ -344,10 +376,10 @@ func storageSubscribeCallback(storageID axstorage.StorageId, userdata any, subsc
 		return
 	}
 
-	sp.ReleaseOnExiting(diskItem)
-	sp.Setup(diskItem)
-
 	if sp.UseChannelEvents {
 		sp.DiskItemsEvents <- diskItem
 	}
+
+	sp.ReleaseOnExiting(diskItem)
+	sp.Setup(diskItem)
 }
