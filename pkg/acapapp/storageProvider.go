@@ -219,6 +219,7 @@ func (sp *StorageProvider) Release(diskItem *axstorage.DiskItem) error {
 		sp.wg.Add(1)
 		sp.app.Syslog.Infof("Awaiting pending rw opteraions for release: %s", diskItem.StorageId)
 		sp.WaitPendingRW()
+		sp.app.Syslog.Infof("Releasing disk %s", diskItem.StorageId)
 		return diskItem.Storage.AxStorageReleaseAsync(releaseCallback, &storageUserData{storageProvider: sp, diskItem: diskItem, tracksWg: true})
 	}
 	return nil
@@ -328,6 +329,7 @@ type storageUserData struct {
 func (sp *StorageProvider) ReleaseOnExiting(diskItem *axstorage.DiskItem) {
 	sp.app.Syslog.Infof("Awaiting pending rw opteraions on exit release: %s", diskItem.StorageId)
 	sp.WaitPendingRW()
+	sp.app.Syslog.Infof("Releasing disk %s on exiting", diskItem.StorageId)
 	if diskItem.Exiting && diskItem.Setup {
 		if err := diskItem.Storage.AxStorageReleaseAsync(releaseCallback, &storageUserData{storageProvider: sp, diskItem: diskItem}); err != nil {
 			sp.app.Syslog.Warn(err.Error())
