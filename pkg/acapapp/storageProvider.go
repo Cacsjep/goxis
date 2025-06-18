@@ -105,7 +105,7 @@ func (sp *StorageProvider) WriteFile(di *axstorage.DiskItem, filePath string, co
 	return rwPossible
 }
 
-func AddExitCallback(sp *StorageProvider, diskItem *axstorage.DiskItem, callback func(*axstorage.DiskItem)) {
+func (sp *StorageProvider) AddExitCallback(diskItem *axstorage.DiskItem, callback func(*axstorage.DiskItem)) {
 	sp.onExitCallbacks = append(sp.onExitCallbacks, callback)
 	sp.app.Syslog.Infof("Exit callback set for disk item: %s", diskItem.StorageId)
 }
