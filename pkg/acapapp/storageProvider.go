@@ -19,8 +19,9 @@ type StorageProvider struct {
 	subscribtions    []int                 // Subscription list for unsubscribe
 	DiskItemsEvents  chan *axstorage.DiskItem
 	UseChannelEvents bool
-	wg               sync.WaitGroup // WaitGroup to track asynchronous operations
-	prw              PendingRW      // Pending read/write operations tracker
+	wg               sync.WaitGroup              // WaitGroup to track asynchronous operations
+	prw              PendingRW                   // Pending read/write operations tracker
+	onExitCallbacks  []func(*axstorage.DiskItem) // Callbacks to be executed on exit for each disk item
 }
 
 type PendingRW struct {
@@ -38,6 +39,7 @@ func (a *AcapApplication) NewStorageProvider(useChannelEvents bool) {
 		DiskItemsEvents:  make(chan *axstorage.DiskItem, 10),
 		UseChannelEvents: useChannelEvents,
 		prw:              PendingRW{},
+		onExitCallbacks:  []func(*axstorage.DiskItem){},
 	}
 }
 
@@ -102,6 +104,13 @@ func (sp *StorageProvider) WriteFile(di *axstorage.DiskItem, filePath string, co
 	}
 	return rwPossible
 }
+
+func AddExitCallback(sp *StorageProvider, diskItem *axstorage.DiskItem, callback func(*axstorage.DiskItem)) {
+	sp.onExitCallbacks = append(sp.onExitCallbacks, callback)
+	sp.app.Syslog.Infof("Exit callback set for disk item: %s", diskItem.StorageId)
+}
+
+// If the disk item is exiting, immediately call the callback
 
 // RemoveFile deletes the specified file from the disk item.
 // It returns an RwResult indicating the outcome of the remove operation.
@@ -327,10 +336,15 @@ type storageUserData struct {
 // becomes unavailable. It should be invoked as part of the storage management lifecycle,
 // especially when handling storage removal or disconnection events.
 func (sp *StorageProvider) ReleaseOnExiting(diskItem *axstorage.DiskItem) {
+
 	sp.app.Syslog.Infof("Awaiting pending rw opteraions on exit release: %s", diskItem.StorageId)
 	sp.WaitPendingRW()
 	sp.app.Syslog.Infof("Releasing disk %s on exiting", diskItem.StorageId)
 	if diskItem.Exiting && diskItem.Setup {
+		for _, callback := range sp.onExitCallbacks {
+			sp.app.Syslog.Infof("Executing exit callback for disk item: %s", diskItem.StorageId)
+			callback(diskItem)
+		}
 		if err := diskItem.Storage.AxStorageReleaseAsync(releaseCallback, &storageUserData{storageProvider: sp, diskItem: diskItem}); err != nil {
 			sp.app.Syslog.Warn(err.Error())
 		}
