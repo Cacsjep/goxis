@@ -31,7 +31,6 @@ type AcapApplication struct {
 	Syslog              *axsyslog.Syslog
 	ParamHandler        *axparameter.AXParameter
 	EventHandler        *axevent.AXEventHandler
-	StorageProvider     *StorageProvider
 	Mainloop            *glib.GMainLoop
 	OnCloseCleaners     []func()
 	eventDeclarationIds []int
@@ -117,9 +116,6 @@ func (a *AcapApplication) close() {
 
 	for _, f := range a.OnCloseCleaners {
 		f()
-	}
-	if a.StorageProvider != nil {
-		a.StorageProvider.Close()
 	}
 	a.Mainloop.Quit()     // Terminate the main loop.
 	a.ParamHandler.Free() // Release the parameter handler.

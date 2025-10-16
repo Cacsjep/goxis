@@ -62,16 +62,6 @@ Upon instantiation, `AcapApplication` undertakes several crucial steps::
 - **Event Handling:** Sets up an `axevent` handler to facilitate event processing.
 - **GMain Loop Preparation:** Configures a GMain loop complete with signal handlers, ensuring robust event management.
 
-`AcapApplication` offers access to a variety of powerful functionalities, such as::
-- **FrameProvider:** Facilitates easy interaction with `axvdo`, streamlining video-related operations.
-- **OverlayProvide:** Facilitates easy interaction with `axoverlay` related operations.
-- **StorageProvider:** Offers straightforward access to the camera's storage, enhancing data management capabilities.
-- `app.IsLicenseValid(major_version int, minor_version int)`: Verifies the validity of the application's license for the specified version.
-- `app.Run()`: Activates the GMain loop within the application, allowing for continuous operation.
-- `app.GetSnapshot(video_channel int)`: Captures and retrieves a JPEG snapshot from a given video channel.
-
-and more ....
-
 ### Create a new goxis application
 
 Just use [goxisbuilder](https://github.com/Cacsjep/goxisbuilder) tool for streamlined builds.
