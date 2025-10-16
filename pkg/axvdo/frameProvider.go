@@ -1,9 +1,7 @@
-package acapapp
+package axvdo
 
 import (
 	"time"
-
-	"github.com/Cacsjep/goxis/pkg/axvdo"
 )
 
 // FrameProviderState defines the possible states of a FrameProvider.
@@ -26,34 +24,32 @@ const (
 
 // FrameProvider encapsulates the management of video frame streaming, including starting, stopping, and restarting the stream.
 type FrameProvider struct {
-	Config             axvdo.VideoSteamConfiguration // Configuration for the video stream.
-	Stream             *axvdo.VdoStream              // Internal video stream reference.
-	state              FrameProviderState            // Current state of the frame provider.
-	running            bool                          // Flag indicating whether the frame provider is actively running.
-	FrameStreamChannel chan *axvdo.VideoFrame        // Channel for delivering video frames to consumers.
-	restartRetries     int                           // Counter for the number of restart attempts.
-	app                *AcapApplication              // Reference to the application managing this frame provider.
-	outReso            *axvdo.VdoResolution
+	Config             VideoSteamConfiguration // Configuration for the video stream.
+	Stream             *VdoStream              // Internal video stream reference.
+	state              FrameProviderState      // Current state of the frame provider.
+	running            bool                    // Flag indicating whether the frame provider is actively running.
+	FrameStreamChannel chan *VideoFrame        // Channel for delivering video frames to consumers.
+	restartRetries     int                     // Counter for the number of restart attempts.
+	outReso            *VdoResolution
 	frameProccessor    func([]byte) []byte
 	RestartCallback    func() // Callback function to be called when the frame provider is restarted
 }
 
 // FrameProviderStats provides statistical information about the operation of a FrameProvider.
 type FrameProviderStats struct {
-	InternalChannelBufferLen int               // The current length of the frame stream channel buffer.
-	RestartRetries           int               // The number of restart attempts made since the last successful start.
-	StreamStats              axvdo.StreamStats // Statistics gathered from the video stream.
+	InternalChannelBufferLen int         // The current length of the frame stream channel buffer.
+	RestartRetries           int         // The number of restart attempts made since the last successful start.
+	StreamStats              StreamStats // Statistics gathered from the video stream.
 }
 
 // NewFrameProvider initializes a new FrameProvider with the given configuration and application context.
 // It prepares the frame provider for operation but does not start streaming frames until Start is called.
-func NewFrameProvider(a *AcapApplication, config axvdo.VideoSteamConfiguration) (*FrameProvider, error) {
+func NewFrameProvider(config VideoSteamConfiguration) (*FrameProvider, error) {
 	fp := &FrameProvider{
 		Config:             config,
 		state:              FrameProviderStateInit,
-		FrameStreamChannel: make(chan *axvdo.VideoFrame, 1),
+		FrameStreamChannel: make(chan *VideoFrame, 1),
 		running:            false,
-		app:                a,
 	}
 	stream, err := fp.createStream()
 	if err != nil {
@@ -65,8 +61,8 @@ func NewFrameProvider(a *AcapApplication, config axvdo.VideoSteamConfiguration) 
 
 // createStream initializes the video stream based on the FrameProvider's configuration.
 // This is a helper method used internally by the FrameProvider.
-func (fp *FrameProvider) createStream() (*axvdo.VdoStream, error) {
-	return axvdo.NewVideoStreamFromConfig(fp.Config)
+func (fp *FrameProvider) createStream() (*VdoStream, error) {
+	return NewVideoStreamFromConfig(fp.Config)
 }
 
 // Start begins the frame streaming process, marking the FrameProvider as running and initiating the frame fetching loop.
@@ -79,34 +75,27 @@ func (fp *FrameProvider) Start() error {
 
 	fp.running = true
 	fp.state = FrameProviderStateStarted
-	fp.app.Syslog.Infof("VDO Channel(%d): Stream is started", fp.Config.GetChannel())
 
 	go func() {
 		for fp.running {
-			video_frame := axvdo.GetVideoFrame(fp.Stream)
+			video_frame := GetVideoFrame(fp.Stream)
 			if video_frame.Error != nil {
 				if video_frame.ErrorExpected {
 					if fp.state == FrameProviderStateStopped {
-						fp.app.Syslog.Infof("VDO Channel(%d): exit frame loop", fp.Config.GetChannel())
 						return
 					}
-					fp.app.Syslog.Warnf("VDO Channel(%d): Restarting stream because vdo is in maintanance mode %s", fp.Config.GetChannel(), video_frame.Error.Error())
 					if err := fp.Restart(); err != nil {
-						fp.app.Syslog.Warnf("VDO Channel(%d): Unable to restart stream, try again...: %s", fp.Config.GetChannel(), err.Error())
 						if fp.restartRetries >= MaxRestartRetries {
 							fp.state = FrameProviderStateError
-							fp.app.Syslog.Errorf("VDO Channel(%d): Max retries for stream restart reached, stream is stopped", fp.Config.GetChannel())
 							break
 						}
 						fp.restartRetries++
 					} else {
-						fp.app.Syslog.Infof("VDO Channel(%d): Successfully restart stream", fp.Config.GetChannel())
 						fp.running = true
 						fp.state = FrameProviderStateStarted
 					}
 					continue
 				}
-				fp.app.Syslog.Errorf("VDO Channel(%d): Vdo returns an error when getting buffer/frame data %s", fp.Config.Channel, video_frame.Error.Error())
 				continue
 			}
 			fp.restartRetries = 0
@@ -122,18 +111,15 @@ func (fp *FrameProvider) Stop() {
 	fp.state = FrameProviderStateStopped
 	fp.Stream.Stop()
 	fp.Stream.Unref()
-	fp.app.Syslog.Infof("VDO Channel(%d): Stream is stopped", fp.Config.GetChannel())
 }
 
 // Restart attempts to restart the video stream, first stopping the current stream and then re-initializing and starting a new stream.
 // It applies a delay before attempting the restart to give the system time to release resources.
 func (fp *FrameProvider) Restart() error {
 	if fp.state == FrameProviderStateStopped {
-		fp.app.Syslog.Infof("VDO Channel(%d): exit frame loop", fp.Config.GetChannel())
 		return nil
 	}
 	time.Sleep(time.Second * 2)
-	fp.app.Syslog.Infof("VDO Channel(%d): Try to restart stream", fp.Config.GetChannel())
 	var err error
 	fp.state = FrameProviderStateRestarting
 	fp.Stop()
@@ -166,7 +152,7 @@ func (fp *FrameProvider) Stats() (*FrameProviderStats, error) {
 	if err != nil {
 		return nil, err
 	}
-	stats := axvdo.StreamStats{
+	stats := StreamStats{
 		Bitrate:                       m.GetUint32("bitrate", 0),
 		BufferType:                    m.GetString("buffer.type", ""),
 		Channel:                       m.GetUint32("channel", 0),

@@ -19,15 +19,15 @@ func main() {
 	testing.Main(
 		nil,
 		[]testing.InternalTest{
-			//{"EventTests", EventTests},
-			//{"TestVdoMapOperations", TestVdoMapOperations},
-			//{"VdoMapTest", VdoMapTest},
-			//{"VdoChannelTest", VdoChannelTest},
-			//{"TestVdoStream", TestVdoStream},
-			//{"LicenseTest", LicenseTest},
+			{"EventTests", EventTests},
+			{"TestVdoMapOperations", TestVdoMapOperations},
+			{"VdoMapTest", VdoMapTest},
+			{"VdoChannelTest", VdoChannelTest},
+			{"TestVdoStream", TestVdoStream},
+			{"LicenseTest", LicenseTest},
 			{"ParamTests", ParamTests},
-			//{"EventHandlerTests", EventHandlerTests},
-			//{"MdbTests", MdbTests},
+			{"EventHandlerTests", EventHandlerTests},
+			{"MdbTests", MdbTests},
 		},
 		nil, nil,
 	)
