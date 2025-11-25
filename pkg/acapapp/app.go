@@ -156,6 +156,29 @@ func (a *AcapApplication) AddCameraPlatformEvent(cpe *CameraPlatformEvent) (int,
 	return declarationID, nil
 }
 
+// AddCameraPlatformEventWithCallback adds the event to the application with declaration complete callback.
+func (a *AcapApplication) AddCameraPlatformEventWithCallback(cpe *CameraPlatformEvent, declartionCompleteCallback axevent.DeclarationCompleteCallback) (int, error) {
+	event, err := NewCameraApplicationPlatformEvent(
+		a.Manifest.ACAPPackageConf.Setup,
+		cpe.Name,
+		cpe.NiceName,
+		cpe.Entries,
+	)
+	if err != nil {
+		return 0, err
+	}
+	if declartionCompleteCallback == nil {
+		return 0, errors.New("callback function cannot be nil")
+	}
+
+	declarationID, err := a.EventHandler.Declare(event, cpe.Stateless, declartionCompleteCallback, nil)
+	if err != nil {
+		return 0, err
+	}
+	a.eventDeclarationIds = append(a.eventDeclarationIds, declarationID)
+	return declarationID, nil
+}
+
 // SendPlatformEvent sends a platform event with the specified event ID and event creation function.
 func (a *AcapApplication) SendPlatformEvent(eventID int, createEventFunc func() (*axevent.AXEvent, error)) error {
 	event, err := createEventFunc()
