@@ -38,9 +38,10 @@ type MDBSubscriberConfig struct {
 
 // MDBSubscriber wraps the mdb_subscriber_t type.
 type MDBSubscriber struct {
-	ptr        *C.mdb_subscriber_t
-	doneHandle cgo.Handle // optional handle for the done callback
-	destroyed  bool
+	ptr          *C.mdb_subscriber_t
+	doneHandle   cgo.Handle    // optional handle for the done callback
+	doneComplete chan struct{} // signals when async callback has fired
+	destroyed    bool
 }
 
 // MDBError wraps the mdb_error_t type. Shown here for reference.
@@ -272,7 +273,18 @@ func MDBSubscriberCreateAsync(
 	onDone DoneCallback, // Our Go callback to be invoked once creation is done
 ) (*MDBSubscriber, error) {
 
-	doneHandle := cgo.NewHandle(onDone)
+	// Create the completion channel
+	doneComplete := make(chan struct{})
+
+	// Wrap the user's callback to signal completion
+	wrappedCallback := func(err error) {
+		defer close(doneComplete) // Signal that callback has fired
+		if onDone != nil {
+			onDone(err)
+		}
+	}
+
+	doneHandle := cgo.NewHandle(DoneCallback(wrappedCallback))
 
 	var cErr *C.mdb_error_t
 	// We pass onSubscriberCreateDoneCallback as a function pointer,
@@ -287,26 +299,42 @@ func MDBSubscriberCreateAsync(
 	if cErr != nil {
 		// On error, free the handle we made
 		doneHandle.Delete()
+		close(doneComplete)
 		return nil, NewMDBError(cErr)
 	}
 
 	return &MDBSubscriber{
-		ptr:        subscriberPtr,
-		doneHandle: doneHandle,
+		ptr:          subscriberPtr,
+		doneHandle:   doneHandle,
+		doneComplete: doneComplete,
 	}, nil
 }
 
 // Destroy cleans up the MDBSubscriber.
+// It waits for the async creation callback to complete before freeing resources.
 func (subscriber *MDBSubscriber) Destroy() {
 	if subscriber.destroyed {
 		return
 	}
 	subscriber.destroyed = true
 
+	// Wait for the async callback to complete before deleting the handle.
+	// This prevents the race condition where the CGO callback fires
+	// after the handle has been deleted.
+	// Use a timeout to prevent deadlock if callback never fires.
+	if subscriber.doneComplete != nil {
+		select {
+		case <-subscriber.doneComplete:
+			// Callback completed, safe to proceed
+		case <-time.After(5 * time.Second):
+			// Timeout - proceed anyway to avoid deadlock
+		}
+	}
+
 	if subscriber.ptr != nil {
 		C.mdb_subscriber_destroy(&subscriber.ptr)
 		subscriber.ptr = nil
 	}
-	// Free the handle for the done callback
+	// Free the handle for the done callback (now safe - callback has fired or timed out)
 	subscriber.doneHandle.Delete()
 }
