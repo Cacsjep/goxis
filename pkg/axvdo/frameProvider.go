@@ -30,8 +30,10 @@ type FrameProvider struct {
 	Stream             *VdoStream              // Internal video stream reference.
 	state              FrameProviderState      // Current state of the frame provider.
 	running            int32                   // Flag indicating whether the frame provider is actively running (atomic).
+	stopped            int32                   // Flag to ensure Stop() only runs once (atomic).
 	wg                 sync.WaitGroup          // WaitGroup to track the frame fetching goroutine.
 	FrameStreamChannel chan *VideoFrame        // Channel for delivering video frames to consumers.
+	stopCh             chan struct{}           // Channel to signal goroutine to stop.
 	restartRetries     int                     // Counter for the number of restart attempts.
 	outReso            *VdoResolution
 	frameProccessor    func([]byte) []byte
@@ -52,6 +54,7 @@ func NewFrameProvider(config VideoSteamConfiguration) (*FrameProvider, error) {
 		Config:             config,
 		state:              FrameProviderStateInit,
 		FrameStreamChannel: make(chan *VideoFrame, 1),
+		stopCh:             make(chan struct{}),
 		// running defaults to 0 (stopped)
 	}
 	stream, err := fp.createStream()
@@ -108,17 +111,22 @@ func (fp *FrameProvider) Start() error {
 				continue
 			}
 			fp.restartRetries = 0
-			// Non-blocking send to prevent goroutine from blocking forever
-			// if consumer stops reading (e.g., context cancelled)
+			// Semi-blocking send: try to send, but also listen for stop signal.
+			// Use timeout to avoid blocking forever if channel is full.
+			// This keeps goroutine mostly waiting (not in GetVideoFrame) which
+			// reduces the race window between GetBuffer and GetBytes when Stop() is called.
 			select {
 			case fp.FrameStreamChannel <- video_frame:
 				// Frame sent successfully
-			default:
-				// Channel full, check if we should stop
+			case <-fp.stopCh:
+				// Stop signal received
+				return
+			case <-time.After(100 * time.Millisecond):
+				// Timeout - check if we should stop, otherwise drop frame
 				if atomic.LoadInt32(&fp.running) == 0 {
 					return
 				}
-				// Drop frame if channel is full - consumer is too slow
+				// Drop frame - consumer is too slow
 			}
 		}
 	}()
@@ -128,10 +136,22 @@ func (fp *FrameProvider) Start() error {
 // Stop halts the frame streaming process, changing the state of the FrameProvider to stopped and cleaning up resources.
 // This function waits for the frame fetching goroutine to exit before releasing stream resources.
 func (fp *FrameProvider) Stop() {
+	// Ensure Stop() only runs once
+	if !atomic.CompareAndSwapInt32(&fp.stopped, 0, 1) {
+		return
+	}
+
 	atomic.StoreInt32(&fp.running, 0)
 	fp.state = FrameProviderStateStopped
+
+	// Signal goroutine to stop - this unblocks the select if waiting on channel send
+	close(fp.stopCh)
+
+	// Stop the stream - this unblocks GetBuffer if waiting for frames
 	fp.Stream.Stop()
-	fp.wg.Wait() // Wait for goroutine to exit before releasing resources
+
+	// Wait for goroutine to exit before releasing resources
+	fp.wg.Wait()
 	fp.Stream.Unref()
 }
 
@@ -140,6 +160,10 @@ func (fp *FrameProvider) Stop() {
 // Note: This is called from within the goroutine, so we don't use Stop() which would deadlock waiting for ourselves.
 func (fp *FrameProvider) Restart() error {
 	if fp.state == FrameProviderStateStopped {
+		return nil
+	}
+	// Check if Stop() was called - don't restart if we're stopping
+	if atomic.LoadInt32(&fp.stopped) == 1 {
 		return nil
 	}
 	time.Sleep(time.Second * 2)
