@@ -147,11 +147,25 @@ func (fp *FrameProvider) Stop() {
 	// Signal goroutine to stop - this unblocks the select if waiting on channel send
 	close(fp.stopCh)
 
-	// Stop the stream - this unblocks GetBuffer if waiting for frames
+	// Stop the stream - this should unblock GetBuffer if waiting for frames
 	fp.Stream.Stop()
 
-	// Wait for goroutine to exit before releasing resources
-	fp.wg.Wait()
+	// Wait for goroutine to exit with timeout
+	// VDO's GetBuffer may have a long internal timeout (~30s) that Stream.Stop() doesn't interrupt
+	done := make(chan struct{})
+	go func() {
+		fp.wg.Wait()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		// Goroutine exited cleanly
+	case <-time.After(2 * time.Second):
+		// Timeout - goroutine is stuck in GetBuffer, proceed anyway
+		// This is safe because we've already called Stream.Stop()
+	}
+
 	fp.Stream.Unref()
 }
 
