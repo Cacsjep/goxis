@@ -227,15 +227,25 @@ func NewVideoStreamFromConfig(stream_cfg VideoSteamConfiguration) (*VdoStream, e
 
 // GetVideoFrame retrieves a video frame from a video stream.
 // If an expected error occurs (e.g., for stream maintenance), the function returns a VideoFrame with the Error and ErrorExpected fields set.
-// This function is recursive and will retry fetching a frame if a recoverable error occurs.
+// Retries up to maxGetFrameRetries times on unexpected errors before giving up.
 func GetVideoFrame(vdo_stream *VdoStream) *VideoFrame {
+	return getVideoFrameWithRetry(vdo_stream, 0)
+}
+
+const maxGetFrameRetries = 5
+
+func getVideoFrameWithRetry(vdo_stream *VdoStream, retryCount int) *VideoFrame {
 	vdo_buf, err := vdo_stream.GetBuffer()
 	if err != nil {
 		if vdoErr, ok := err.(*VdoError); ok && vdoErr.Expected {
 			return &VideoFrame{Error: vdoErr, ErrorExpected: vdoErr.Expected}
 		}
-		// Retry when its not an expected error
-		return GetVideoFrame(vdo_stream)
+		// Retry on unexpected error, but limit retries to prevent infinite loop
+		if retryCount < maxGetFrameRetries {
+			return getVideoFrameWithRetry(vdo_stream, retryCount+1)
+		}
+		// Max retries exceeded - return error instead of looping forever
+		return &VideoFrame{Error: err, ErrorExpected: false}
 	}
 
 	vdo_frame, err := vdo_buf.GetFrame()
