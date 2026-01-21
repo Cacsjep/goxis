@@ -160,13 +160,18 @@ func (fp *FrameProvider) Stop() {
 
 	select {
 	case <-done:
-		// Goroutine exited cleanly
+		// Goroutine exited cleanly, safe to Unref now
+		fp.Stream.Unref()
 	case <-time.After(2 * time.Second):
-		// Timeout - goroutine is stuck in GetBuffer, proceed anyway
-		// This is safe because we've already called Stream.Stop()
+		// Timeout - goroutine is stuck in GetBuffer
+		// We CANNOT call Unref() here as goroutine might still be using the stream
+		// Spawn a cleanup goroutine to wait and Unref when safe
+		stream := fp.Stream
+		go func() {
+			<-done // Wait for goroutine to actually exit
+			stream.Unref()
+		}()
 	}
-
-	fp.Stream.Unref()
 }
 
 // Restart attempts to restart the video stream, first stopping the current stream and then re-initializing and starting a new stream.
