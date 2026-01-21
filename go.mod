@@ -4,7 +4,7 @@ go 1.22.0
 
 require (
 	github.com/godbus/dbus/v5 v5.1.0
-	github.com/gofiber/fiber/v2 v2.52.2
+	github.com/gofiber/fiber/v2 v2.52.9
 	github.com/stretchr/testify v1.9.0
 )
 
