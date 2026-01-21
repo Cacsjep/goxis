@@ -4,6 +4,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"golang.org/x/sys/unix"
 )
 
 // FrameProviderState defines the possible states of a FrameProvider.
@@ -72,7 +74,8 @@ func (fp *FrameProvider) createStream() (*VdoStream, error) {
 
 // Start begins the frame streaming process, marking the FrameProvider as running and initiating the frame fetching loop.
 // If an error occurs while starting the stream, it returns the error without altering the provider's state.
-// Handles automatic restart in case of an expected Vdo error
+// Handles automatic restart in case of an expected Vdo error.
+// Uses poll-based approach like Axis C examples for clean shutdown.
 func (fp *FrameProvider) Start() error {
 	if err := fp.Stream.Start(); err != nil {
 		return err
@@ -84,47 +87,55 @@ func (fp *FrameProvider) Start() error {
 	fp.wg.Add(1)
 	go func() {
 		defer fp.wg.Done()
-		for atomic.LoadInt32(&fp.running) == 1 {
-			video_frame := GetVideoFrame(fp.Stream)
-			if video_frame.Error != nil {
-				if atomic.LoadInt32(&fp.running) == 0 {
-					return
-				}
-				if video_frame.ErrorExpected {
-					if fp.state == FrameProviderStateStopped {
-						return
-					}
-					if err := fp.Restart(); err != nil {
-						if fp.restartRetries >= MaxRestartRetries {
-							fp.state = FrameProviderStateError
-							break
-						}
-						fp.restartRetries++
-					} else {
-						atomic.StoreInt32(&fp.running, 1)
-						fp.state = FrameProviderStateStarted
-					}
-					continue
-				}
-				continue
-			}
-			fp.restartRetries = 0
-			select {
-			case fp.FrameStreamChannel <- video_frame:
-			case <-fp.stopCh:
-				return
-			case <-time.After(100 * time.Millisecond):
-				if atomic.LoadInt32(&fp.running) == 0 {
-					return
-				}
-			}
-		}
+		fp.pollLoop()
 	}()
 	return nil
 }
 
+// pollLoop uses poll-based buffer retrieval like Axis C examples.
+// Simple loop: poll with timeout, get buffer when data ready.
+func (fp *FrameProvider) pollLoop() {
+	const pollTimeoutMs = 100
+
+	for atomic.LoadInt32(&fp.running) == 1 {
+		fd, err := fp.Stream.GetFd()
+		if err != nil {
+			continue
+		}
+
+		pollFds := []unix.PollFd{{Fd: int32(fd), Events: unix.POLLIN}}
+		n, _ := unix.Poll(pollFds, pollTimeoutMs)
+		if n <= 0 {
+			continue
+		}
+
+		if pollFds[0].Revents&unix.POLLIN == 0 {
+			continue
+		}
+
+		video_frame := GetVideoFrame(fp.Stream)
+		if video_frame.Error != nil {
+			if video_frame.ErrorExpected {
+				fp.Restart()
+			}
+			continue
+		}
+
+		fp.restartRetries = 0
+		select {
+		case fp.FrameStreamChannel <- video_frame:
+		case <-fp.stopCh:
+			return
+		default:
+			// Channel full, drop frame
+		}
+	}
+}
+
 // Stop halts the frame streaming process and releases resources.
 // Cleanup happens in a background goroutine to avoid blocking.
+// Like Axis C examples, we don't call vdo_stream_stop() - just unref.
+// The poll-based loop will exit on next timeout (100ms max).
 func (fp *FrameProvider) Stop() {
 	if !atomic.CompareAndSwapInt32(&fp.stopped, 0, 1) {
 		return
@@ -133,7 +144,8 @@ func (fp *FrameProvider) Stop() {
 	atomic.StoreInt32(&fp.running, 0)
 	fp.state = FrameProviderStateStopped
 	close(fp.stopCh)
-	fp.Stream.Stop()
+	// NOTE: We don't call fp.Stream.Stop() - Axis C examples don't either.
+	// The poll loop will exit on next timeout since running=0.
 
 	// Cleanup in background - wait for goroutine then Unref
 	stream := fp.Stream
@@ -145,6 +157,7 @@ func (fp *FrameProvider) Stop() {
 
 // Restart attempts to restart the video stream.
 // Note: This is called from within the goroutine, so we don't use Stop() which would deadlock.
+// Like Axis C examples, we don't call vdo_stream_stop() - just unref.
 func (fp *FrameProvider) Restart() error {
 	if fp.state == FrameProviderStateStopped {
 		return nil
@@ -155,7 +168,7 @@ func (fp *FrameProvider) Restart() error {
 	time.Sleep(time.Second * 2)
 	var err error
 	fp.state = FrameProviderStateRestarting
-	fp.Stream.Stop()
+	// NOTE: We don't call fp.Stream.Stop() - Axis C examples don't either.
 	fp.Stream.Unref()
 	if fp.Stream, err = fp.createStream(); err != nil {
 		return err
