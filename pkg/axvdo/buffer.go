@@ -96,10 +96,14 @@ func (b *VdoBuffer) GetOpaque() unsafe.Pointer {
 //
 // https://axiscommunications.github.io/acap-documentation/docs/acap-sdk-version-3/api/src/api/vdostream/html/vdo-buffer_8h.html#a3d39e2466d23b62e52a0fbfd10a968a3
 func (b *VdoBuffer) GetData() (unsafe.Pointer, error) {
-	if b.Ptr != nil {
-		return unsafe.Pointer(C.vdo_buffer_get_data(b.Ptr)), nil
+	if b.Ptr == nil {
+		return nil, errors.New("VdoBuffer ptr is null when getting data")
 	}
-	return nil, errors.New("VdoBuffer ptr is null when getting data")
+	dataPtr := unsafe.Pointer(C.vdo_buffer_get_data(b.Ptr))
+	if dataPtr == nil {
+		return nil, errors.New("vdo_buffer_get_data returned null pointer")
+	}
+	return dataPtr, nil
 }
 
 // GetBytes returns the data of the VdoBuffer as a Go byte slice.
