@@ -108,7 +108,18 @@ func (fp *FrameProvider) Start() error {
 				continue
 			}
 			fp.restartRetries = 0
-			fp.FrameStreamChannel <- video_frame
+			// Non-blocking send to prevent goroutine from blocking forever
+			// if consumer stops reading (e.g., context cancelled)
+			select {
+			case fp.FrameStreamChannel <- video_frame:
+				// Frame sent successfully
+			default:
+				// Channel full, check if we should stop
+				if atomic.LoadInt32(&fp.running) == 0 {
+					return
+				}
+				// Drop frame if channel is full - consumer is too slow
+			}
 		}
 	}()
 	return nil
