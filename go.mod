@@ -1,13 +1,13 @@
 module github.com/Cacsjep/goxis
 
-go 1.22.0
+go 1.24.0
 
 require (
 	github.com/goccy/go-json v0.10.5
-	github.com/godbus/dbus/v5 v5.1.0
+	github.com/godbus/dbus/v5 v5.2.2
 	github.com/gorilla/websocket v1.5.3
-	github.com/stretchr/testify v1.9.0
-	golang.org/x/sys v0.28.0
+	github.com/stretchr/testify v1.11.1
+	golang.org/x/sys v0.40.0
 )
 
 require (
