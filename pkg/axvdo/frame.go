@@ -51,24 +51,9 @@ func (f *VdoFrame) GetHeaderSize() int {
 	return int(C.vdo_frame_get_header_size(f.Ptr))
 }
 
-// GetFd returns a file descriptor for this frame.
-func (f *VdoFrame) GetFd() int {
-	return int(C.vdo_frame_get_fd(f.Ptr))
-}
-
 // GetExtraInfo returns the extra info of this frame.
 func (f *VdoFrame) GetExtraInfo() *VdoMap {
 	return &VdoMap{Ptr: C.vdo_frame_get_extra_info(f.Ptr)}
-}
-
-// GetOpaque returns a pointer to the opaque data of this frame.
-func (f *VdoFrame) GetOpaque() unsafe.Pointer {
-	return unsafe.Pointer(C.vdo_frame_get_opaque(f.Ptr))
-}
-
-// GetIsLastBuffer tests whether this frame is the last buffer.
-func (f *VdoFrame) GetIsLastBuffer() bool {
-	return C.vdo_frame_get_is_last_buffer(f.Ptr) != C.FALSE
 }
 
 // SetSize sets the size of this frame.

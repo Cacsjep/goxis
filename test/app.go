@@ -67,21 +67,9 @@ func TestVdoFrameOperations(t *testing.T, existingBuffer *axvdo.VdoBuffer) {
 	headerSize := frame.GetHeaderSize()
 	assert.GreaterOrEqual(t, headerSize, 0, "Header size should be non-negative")
 
-	// Test GetFd
-	fd := frame.GetFd()
-	assert.Greater(t, fd, -1, "File descriptor should be valid")
-
 	// Test GetExtraInfo
 	extraInfo := frame.GetExtraInfo()
 	assert.NotNil(t, extraInfo, "Extra info should not be nil")
-
-	// Test GetOpaque
-	opaque := frame.GetOpaque()
-	assert.Nil(t, opaque, "Opaque should not be nil")
-
-	// Test GetIsLastBuffer
-	isLastBuffer := frame.GetIsLastBuffer()
-	assert.NotNil(t, isLastBuffer, "IsLastBuffer should not be nil")
 
 	// Assuming SetSize and other setters affect the frame; otherwise, they're not testable without effect
 	frame.SetSize(1024)
