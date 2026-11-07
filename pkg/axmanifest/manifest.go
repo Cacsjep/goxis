@@ -7,8 +7,12 @@ import (
 	"os"
 )
 
+// ApplicationManifestSchema is an ACAP application manifest, schema 1.x or 2.x.
+// Schema 2 (ACAP Native SDK 12.10+, required on AXIS OS 13) adds
+// setup.vendorId and setup.compatibleOsVersions, makes setup.architecture
+// required and drops setup.embeddedSdkVersion.
 type ApplicationManifestSchema struct {
-	SchemaVersion   string          `json:"schemaVersion" validate:"required,regexp=^1\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"`
+	SchemaVersion   string          `json:"schemaVersion" validate:"required,regexp=^[12]\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"`
 	Resources       Resources       `json:"resources,omitempty"`
 	ACAPPackageConf ACAPPackageConf `json:"acapPackageConf" validate:"required"`
 }
@@ -17,6 +21,27 @@ type ApplicationManifestSchema struct {
 type Resources struct {
 	DBus  DBusResources  `json:"dbus,omitempty"`
 	Linux LinuxResources `json:"linux,omitempty"`
+	// DeviceDataHub grants access to the Device Data Hub (schema 1.11.0 or
+	// 2.2.0 and later).
+	DeviceDataHub *DeviceDataHubResource `json:"deviceDataHub,omitempty"`
+	// DeepLearningProcessor declares use of the DLPU (schema 2.x). On AXIS
+	// OS 13 an application that does not declare it gets no DLPU.
+	DeepLearningProcessor *DeepLearningProcessorResource `json:"deepLearningProcessor,omitempty"`
+}
+
+// DeviceDataHubResource enables the Device Data Hub for the application.
+// Subscribing to public topics (such as AXIS Scene Metadata) needs only
+// Enabled. AccessControlList entries grant rights on the application's own
+// topics; they are kept as raw JSON (see the manifest schema in the SDK).
+type DeviceDataHubResource struct {
+	Enabled           bool              `json:"enabled"`
+	AccessControlList []json.RawMessage `json:"accessControlList,omitempty"`
+}
+
+// DeepLearningProcessorResource declares the deep learning processor (DLPU).
+type DeepLearningProcessorResource struct {
+	Enabled  bool `json:"enabled"`
+	Required bool `json:"required,omitempty"`
 }
 
 // DBusResources details D-Bus resources on the host system that the application requires or desires access to.
@@ -49,7 +74,7 @@ type Setup struct {
 	AppName            string `json:"appName" validate:"required,alphanum,max=26"`
 	AppID              string `json:"appId" validate:"omitempty,numeric"`
 	Architecture       string `json:"architecture" validate:"omitempty,oneof=all aarch64 armv7hf"`
-	EmbeddedSdkVersion string `json:"embeddedSdkVersion" validate:"omitempty,semver"`
+	EmbeddedSdkVersion string `json:"embeddedSdkVersion,omitempty" validate:"omitempty,semver"` // schema 1.x only
 	FriendlyName       string `json:"friendlyName" validate:"omitempty"`
 	User               User   `json:"user" validate:"required,dive"`
 	RunMode            string `json:"runMode" validate:"required,oneof=respawn once never"`
@@ -57,6 +82,20 @@ type Setup struct {
 	Vendor             string `json:"vendor" validate:"required,regexp=^[\\w /\\-\\(\\),\\.\\!\\?&']+$"`
 	VendorUrl          string `json:"vendorUrl" validate:"omitempty,url"`
 	Version            string `json:"version" validate:"required,semver"`
+	// VendorID is the vendor id the AXIS ACAP Service Portal assigns
+	// (schema 2.x, required).
+	VendorID string `json:"vendorId,omitempty" validate:"omitempty,hexadecimal,len=10"`
+	// CompatibleOsVersions lists the AXIS OS version ranges the application
+	// supports (schema 2.x, required). From AXIS OS 12.10 the device refuses
+	// to install an application outside every range.
+	CompatibleOsVersions []OsVersionRange `json:"compatibleOsVersions,omitempty"`
+}
+
+// OsVersionRange is an AXIS OS version range, such as {Min: "12.10", Max: "13"}.
+// A missing patch or minor version includes all of them.
+type OsVersionRange struct {
+	Min string `json:"min,omitempty"`
+	Max string `json:"max,omitempty"`
 }
 
 // User defines static user and group information.
