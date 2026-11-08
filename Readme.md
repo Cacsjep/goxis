@@ -24,6 +24,7 @@ Goxis organizes its functionality around several key areas of the native SDK, ea
 - [axlarod](https://pkg.go.dev/github.com/Cacsjep/goxis/pkg/axlarod) - Larod API
 - [axlicense](https://pkg.go.dev/github.com/Cacsjep/goxis/pkg/axlicense) - License Key API for managing application licenses.
 - [axsyslog](https://pkg.go.dev/github.com/Cacsjep/goxis/pkg/axsyslog) - Syslog for logging and diagnostics.
+- [axdatahub](https://pkg.go.dev/github.com/Cacsjep/goxis/pkg/axdatahub) - Device Data Hub API (AXIS OS 12.10+), the publish/subscribe service that replaces the Message Broker on AXIS OS 13, with typed AXIS Scene Metadata topics. Loaded at runtime, so it builds with any SDK.
 
 ## Additional Packages
 
